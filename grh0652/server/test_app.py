@@ -88,6 +88,6 @@ def test_recovery_uses_configured_ce_threshold_and_closes_passed_plan():
  assert client.put("/api/teacher/recovery-bank/REC",headers=H,json=bank).status_code==200
  s=client.post("/api/recovery/start",json={"student_id":"rec","course_id":"REC","kind":"recovery","item_id":"ignored","payload":{}});assert s.status_code==200
  answers={"r1":0,"r2":True,"r3":[2,0],"r4":" respuesta "}
- done=client.post(f"/api/recovery/{s.json()['id']}/submit",json={"payload":{"answers":answers}});assert done.status_code==200
+ done=client.post(f"/api/recovery/{s.json()['id']}/submit",json={"payload":{"answers":answers}});assert done.status_code==200, done.text
  assert done.json()["status"]=="passed"
  assert client.post("/api/recovery/start",json={"student_id":"rec","course_id":"REC","kind":"recovery","item_id":"ignored","payload":{}}).status_code==409
