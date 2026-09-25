@@ -4,12 +4,12 @@
       "id": "1a1",
       "ce": "1.a",
       "kind": "choice",
-      "prompt": "Una empresa quiere saber qué norma regula con carácter básico la relación laboral ordinaria. ¿Qué fuente debe consultar?",
+      "prompt": "Una empresa quiere saber qué norma regula con carácter básico la relación laboral ordinaria. ¿Qué fuente debe consultar? Revisa todas las alternativas antes de responder.",
       "options": [
-        "Estatuto de los Trabajadores",
         "Padrón municipal",
         "Plan contable",
-        "Contrato de alquiler"
+        "Contrato de alquiler",
+        "Estatuto de los Trabajadores"
       ]
     },
     {
@@ -49,12 +49,12 @@
       "id": "1a6",
       "ce": "1.a",
       "kind": "choice",
-      "prompt": "Encuentras una plantilla de contrato de 2022 en un blog y una versión consolidada vigente del Estatuto en el BOE. ¿Cuál debe prevalecer para tomar la decisión jurídica?",
+      "prompt": "Encuentras una plantilla de contrato de 2022 en un blog y una versión consolidada vigente del Estatuto en el BOE. ¿Cuál debe prevalecer para tomar la decisión jurídica? Revisa todas las alternativas antes de responder.",
       "options": [
-        "La plantilla antigua porque ya está redactada",
-        "La fuente oficial vigente y después adaptar el modelo",
         "El blog si aparece primero en el buscador",
-        "Cualquiera de las dos"
+        "Cualquiera de las dos",
+        "La plantilla antigua porque ya está redactada",
+        "La fuente oficial vigente y después adaptar el modelo"
       ]
     },
     {
@@ -68,12 +68,12 @@
       "id": "1b2",
       "ce": "1.b",
       "kind": "choice",
-      "prompt": "¿Qué debe ocurrir antes de cumplimentar un modelo de contrato?",
+      "prompt": "¿Qué debe ocurrir antes de cumplimentar un modelo de contrato? Revisa todas las alternativas antes de responder.",
       "options": [
+        "Tramitar una baja",
         "Analizar la necesidad y elegir la modalidad adecuada",
         "Archivar el contrato",
-        "Emitir una nómina",
-        "Tramitar una baja"
+        "Emitir una nómina"
       ]
     },
     {
@@ -106,12 +106,12 @@
       "id": "1b6",
       "ce": "1.b",
       "kind": "choice",
-      "prompt": "Una empresa ya ha firmado el contrato, pero aún no ha realizado el alta ni la comunicación correspondiente. ¿En qué situación está el procedimiento?",
+      "prompt": "Una empresa ya ha firmado el contrato, pero aún no ha realizado el alta ni la comunicación correspondiente. ¿En qué situación está el procedimiento? Revisa todas las alternativas antes de responder.",
       "options": [
-        "Completamente cerrado",
         "Incompleto: faltan fases administrativas",
         "No existe contrato",
-        "Solo falta la nómina"
+        "Solo falta la nómina",
+        "Completamente cerrado"
       ]
     },
     {
@@ -125,24 +125,24 @@
       "id": "1c2",
       "ce": "1.c",
       "kind": "choice",
-      "prompt": "¿Qué organismo gestiona habitualmente el alta de una persona trabajadora en el Régimen General?",
+      "prompt": "¿Qué organismo gestiona habitualmente el alta de una persona trabajadora en el Régimen General? Revisa todas las alternativas antes de responder.",
       "options": [
-        "TGSS",
-        "SEPE",
         "AEAT",
-        "Cabildo"
+        "Cabildo",
+        "TGSS",
+        "SEPE"
       ]
     },
     {
       "id": "1c3",
       "ce": "1.c",
       "kind": "choice",
-      "prompt": "¿A qué organismo estatal se comunica el contenido de los contratos por los sistemas habilitados?",
+      "prompt": "¿A qué organismo estatal se comunica el contenido de los contratos por los sistemas habilitados? Revisa todas las alternativas antes de responder.",
       "options": [
+        "Registro Mercantil",
         "SEPE",
         "INSS",
-        "TGSS exclusivamente",
-        "Registro Mercantil"
+        "TGSS exclusivamente"
       ]
     },
     {
@@ -168,36 +168,36 @@
       "id": "1c6",
       "ce": "1.c",
       "kind": "choice",
-      "prompt": "Una asesoría debe tramitar el alta, comunicar el contrato y consultar un programa autonómico de incentivos. ¿Qué combinación es correcta?",
+      "prompt": "Una asesoría debe tramitar el alta, comunicar el contrato y consultar un programa autonómico de incentivos. ¿Qué combinación es correcta? Revisa todas las alternativas antes de responder.",
       "options": [
-        "TGSS + SEPE + SCE",
         "INSS + AEAT + Ayuntamiento",
         "SEPE + Catastro + SCE",
-        "TGSS + Registro Mercantil + Cabildo"
+        "TGSS + Registro Mercantil + Cabildo",
+        "TGSS + SEPE + SCE"
       ]
     },
     {
       "id": "1d1",
       "ce": "1.d",
       "kind": "choice",
-      "prompt": "Una empresa necesita cubrir de forma estable un puesto estructural. ¿Qué modalidad es la referencia general?",
+      "prompt": "Una empresa necesita cubrir de forma estable un puesto estructural. ¿Qué modalidad es la referencia general? Revisa todas las alternativas antes de responder.",
       "options": [
-        "Contrato indefinido",
-        "Contrato temporal sin causa",
         "Contrato de sustitución",
-        "Beca sin contrato"
+        "Beca sin contrato",
+        "Contrato indefinido",
+        "Contrato temporal sin causa"
       ]
     },
     {
       "id": "1d2",
       "ce": "1.d",
       "kind": "choice",
-      "prompt": "Una actividad hotelera se repite cada temporada y existe una necesidad intermitente recurrente. ¿Qué figura debe analizarse especialmente?",
+      "prompt": "Una actividad hotelera se repite cada temporada y existe una necesidad intermitente recurrente. ¿Qué figura debe analizarse especialmente? Revisa todas las alternativas antes de responder.",
       "options": [
+        "Sustitución sin persona sustituida",
         "Fijo-discontinuo",
         "Temporal para probar",
-        "Contrato mercantil",
-        "Sustitución sin persona sustituida"
+        "Contrato mercantil"
       ]
     },
     {
@@ -230,96 +230,96 @@
       "id": "1d6",
       "ce": "1.d",
       "kind": "choice",
-      "prompt": "¿Qué dato define específicamente un contrato a tiempo parcial?",
+      "prompt": "¿Qué dato define específicamente un contrato a tiempo parcial? Revisa todas las alternativas antes de responder.",
       "options": [
-        "Una jornada inferior a la de una persona comparable a tiempo completo",
         "Que solo se trabaje en verano",
         "Que el contrato sea siempre temporal",
-        "Que no exista convenio"
+        "Que no exista convenio",
+        "Una jornada inferior a la de una persona comparable a tiempo completo"
       ]
     },
     {
       "id": "1e1",
       "ce": "1.e",
       "kind": "choice",
-      "prompt": "Una asesoría incorpora de forma permanente a una administrativa para tareas estructurales. ¿Qué propuesta es la más coherente?",
+      "prompt": "Una asesoría incorpora de forma permanente a una administrativa para tareas estructurales. ¿Qué propuesta es la más coherente? Revisa todas las alternativas antes de responder.",
       "options": [
-        "Indefinido ordinario, salvo particularidad legal",
-        "Temporal de seis meses para probar",
         "Sustitución",
-        "Formación en alternancia sin formación"
+        "Formación en alternancia sin formación",
+        "Indefinido ordinario, salvo particularidad legal",
+        "Temporal de seis meses para probar"
       ]
     },
     {
       "id": "1e2",
       "ce": "1.e",
       "kind": "choice",
-      "prompt": "Una trabajadora está de baja con derecho a reserva de puesto y la empresa necesita cubrir sus funciones. ¿Qué modalidad debe analizarse?",
+      "prompt": "Una trabajadora está de baja con derecho a reserva de puesto y la empresa necesita cubrir sus funciones. ¿Qué modalidad debe analizarse? Revisa todas las alternativas antes de responder.",
       "options": [
+        "Prácticas no laborales",
         "Contrato de sustitución",
         "Indefinido fijo-discontinuo",
-        "Temporal sin causa",
-        "Prácticas no laborales"
+        "Temporal sin causa"
       ]
     },
     {
       "id": "1e3",
       "ce": "1.e",
       "kind": "choice",
-      "prompt": "Un hotel tiene cada año una campaña estacional recurrente con periodos de actividad e inactividad. ¿Qué figura encaja mejor?",
+      "prompt": "Un hotel tiene cada año una campaña estacional recurrente con periodos de actividad e inactividad. ¿Qué figura encaja mejor? Revisa todas las alternativas antes de responder.",
       "options": [
-        "Fijo-discontinuo",
         "Temporal por costumbre cada año",
         "Contrato mercantil",
-        "Indefinido a tiempo completo necesariamente todo el año"
+        "Indefinido a tiempo completo necesariamente todo el año",
+        "Fijo-discontinuo"
       ]
     },
     {
       "id": "1e4",
       "ce": "1.e",
       "kind": "choice",
-      "prompt": "Una empresa sufre un incremento ocasional e imprevisible de pedidos durante unas semanas, bien documentado y no estructural. ¿Qué modalidad podría proceder si se cumplen los requisitos legales?",
+      "prompt": "Una empresa sufre un incremento ocasional e imprevisible de pedidos durante unas semanas, bien documentado y no estructural. ¿Qué modalidad podría proceder si se cumplen los requisitos legales? Revisa todas las alternativas antes de responder.",
       "options": [
-        "Temporal por circunstancias de la producción",
-        "Fijo-discontinuo automáticamente",
         "Sustitución",
-        "Contrato sin alta"
+        "Contrato sin alta",
+        "Temporal por circunstancias de la producción",
+        "Fijo-discontinuo automáticamente"
       ]
     },
     {
       "id": "1e5",
       "ce": "1.e",
       "kind": "choice",
-      "prompt": "Una persona estudia FP y la empresa quiere compatibilizar trabajo retribuido con su proceso formativo coordinado. ¿Qué contrato debe valorarse?",
+      "prompt": "Una persona estudia FP y la empresa quiere compatibilizar trabajo retribuido con su proceso formativo coordinado. ¿Qué contrato debe valorarse? Revisa todas las alternativas antes de responder.",
       "options": [
+        "Indefinido fijo-discontinuo por definición",
         "Formación en alternancia",
         "Sustitución",
-        "Temporal sin causa",
-        "Indefinido fijo-discontinuo por definición"
+        "Temporal sin causa"
       ]
     },
     {
       "id": "1e6",
       "ce": "1.e",
       "kind": "choice",
-      "prompt": "Una persona acaba de obtener una titulación y se pretende que adquiera práctica profesional adecuada a ese nivel de estudios. ¿Qué modalidad formativa debe analizarse?",
+      "prompt": "Una persona acaba de obtener una titulación y se pretende que adquiera práctica profesional adecuada a ese nivel de estudios. ¿Qué modalidad formativa debe analizarse? Revisa todas las alternativas antes de responder.",
       "options": [
-        "Contrato formativo para la obtención de práctica profesional",
         "Sustitución",
         "Temporal por vacaciones siempre",
-        "Fijo-discontinuo"
+        "Fijo-discontinuo",
+        "Contrato formativo para la obtención de práctica profesional"
       ]
     },
     {
       "id": "1f1",
       "ce": "1.f",
       "kind": "choice",
-      "prompt": "Antes de aplicar un convenio colectivo, ¿qué debe comprobarse?",
+      "prompt": "Antes de aplicar un convenio colectivo, ¿qué debe comprobarse? Revisa todas las alternativas antes de responder.",
       "options": [
-        "Ámbitos funcional, territorial, personal y temporal",
-        "Solo la portada",
         "Solo el salario base",
-        "Que tenga muchas páginas"
+        "Que tenga muchas páginas",
+        "Ámbitos funcional, territorial, personal y temporal",
+        "Solo la portada"
       ]
     },
     {
@@ -352,24 +352,24 @@
       "id": "1f5",
       "ce": "1.f",
       "kind": "choice",
-      "prompt": "Una empresa está en Tenerife, pero realiza una actividad distinta a la del convenio que el administrativo suele usar. ¿Qué debe hacer?",
+      "prompt": "Una empresa está en Tenerife, pero realiza una actividad distinta a la del convenio que el administrativo suele usar. ¿Qué debe hacer? Revisa todas las alternativas antes de responder.",
       "options": [
+        "Elegir el que tenga salarios más bajos",
         "Comprobar el ámbito funcional y localizar el convenio correcto",
         "Aplicar el convenio habitual por comodidad",
-        "No aplicar convenio alguno",
-        "Elegir el que tenga salarios más bajos"
+        "No aplicar convenio alguno"
       ]
     },
     {
       "id": "1f6",
       "ce": "1.f",
       "kind": "choice",
-      "prompt": "El contrato individual fija un salario inferior al mínimo de convenio para el grupo profesional correctamente asignado. ¿Qué debe hacer el técnico?",
+      "prompt": "El contrato individual fija un salario inferior al mínimo de convenio para el grupo profesional correctamente asignado. ¿Qué debe hacer el técnico? Revisa todas las alternativas antes de responder.",
       "options": [
-        "Corregirlo para respetar el mínimo aplicable",
         "Mantenerlo si el trabajador firma",
         "Ocultarlo en un anexo",
-        "Compensarlo con días libres sin revisar norma"
+        "Compensarlo con días libres sin revisar norma",
+        "Corregirlo para respetar el mínimo aplicable"
       ]
     },
     {
@@ -383,12 +383,12 @@
       "id": "1g2",
       "ce": "1.g",
       "kind": "choice",
-      "prompt": "¿Qué comprobación es prioritaria antes de firmar un contrato?",
+      "prompt": "¿Qué comprobación es prioritaria antes de firmar un contrato? Revisa todas las alternativas antes de responder.",
       "options": [
-        "Que datos, jornada, salario, modalidad y convenio sean coherentes",
-        "Que el archivo tenga un color concreto",
         "Que el documento ocupe una sola página",
-        "Que no tenga anexos"
+        "Que no tenga anexos",
+        "Que datos, jornada, salario, modalidad y convenio sean coherentes",
+        "Que el archivo tenga un color concreto"
       ]
     },
     {
@@ -421,36 +421,36 @@
       "id": "1g6",
       "ce": "1.g",
       "kind": "choice",
-      "prompt": "Detectas que el grupo profesional del contrato no coincide con las funciones reales descritas en la oferta. ¿Qué actuación es correcta?",
+      "prompt": "Detectas que el grupo profesional del contrato no coincide con las funciones reales descritas en la oferta. ¿Qué actuación es correcta? Revisa todas las alternativas antes de responder.",
       "options": [
+        "Cambiar el DNI del trabajador",
         "Detener la formalización y revisar clasificación y convenio",
         "Firmar y corregirlo solo si hay una reclamación",
-        "Borrar la descripción del puesto",
-        "Cambiar el DNI del trabajador"
+        "Borrar la descripción del puesto"
       ]
     },
     {
       "id": "1h1",
       "ce": "1.h",
       "kind": "choice",
-      "prompt": "¿Qué canal se asocia específicamente con la comunicación electrónica de contratos al SEPE?",
+      "prompt": "¿Qué canal se asocia específicamente con la comunicación electrónica de contratos al SEPE? Revisa todas las alternativas antes de responder.",
       "options": [
-        "Contrat@ o sistema habilitado por el SEPE",
         "Registro Mercantil",
         "Catastro",
-        "Portal de becas"
+        "Portal de becas",
+        "Contrat@ o sistema habilitado por el SEPE"
       ]
     },
     {
       "id": "1h2",
       "ce": "1.h",
       "kind": "choice",
-      "prompt": "¿Qué sistema se asocia a la comunicación telemática de datos de afiliación, altas y bajas con la TGSS?",
+      "prompt": "¿Qué sistema se asocia a la comunicación telemática de datos de afiliación, altas y bajas con la TGSS? Revisa todas las alternativas antes de responder.",
       "options": [
-        "Sistema RED",
-        "Contrat@",
         "Sede del Catastro",
-        "Registro de la Propiedad"
+        "Registro de la Propiedad",
+        "Sistema RED",
+        "Contrat@"
       ]
     },
     {
@@ -483,24 +483,24 @@
       "id": "1h6",
       "ce": "1.h",
       "kind": "choice",
-      "prompt": "El sistema devuelve un error al comunicar un contrato. ¿Qué debe hacer el técnico?",
+      "prompt": "El sistema devuelve un error al comunicar un contrato. ¿Qué debe hacer el técnico? Revisa todas las alternativas antes de responder.",
       "options": [
+        "Enviar el contrato a cualquier organismo",
         "Revisar el error, corregir los datos y conservar la evidencia del trámite válido",
         "Dar por hecho que se envió",
-        "Borrar el expediente",
-        "Enviar el contrato a cualquier organismo"
+        "Borrar el expediente"
       ]
     },
     {
       "id": "1i1",
       "ce": "1.i",
       "kind": "choice",
-      "prompt": "¿Cuál es la función correcta de un programa de gestión laboral?",
+      "prompt": "¿Cuál es la función correcta de un programa de gestión laboral? Revisa todas las alternativas antes de responder.",
       "options": [
-        "Ayudar a confeccionar, registrar y archivar, manteniendo la revisión profesional",
         "Decidir por sí solo qué contrato es legal",
         "Sustituir el convenio colectivo",
-        "Eliminar la necesidad de proteger datos"
+        "Eliminar la necesidad de proteger datos",
+        "Ayudar a confeccionar, registrar y archivar, manteniendo la revisión profesional"
       ]
     },
     {
@@ -540,12 +540,12 @@
       "id": "1i6",
       "ce": "1.i",
       "kind": "choice",
-      "prompt": "Un compañero pide tu contraseña del certificado digital para “ir más rápido”. ¿Qué actuación es correcta?",
+      "prompt": "Un compañero pide tu contraseña del certificado digital para “ir más rápido”. ¿Qué actuación es correcta? Revisa todas las alternativas antes de responder.",
       "options": [
-        "No compartir credenciales personales y seguir el procedimiento autorizado de acceso",
-        "Compartirla por mensajería",
         "Escribirla en un post-it común",
-        "Desactivar los permisos"
+        "Desactivar los permisos",
+        "No compartir credenciales personales y seguir el procedimiento autorizado de acceso",
+        "Compartirla por mensajería"
       ]
     }
   ]
