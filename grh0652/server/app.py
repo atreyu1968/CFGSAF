@@ -125,7 +125,13 @@ def recovery_submit(attempt_id:int,x:SubmitAttempt):
  c=con();a=c.execute("SELECT * FROM attempts WHERE id=?",(attempt_id,)).fetchone()
  if not a or a["kind"]!="recovery":c.close();raise HTTPException(404,"Intento de recuperación no encontrado")
  if a["status"]!="started":c.close();raise HTTPException(409,"Recuperación ya entregada")
- p=c.execute("SELECT criteria,status FROM recovery_plans WHERE student_id=? AND course_id=?",(a["student_id"],a["course_id"])).fetchone()\n if not p or p["status"]!="pending":c.close();raise HTTPException(409,"Plan de recuperación no disponible")\n cfg,_=config_row(c,a["course_id"]);threshold=float(cfg.get("ce_pass_score",50))/100.0;ces=json.loads(p["criteria"] or "[]");answers=(x.payload or {}).get("answers",{});rows=[dict(r) for r in c.execute("SELECT * FROM recovery_banks WHERE course_id=?",(a["course_id"],)) if r["ce"] in ces];by={}
+ p=c.execute("SELECT criteria,status FROM recovery_plans WHERE student_id=? AND course_id=?",(a["student_id"],a["course_id"])).fetchone()
+ if not p or p["status"]!="pending":
+  c.close();raise HTTPException(409,"Plan de recuperación no disponible")
+ cfg,_=config_row(c,a["course_id"])
+ threshold=float(cfg.get("ce_pass_score",50))/100.0
+ ces=json.loads(p["criteria"] or "[]")
+ answers=(x.payload or {}).get("answers",{});rows=[dict(r) for r in c.execute("SELECT * FROM recovery_banks WHERE course_id=?",(a["course_id"],)) if r["ce"] in ces];by={}
  for r in rows:
   d=by.setdefault(r["ce"],{"ok":0,"n":0});d["n"]+=1;given=answers.get(r["item_id"]);expected=json.loads(r["answer"]);kind=r["kind"] or "choice"
   if kind=="multi" and isinstance(given,list) and isinstance(expected,list):ok=sorted(given)==sorted(expected)
