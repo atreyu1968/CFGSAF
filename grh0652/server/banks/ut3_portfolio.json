@@ -4,12 +4,12 @@
       "id": "3.ap1",
       "ce": "3.a",
       "kind": "choice",
-      "prompt": "Ante un caso sobre Normativa y trámites empresariales, ¿qué actuación debe realizarse primero?",
+      "prompt": "Ante un caso sobre Normativa y trámites empresariales, ¿qué actuación debe realizarse primero? Revisa todas las alternativas antes de responder.",
       "options": [
-        "Identificar el hecho y comprobar datos y normativa vigentes",
         "Copiar un trámite anterior",
         "Enviar sin comprobar fechas",
-        "Archivar sin justificante"
+        "Archivar sin justificante",
+        "Identificar el hecho y comprobar datos y normativa vigentes"
       ]
     },
     {
@@ -42,36 +42,36 @@
       "id": "3.ap5",
       "ce": "3.a",
       "kind": "choice",
-      "prompt": "¿Qué inconsistencia exige detener el trámite?",
+      "prompt": "¿Qué inconsistencia exige detener el trámite? Revisa todas las alternativas antes de responder.",
       "options": [
-        "Fechas del expediente que no coinciden con el hecho real",
-        "Existencia de justificante",
         "Uso de fuente oficial",
-        "Registro del responsable"
+        "Registro del responsable",
+        "Fechas del expediente que no coinciden con el hecho real",
+        "Existencia de justificante"
       ]
     },
     {
       "id": "3.ap6",
       "ce": "3.a",
       "kind": "choice",
-      "prompt": "¿Qué evidencia permite auditar un caso de Normativa y trámites empresariales?",
+      "prompt": "¿Qué evidencia permite auditar un caso de Normativa y trámites empresariales? Revisa todas las alternativas antes de responder.",
       "options": [
+        "Ninguna si el sistema aceptó",
         "Datos de origen, operación/trámite, respuesta y responsable",
         "Solo una nota informal",
-        "Solo el resultado final",
-        "Ninguna si el sistema aceptó"
+        "Solo el resultado final"
       ]
     },
     {
       "id": "3.bp1",
       "ce": "3.b",
       "kind": "choice",
-      "prompt": "Ante un caso sobre Bases y aportaciones, ¿qué actuación debe realizarse primero?",
+      "prompt": "Ante un caso sobre Bases y aportaciones, ¿qué actuación debe realizarse primero? Revisa todas las alternativas antes de responder.",
       "options": [
-        "Identificar el hecho y comprobar datos y normativa vigentes",
         "Copiar un trámite anterior",
         "Enviar sin comprobar fechas",
-        "Archivar sin justificante"
+        "Archivar sin justificante",
+        "Identificar el hecho y comprobar datos y normativa vigentes"
       ]
     },
     {
@@ -104,36 +104,36 @@
       "id": "3.bp5",
       "ce": "3.b",
       "kind": "choice",
-      "prompt": "¿Qué inconsistencia exige detener el trámite?",
+      "prompt": "¿Qué inconsistencia exige detener el trámite? Revisa todas las alternativas antes de responder.",
       "options": [
-        "Fechas del expediente que no coinciden con el hecho real",
-        "Existencia de justificante",
         "Uso de fuente oficial",
-        "Registro del responsable"
+        "Registro del responsable",
+        "Fechas del expediente que no coinciden con el hecho real",
+        "Existencia de justificante"
       ]
     },
     {
       "id": "3.bp6",
       "ce": "3.b",
       "kind": "choice",
-      "prompt": "¿Qué evidencia permite auditar un caso de Bases y aportaciones?",
+      "prompt": "¿Qué evidencia permite auditar un caso de Bases y aportaciones? Revisa todas las alternativas antes de responder.",
       "options": [
+        "Ninguna si el sistema aceptó",
         "Datos de origen, operación/trámite, respuesta y responsable",
         "Solo una nota informal",
-        "Solo el resultado final",
-        "Ninguna si el sistema aceptó"
+        "Solo el resultado final"
       ]
     },
     {
       "id": "3.cp1",
       "ce": "3.c",
       "kind": "choice",
-      "prompt": "Ante un caso sobre Prestaciones económicas, ¿qué actuación debe realizarse primero?",
+      "prompt": "Ante un caso sobre Prestaciones económicas, ¿qué actuación debe realizarse primero? Revisa todas las alternativas antes de responder.",
       "options": [
-        "Identificar el hecho y comprobar datos y normativa vigentes",
         "Copiar un trámite anterior",
         "Enviar sin comprobar fechas",
-        "Archivar sin justificante"
+        "Archivar sin justificante",
+        "Identificar el hecho y comprobar datos y normativa vigentes"
       ]
     },
     {
@@ -166,36 +166,36 @@
       "id": "3.cp5",
       "ce": "3.c",
       "kind": "choice",
-      "prompt": "¿Qué inconsistencia exige detener el trámite?",
+      "prompt": "¿Qué inconsistencia exige detener el trámite? Revisa todas las alternativas antes de responder.",
       "options": [
-        "Fechas del expediente que no coinciden con el hecho real",
-        "Existencia de justificante",
         "Uso de fuente oficial",
-        "Registro del responsable"
+        "Registro del responsable",
+        "Fechas del expediente que no coinciden con el hecho real",
+        "Existencia de justificante"
       ]
     },
     {
       "id": "3.cp6",
       "ce": "3.c",
       "kind": "choice",
-      "prompt": "¿Qué evidencia permite auditar un caso de Prestaciones económicas?",
+      "prompt": "¿Qué evidencia permite auditar un caso de Prestaciones económicas? Revisa todas las alternativas antes de responder.",
       "options": [
+        "Ninguna si el sistema aceptó",
         "Datos de origen, operación/trámite, respuesta y responsable",
         "Solo una nota informal",
-        "Solo el resultado final",
-        "Ninguna si el sistema aceptó"
+        "Solo el resultado final"
       ]
     },
     {
       "id": "3.dp1",
       "ce": "3.d",
       "kind": "choice",
-      "prompt": "Ante un caso sobre Afiliación, altas, bajas y variaciones, ¿qué actuación debe realizarse primero?",
+      "prompt": "Ante un caso sobre Afiliación, altas, bajas y variaciones, ¿qué actuación debe realizarse primero? Revisa todas las alternativas antes de responder.",
       "options": [
-        "Identificar el hecho y comprobar datos y normativa vigentes",
         "Copiar un trámite anterior",
         "Enviar sin comprobar fechas",
-        "Archivar sin justificante"
+        "Archivar sin justificante",
+        "Identificar el hecho y comprobar datos y normativa vigentes"
       ]
     },
     {
@@ -228,36 +228,36 @@
       "id": "3.dp5",
       "ce": "3.d",
       "kind": "choice",
-      "prompt": "¿Qué inconsistencia exige detener el trámite?",
+      "prompt": "¿Qué inconsistencia exige detener el trámite? Revisa todas las alternativas antes de responder.",
       "options": [
-        "Fechas del expediente que no coinciden con el hecho real",
-        "Existencia de justificante",
         "Uso de fuente oficial",
-        "Registro del responsable"
+        "Registro del responsable",
+        "Fechas del expediente que no coinciden con el hecho real",
+        "Existencia de justificante"
       ]
     },
     {
       "id": "3.dp6",
       "ce": "3.d",
       "kind": "choice",
-      "prompt": "¿Qué evidencia permite auditar un caso de Afiliación, altas, bajas y variaciones?",
+      "prompt": "¿Qué evidencia permite auditar un caso de Afiliación, altas, bajas y variaciones? Revisa todas las alternativas antes de responder.",
       "options": [
+        "Ninguna si el sistema aceptó",
         "Datos de origen, operación/trámite, respuesta y responsable",
         "Solo una nota informal",
-        "Solo el resultado final",
-        "Ninguna si el sistema aceptó"
+        "Solo el resultado final"
       ]
     },
     {
       "id": "3.ep1",
       "ce": "3.e",
       "kind": "choice",
-      "prompt": "Ante un caso sobre Vías de comunicación, ¿qué actuación debe realizarse primero?",
+      "prompt": "Ante un caso sobre Vías de comunicación, ¿qué actuación debe realizarse primero? Revisa todas las alternativas antes de responder.",
       "options": [
-        "Identificar el hecho y comprobar datos y normativa vigentes",
         "Copiar un trámite anterior",
         "Enviar sin comprobar fechas",
-        "Archivar sin justificante"
+        "Archivar sin justificante",
+        "Identificar el hecho y comprobar datos y normativa vigentes"
       ]
     },
     {
@@ -290,36 +290,36 @@
       "id": "3.ep5",
       "ce": "3.e",
       "kind": "choice",
-      "prompt": "¿Qué inconsistencia exige detener el trámite?",
+      "prompt": "¿Qué inconsistencia exige detener el trámite? Revisa todas las alternativas antes de responder.",
       "options": [
-        "Fechas del expediente que no coinciden con el hecho real",
-        "Existencia de justificante",
         "Uso de fuente oficial",
-        "Registro del responsable"
+        "Registro del responsable",
+        "Fechas del expediente que no coinciden con el hecho real",
+        "Existencia de justificante"
       ]
     },
     {
       "id": "3.ep6",
       "ce": "3.e",
       "kind": "choice",
-      "prompt": "¿Qué evidencia permite auditar un caso de Vías de comunicación?",
+      "prompt": "¿Qué evidencia permite auditar un caso de Vías de comunicación? Revisa todas las alternativas antes de responder.",
       "options": [
+        "Ninguna si el sistema aceptó",
         "Datos de origen, operación/trámite, respuesta y responsable",
         "Solo una nota informal",
-        "Solo el resultado final",
-        "Ninguna si el sistema aceptó"
+        "Solo el resultado final"
       ]
     },
     {
       "id": "3.fp1",
       "ce": "3.f",
       "kind": "choice",
-      "prompt": "Ante un caso sobre Órganos inspectores y fiscalizadores, ¿qué actuación debe realizarse primero?",
+      "prompt": "Ante un caso sobre Órganos inspectores y fiscalizadores, ¿qué actuación debe realizarse primero? Revisa todas las alternativas antes de responder.",
       "options": [
-        "Identificar el hecho y comprobar datos y normativa vigentes",
         "Copiar un trámite anterior",
         "Enviar sin comprobar fechas",
-        "Archivar sin justificante"
+        "Archivar sin justificante",
+        "Identificar el hecho y comprobar datos y normativa vigentes"
       ]
     },
     {
@@ -352,36 +352,36 @@
       "id": "3.fp5",
       "ce": "3.f",
       "kind": "choice",
-      "prompt": "¿Qué inconsistencia exige detener el trámite?",
+      "prompt": "¿Qué inconsistencia exige detener el trámite? Revisa todas las alternativas antes de responder.",
       "options": [
-        "Fechas del expediente que no coinciden con el hecho real",
-        "Existencia de justificante",
         "Uso de fuente oficial",
-        "Registro del responsable"
+        "Registro del responsable",
+        "Fechas del expediente que no coinciden con el hecho real",
+        "Existencia de justificante"
       ]
     },
     {
       "id": "3.fp6",
       "ce": "3.f",
       "kind": "choice",
-      "prompt": "¿Qué evidencia permite auditar un caso de Órganos inspectores y fiscalizadores?",
+      "prompt": "¿Qué evidencia permite auditar un caso de Órganos inspectores y fiscalizadores? Revisa todas las alternativas antes de responder.",
       "options": [
+        "Ninguna si el sistema aceptó",
         "Datos de origen, operación/trámite, respuesta y responsable",
         "Solo una nota informal",
-        "Solo el resultado final",
-        "Ninguna si el sistema aceptó"
+        "Solo el resultado final"
       ]
     },
     {
       "id": "3.gp1",
       "ce": "3.g",
       "kind": "choice",
-      "prompt": "Ante un caso sobre Previsión social complementaria, ¿qué actuación debe realizarse primero?",
+      "prompt": "Ante un caso sobre Previsión social complementaria, ¿qué actuación debe realizarse primero? Revisa todas las alternativas antes de responder.",
       "options": [
-        "Identificar el hecho y comprobar datos y normativa vigentes",
         "Copiar un trámite anterior",
         "Enviar sin comprobar fechas",
-        "Archivar sin justificante"
+        "Archivar sin justificante",
+        "Identificar el hecho y comprobar datos y normativa vigentes"
       ]
     },
     {
@@ -414,36 +414,36 @@
       "id": "3.gp5",
       "ce": "3.g",
       "kind": "choice",
-      "prompt": "¿Qué inconsistencia exige detener el trámite?",
+      "prompt": "¿Qué inconsistencia exige detener el trámite? Revisa todas las alternativas antes de responder.",
       "options": [
-        "Fechas del expediente que no coinciden con el hecho real",
-        "Existencia de justificante",
         "Uso de fuente oficial",
-        "Registro del responsable"
+        "Registro del responsable",
+        "Fechas del expediente que no coinciden con el hecho real",
+        "Existencia de justificante"
       ]
     },
     {
       "id": "3.gp6",
       "ce": "3.g",
       "kind": "choice",
-      "prompt": "¿Qué evidencia permite auditar un caso de Previsión social complementaria?",
+      "prompt": "¿Qué evidencia permite auditar un caso de Previsión social complementaria? Revisa todas las alternativas antes de responder.",
       "options": [
+        "Ninguna si el sistema aceptó",
         "Datos de origen, operación/trámite, respuesta y responsable",
         "Solo una nota informal",
-        "Solo el resultado final",
-        "Ninguna si el sistema aceptó"
+        "Solo el resultado final"
       ]
     },
     {
       "id": "3.hp1",
       "ce": "3.h",
       "kind": "choice",
-      "prompt": "Ante un caso sobre Aplicaciones informáticas, ¿qué actuación debe realizarse primero?",
+      "prompt": "Ante un caso sobre Aplicaciones informáticas, ¿qué actuación debe realizarse primero? Revisa todas las alternativas antes de responder.",
       "options": [
-        "Identificar el hecho y comprobar datos y normativa vigentes",
         "Copiar un trámite anterior",
         "Enviar sin comprobar fechas",
-        "Archivar sin justificante"
+        "Archivar sin justificante",
+        "Identificar el hecho y comprobar datos y normativa vigentes"
       ]
     },
     {
@@ -476,24 +476,24 @@
       "id": "3.hp5",
       "ce": "3.h",
       "kind": "choice",
-      "prompt": "¿Qué inconsistencia exige detener el trámite?",
+      "prompt": "¿Qué inconsistencia exige detener el trámite? Revisa todas las alternativas antes de responder.",
       "options": [
-        "Fechas del expediente que no coinciden con el hecho real",
-        "Existencia de justificante",
         "Uso de fuente oficial",
-        "Registro del responsable"
+        "Registro del responsable",
+        "Fechas del expediente que no coinciden con el hecho real",
+        "Existencia de justificante"
       ]
     },
     {
       "id": "3.hp6",
       "ce": "3.h",
       "kind": "choice",
-      "prompt": "¿Qué evidencia permite auditar un caso de Aplicaciones informáticas?",
+      "prompt": "¿Qué evidencia permite auditar un caso de Aplicaciones informáticas? Revisa todas las alternativas antes de responder.",
       "options": [
+        "Ninguna si el sistema aceptó",
         "Datos de origen, operación/trámite, respuesta y responsable",
         "Solo una nota informal",
-        "Solo el resultado final",
-        "Ninguna si el sistema aceptó"
+        "Solo el resultado final"
       ]
     }
   ]
