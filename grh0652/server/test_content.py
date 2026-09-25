@@ -46,3 +46,15 @@ def test_exam_uses_server_deadline_and_server_questions():
         assert "const answers=examQuestions.map(examAnswer)" in js
         assert "examQuestions.forEach((q,i)=>amap[q.id]=answers[i])" in js
         assert "const answers=EXAM.map(examAnswer)" not in js
+
+def test_recovery_ui_supports_all_server_item_types():
+ for unit in ("ut1","ut2","ut3","ut4"):
+  js=(ROOT/"scorm"/unit/"assets"/"scorm.js").read_text(encoding="utf-8")
+  assert "i.kind==='multi'" in js
+  assert "type=\"checkbox\"" in js
+  assert "i.kind==='tf'" in js
+  assert "value=\"true\"" in js and "value=\"false\"" in js
+  assert "i.kind==='free'" in js
+  assert "<textarea" in js
+  assert "Array.from(document.querySelectorAll" in js
+  assert "x.value==='true'" in js
