@@ -35,3 +35,14 @@ def test_exam_and_self_assessment_are_separate_in_player():
   assert "examQuestions=(gate.questions||[])" in js
   assert "const pool=shuffle([...EXAM])" in js
   assert "Entregar examen</button>" in js
+
+def test_exam_uses_server_deadline_and_server_questions():
+    for unit in ("ut1","ut2","ut3","ut4"):
+        js=(ROOT/"scorm"/unit/"assets"/"scorm.js").read_text(encoding="utf-8")
+        assert "examDeadline=gate.deadline_at||null" in js
+        assert "startExamTimer()" in js
+        assert "setInterval(updateExamCountdown,1000)" in js
+        assert "submitExam(true)" in js
+        assert "const answers=examQuestions.map(examAnswer)" in js
+        assert "examQuestions.forEach((q,i)=>amap[q.id]=answers[i])" in js
+        assert "const answers=EXAM.map(examAnswer)" not in js
