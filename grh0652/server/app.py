@@ -28,6 +28,8 @@ CREATE TABLE IF NOT EXISTS recovery_results(student_id TEXT,course_id TEXT,score
  cols={r["name"] for r in c.execute("PRAGMA table_info(exam_versions)")}
  if "config" not in cols:c.execute("ALTER TABLE exam_versions ADD COLUMN config TEXT")
  if "deadline_at" not in cols:c.execute("ALTER TABLE exam_versions ADD COLUMN deadline_at TEXT")
+ bcols={r["name"] for r in c.execute("PRAGMA table_info(exam_banks)")}
+ if "type" not in bcols:c.execute("ALTER TABLE exam_banks ADD COLUMN type TEXT NOT NULL DEFAULT 'choice'")
  c.commit();return c
 
 DEFAULT={"portfolio_weight":40,"exam_weight":60,"pass_score":50,"ce_pass_percent":80,"ce_pass_score":50,"exam_enabled":False,"exam_questions_per_ce":3,"exam_minutes":45,"require_both_instruments":False}
