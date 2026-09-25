@@ -46,7 +46,7 @@ def test_close_generates_only_failed_recovery():
  assert client.put("/api/teacher/portfolio-bank/CLOSE",headers=H,json={"items":[{"id":"pc","ce":"3.c","kind":"choice","prompt":"P","options":[],"answer":"x"},{"id":"pf","ce":"3.f","kind":"choice","prompt":"P","options":[],"answer":"x"}]}).status_code==200
  for student,score in (("fail",0),("pass",100)):
   for ce,item in (("3.c","pc"),("3.f","pf")):
-   assert client.post("/api/evidence",json={"student_id":student,"course_id":"CLOSE","kind":"portfolio","ce":ce,"item_id":item,"attempt":1,"response":"x","correct":score==100,"score":score,"payload":{}}).status_code==200
+   assert client.post("/api/evidence",headers=SH(student),json={"student_id":student,"course_id":"CLOSE","kind":"portfolio","ce":ce,"item_id":item,"attempt":1,"response":"x","correct":score==100,"score":score,"payload":{}}).status_code==200
   st=client.post("/api/exam/start",headers=SH(student),json={"student_id":student,"course_id":"CLOSE","kind":"exam","item_id":"final"});assert st.status_code==200,st.text
   ans={q["id"]:(True if score==100 else False) for q in st.json()["questions"]}
   assert client.post(f"/api/exam/{st.json()['attempt_id']}/submit",headers=SH(student),json={"payload":{"answers":ans}}).status_code==200
@@ -86,10 +86,10 @@ def test_missing_exam_bank_does_not_consume_attempt():
  cfg={"portfolio_weight":40,"exam_weight":60,"pass_score":50,"ce_pass_percent":80,"ce_pass_score":50,"exam_enabled":True,"exam_questions_per_ce":1,"exam_minutes":45,"require_both_instruments":False}
  assert client.put("/api/config/ATOMIC",headers=H,json=cfg).status_code==200
  body={"student_id":"atomic","course_id":"ATOMIC","kind":"exam","item_id":"final","payload":{}}
- first=client.post("/api/exam/start",headers=SH("exam1"),json=body);assert first.status_code==409
+ first=client.post("/api/exam/start",headers=SH("atomic"),json=body);assert first.status_code==409
  bank={"questions":[{"id":"a1","ce":"a","q":"A","options":["Sí","No"],"answer":0,"type":"choice"}]}
  assert client.put("/api/teacher/exam-bank/ATOMIC",headers=H,json=bank).status_code==200
- second=client.post("/api/exam/start",headers=SH("exam1"),json=body);assert second.status_code==200
+ second=client.post("/api/exam/start",headers=SH("atomic"),json=body);assert second.status_code==200
  assert second.json()["attempt"]==1
 
 def test_recovery_uses_configured_ce_threshold_and_closes_passed_plan():
@@ -124,7 +124,7 @@ def test_result_ignores_client_claims_and_recomputes_from_server_evidence():
  start=client.post("/api/exam/start",headers=SH("auth"),json={"student_id":"auth","course_id":"AUTH","kind":"exam","item_id":"final"});assert start.status_code==200,start.text
  qs=start.json()["questions"];answers={}
  for q in qs: answers[q["id"]]=True if q["ce"]=="c1" else False
- assert client.post(f"/api/exam/{start.json()['attempt_id']}/submit",json={"payload":{"answers":answers}}).status_code==200
+ assert client.post(f"/api/exam/{start.json()['attempt_id']}/submit",headers=SH("auth"),json={"payload":{"answers":answers}}).status_code==200
  forged={"student_id":"auth","course_id":"AUTH","portfolio":100,"exam":100,"final":100,"ce_passed":2,"ce_total":2,"ra_passed":True,"recovery":[]}
  r=client.post("/api/result",headers=SH("auth"),json=forged);assert r.status_code==200,r.text
  d=r.json();assert d["final"]==50.0;assert d["ce_passed"]==1;assert d["ra_passed"] is False;assert d["recovery"]==["c2"]
@@ -147,10 +147,10 @@ def test_portfolio_score_is_server_authoritative():
  bank={"items":[{"id":"p1","ce":"c1","kind":"choice","prompt":"P","options":["A","B"],"answer":1}]}
  assert client.put("/api/teacher/portfolio-bank/PORT",headers=H,json=bank).status_code==200
  forged={"student_id":"s","course_id":"PORT","kind":"portfolio","ce":"c1","item_id":"p1","attempt":1,"response":0,"correct":True,"score":100,"payload":{}}
- r=client.post("/api/evidence",json=forged);assert r.status_code==200,r.text
+ r=client.post("/api/evidence",headers=SH(forged["student_id"]),json=forged);assert r.status_code==200,r.text
  assert r.json()["correct"] is False and r.json()["score"]==0
  c=module.con();row=c.execute("SELECT correct,score FROM evidence WHERE student_id='s' AND course_id='PORT' AND item_id='p1'").fetchone();c.close()
  assert row["correct"]==0 and row["score"]==0
  forged["response"]=1;forged["correct"]=False;forged["score"]=0;forged["attempt"]=2
- r=client.post("/api/evidence",json=forged);assert r.status_code==200
+ r=client.post("/api/evidence",headers=SH(forged["student_id"]),json=forged);assert r.status_code==200
  assert r.json()["correct"] is True and r.json()["score"]==100
