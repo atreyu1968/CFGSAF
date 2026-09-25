@@ -15,7 +15,7 @@ app.add_middleware(CORSMiddleware,allow_origins=ORIGINS or [],allow_credentials=
 def now(): return datetime.datetime.now(datetime.UTC).isoformat()
 def con():
  c=sqlite3.connect(DB,timeout=10);c.row_factory=sqlite3.Row;c.execute("PRAGMA journal_mode=WAL");c.execute("PRAGMA foreign_keys=ON");c.execute("PRAGMA busy_timeout=5000")
- c.executescript("""CREATE TABLE IF NOT EXISTS states(student_id TEXT,course_id TEXT,state TEXT,updated_at TEXT,PRIMARY KEY(student_id,course_id));
+ c.executescript("""CREATE TABLE IF NOT EXISTS students(student_id TEXT PRIMARY KEY,token TEXT NOT NULL UNIQUE,created_at TEXT);\nCREATE TABLE IF NOT EXISTS states(student_id TEXT,course_id TEXT,state TEXT,updated_at TEXT,PRIMARY KEY(student_id,course_id));
 CREATE TABLE IF NOT EXISTS evidence(id INTEGER PRIMARY KEY AUTOINCREMENT,student_id TEXT,course_id TEXT,kind TEXT,ce TEXT,item_id TEXT,attempt INTEGER,response TEXT,correct INTEGER,score REAL,payload TEXT,created_at TEXT);
 CREATE TABLE IF NOT EXISTS results(student_id TEXT,course_id TEXT,portfolio REAL,exam REAL,final REAL,ce_passed INTEGER,ce_total INTEGER,ra_passed INTEGER,recovery TEXT,updated_at TEXT,PRIMARY KEY(student_id,course_id));
 CREATE TABLE IF NOT EXISTS configs(course_id TEXT PRIMARY KEY,config TEXT,version INTEGER NOT NULL DEFAULT 1,updated_at TEXT);
