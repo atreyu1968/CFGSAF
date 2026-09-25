@@ -180,6 +180,17 @@ def recovery_submit(attempt_id:int,x:SubmitAttempt,x_student_token:str|None=Head
   status="passed" if not remaining else "pending";authoritative={"ce_passed":new_passed,"ce_total":total,"ra_passed":ra,"recovery":remaining}
  c.execute("UPDATE recovery_plans SET criteria=?,status=? WHERE student_id=? AND course_id=?",(json.dumps(authoritative["recovery"] if authoritative else [ce for ce in ces if ce not in passed]),status,a["student_id"],a["course_id"]));c.commit();c.close();return {"score":score,"by_ce":by,"criteria_passed":passed,"status":status,"result":authoritative}
 
+@app.get("/api/portfolio/{course_id}")
+def get_portfolio(course_id:str,x_student_token:str|None=Header(None)):
+ student_auth(x_student_token)
+ bank_dir=Path(__file__).resolve().parent/"banks";items=[]
+ for unit in ("ut1","ut2","ut3","ut4"):
+  p=bank_dir/f"{unit}_portfolio.json"
+  if p.exists():
+   for q in json.loads(p.read_text(encoding="utf-8")).get("items",[]):
+    items.append({k:v for k,v in q.items() if k not in ("answer","feedback")})
+ return {"course_id":course_id,"items":items}
+
 @app.put("/api/teacher/portfolio-bank/{course_id}")
 def put_portfolio_bank(course_id:str,x:RecoveryBankIn,x_teacher_token:str|None=Header(None)):
  auth(x_teacher_token);c=con();c.execute("DELETE FROM portfolio_banks WHERE course_id=?",(course_id,))
