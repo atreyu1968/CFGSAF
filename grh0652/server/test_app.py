@@ -91,3 +91,18 @@ def test_recovery_uses_configured_ce_threshold_and_closes_passed_plan():
  done=client.post(f"/api/recovery/{s.json()['id']}/submit",json={"payload":{"answers":answers}});assert done.status_code==200, done.text
  assert done.json()["status"]=="passed"
  assert client.post("/api/recovery/start",json={"student_id":"rec","course_id":"REC","kind":"recovery","item_id":"ignored","payload":{}}).status_code==409
+
+def test_result_ignores_client_claims_and_recomputes_from_server_evidence():
+ cfg={"portfolio_weight":40,"exam_weight":60,"pass_score":50,"ce_pass_percent":80,"ce_pass_score":50,"exam_enabled":True,"exam_questions_per_ce":1,"exam_minutes":45,"require_both_instruments":False}
+ assert client.put("/api/config/AUTH",headers=H,json=cfg).status_code==200
+ bank={"questions":[{"id":"q1","ce":"c1","q":"Q1","options":["A","B"],"answer":0,"type":"choice"},{"id":"q2","ce":"c2","q":"Q2","options":["A","B"],"answer":0,"type":"choice"}]}
+ assert client.put("/api/teacher/exam-bank/AUTH",headers=H,json=bank).status_code==200
+ for ce,item,score in [("c1","p1",100),("c2","p2",0)]:
+  assert client.post("/api/evidence",json={"student_id":"auth","course_id":"AUTH","kind":"portfolio","ce":ce,"item_id":item,"attempt":1,"response":"x","correct":score==100,"score":score,"payload":{}}).status_code==200
+ start=client.post("/api/exam/start",json={"student_id":"auth","course_id":"AUTH","kind":"exam","item_id":"final"});assert start.status_code==200
+ qs=start.json()["questions"];answers={}
+ for q in qs: answers[q["id"]]=0 if q["ce"]=="c1" else 1
+ assert client.post(f"/api/exam/{start.json()['attempt_id']}/submit",json={"payload":{"answers":answers}}).status_code==200
+ forged={"student_id":"auth","course_id":"AUTH","portfolio":100,"exam":100,"final":100,"ce_passed":2,"ce_total":2,"ra_passed":True,"recovery":[]}
+ r=client.post("/api/result",json=forged);assert r.status_code==200,r.text
+ d=r.json();assert d["final"]==50.0;assert d["ce_passed"]==1;assert d["ra_passed"] is False;assert d["recovery"]==["c2"]
