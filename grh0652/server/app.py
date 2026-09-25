@@ -146,10 +146,16 @@ def put_exam_bank(course_id:str,x:BankIn,x_teacher_token:str|None=Header(None)):
 @app.post("/api/exam/start")
 def exam_start(x:AttemptIn):
  if x.kind!="exam": raise HTTPException(400,"kind debe ser exam")
- gate=start_attempt(x);c=con();old=c.execute("SELECT * FROM exam_versions WHERE attempt_id=?",(gate["id"],)).fetchone()
- if old:c.close();return {"attempt_id":gate["id"],"attempt":gate["attempt"],"version":old["version"],"questions":json.loads(old["questions"]),"config":json.loads(old["config"]) if old["config"] else {},"deadline_at":old["deadline_at"],"resumed":True}
- cfg,_=config_row(c,x.course_id);rows=[dict(r) for r in c.execute("SELECT * FROM exam_banks WHERE course_id=? ORDER BY ce,question_id",(x.course_id,))]
+ c=con();active=c.execute("SELECT id,attempt_no FROM attempts WHERE student_id=? AND course_id=? AND kind='exam' AND item_id=? AND status='started' ORDER BY attempt_no DESC LIMIT 1",(x.student_id,x.course_id,x.item_id)).fetchone()
+ if active:
+  old=c.execute("SELECT * FROM exam_versions WHERE attempt_id=?",(active["id"],)).fetchone()
+  if old:c.close();return {"attempt_id":active["id"],"attempt":active["attempt_no"],"version":old["version"],"questions":json.loads(old["questions"]),"config":json.loads(old["config"]) if old["config"] else {},"deadline_at":old["deadline_at"],"resumed":True}
+ cfg,_=config_row(c,x.course_id)
+ if not cfg.get("exam_enabled"):c.close();raise HTTPException(403,"Examen no activado")
+ if c.execute("SELECT 1 FROM evaluation_closures WHERE course_id=?",(x.course_id,)).fetchone():c.close();raise HTTPException(409,"Evaluación cerrada")
+ rows=[dict(r) for r in c.execute("SELECT * FROM exam_banks WHERE course_id=? ORDER BY ce,question_id",(x.course_id,))]
  if not rows:c.close();raise HTTPException(409,"Banco de examen no cargado en el servidor")
+ c.close();gate=start_attempt(x);c=con()
  import random,hashlib
  seed=int(hashlib.sha256((x.student_id+"|"+x.course_id+"|"+str(gate["id"])).encode()).hexdigest()[:16],16);rnd=random.Random(seed);by={}
  for r in rows:by.setdefault(r["ce"],[]).append(r)
