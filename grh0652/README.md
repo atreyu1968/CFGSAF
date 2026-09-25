@@ -1,18 +1,31 @@
-# GRH 0652 · Aula digital
+# GRH 0652 · Reproductor SCORM en GitHub Pages
 
-Versión GitHub Pages del módulo **0652 Gestión de Recursos Humanos**.
+Esta carpeta contiene una **versión específica para GitHub Pages del SCORM 1.2 real de la UT1**, acompañada por un reproductor que expone la API que espera un SCO SCORM 1.2.
 
-## Unidad disponible
-- UT1 Gestión de la contratación laboral
-- 11 bloques teóricos
-- 54 ejercicios interactivos: 6 por cada uno de los 9 criterios de evaluación del RA1
-- 36 preguntas de autoevaluación final
-- Persistencia local mediante localStorage y API SCORM 1.2 emulada
+## Arquitectura
 
-## Acceso
-Abra `grh0652/index.html` desde GitHub Pages.
+- `index.html`: portal para el alumnado.
+- `player.html`: reproductor que crea la API SCORM 1.2 y carga el SCO en un iframe.
+- `assets/scorm-api.js`: implementación local de la API SCORM 1.2.
+- `scorm/ut1/imsmanifest.xml`: manifiesto SCORM.
+- `scorm/ut1/index.html`: SCO de la UT1.
+- `scorm/ut1/assets/style.css`: estilos.
+- `scorm/ut1/assets/scorm.js`: navegación, 54 actividades, examen de 36 preguntas y seguimiento.
+- `scorm/ut1/assets/infografias/`: recursos visuales de la unidad.
+- `scorm/ut1/assets/media/`: esquemas de apoyo.
 
-## Importante
-GitHub Pages es hosting estático. El progreso queda en el navegador del estudiante; para registro centralizado y calificación oficial se recomienda Moodle u otro LMS.
+## Seguimiento
 
-Autor: Francisco Javier González Rolo.
+GitHub Pages es estático. El reproductor guarda en `localStorage`, separado por alumno y curso:
+
+- cmi.core.lesson_location
+- cmi.suspend_data
+- cmi.core.lesson_status
+- cmi.core.score.raw
+- interacciones registradas por el SCO
+
+Este seguimiento permite reanudar en el mismo navegador, pero **no es un registro centralizado ni una calificación oficial**. Para ello debe utilizarse el ZIP SCORM en Moodle u otro LMS.
+
+## Autor
+
+Francisco Javier González Rolo
