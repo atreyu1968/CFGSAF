@@ -221,8 +221,8 @@ function installPortfolioRules(){
  document.querySelectorAll('.nav-group').forEach(x=>{if(x.textContent.trim()==='Práctica por CE')x.textContent='Portafolio de Actividades'});
  const mh=document.querySelector('#practica-home h1');if(mh)mh.textContent='Portafolio de Actividades · evaluación por criterios';
  document.addEventListener('click',ev=>{const b=ev.target.closest('.check-ex');if(!b)return;const e=getEx(b.dataset.ce,b.dataset.id);if(!e)return;const id=e.id,n=state.portfolioAttempts[id]||0;if(n>=2){ev.preventDefault();ev.stopImmediatePropagation();alert('Esta actividad del portafolio ya ha consumido sus 2 intentos.');return}
-  const a=answerForExercise(e);if(a===null)return;const ok=correctExercise(e,a);state.portfolioAttempts[id]=n+1;state.portfolioScores[id]=ok?100:0;
-  try{if(evidence())evidence().event({kind:'portfolio',ce:b.dataset.ce,item_id:id,attempt:n+1,response:a,correct:ok,score:ok?100:0,payload:{max_attempts:2}})}catch(x){}
+  const a=answerForExercise(e);if(a===null)return;const ok=correctExercise(e,a);state.portfolioAttempts[id]=n+1;
+  try{if(evidence()){const sent=evidence().event({kind:'portfolio',ce:b.dataset.ce,item_id:id,attempt:n+1,response:a,payload:{max_attempts:2}});Promise.resolve(sent).then(r=>{if(r&&typeof r.score==='number'){state.portfolioScores[id]=r.score;saveState();syncState()}}).catch(()=>{})}}catch(x){}
  },true)
 }
 function seededRandom(seed){let h=2166136261;for(let i=0;i<seed.length;i++){h^=seed.charCodeAt(i);h=Math.imul(h,16777619)}return()=>{h+=0x6D2B79F5;let t=h;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296}}
