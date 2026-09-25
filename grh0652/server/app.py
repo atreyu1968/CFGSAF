@@ -22,7 +22,9 @@ CREATE TABLE IF NOT EXISTS attempts(id INTEGER PRIMARY KEY AUTOINCREMENT,student
 CREATE TABLE IF NOT EXISTS evaluation_closures(course_id TEXT PRIMARY KEY,closed_at TEXT,config_version INTEGER);
 CREATE TABLE IF NOT EXISTS recovery_plans(student_id TEXT,course_id TEXT,criteria TEXT,status TEXT,created_at TEXT,PRIMARY KEY(student_id,course_id));
 CREATE TABLE IF NOT EXISTS exam_banks(course_id TEXT,question_id TEXT,ce TEXT,question TEXT,options TEXT,answer TEXT,PRIMARY KEY(course_id,question_id));
-CREATE TABLE IF NOT EXISTS exam_versions(attempt_id INTEGER PRIMARY KEY,student_id TEXT,course_id TEXT,version TEXT,questions TEXT,answers TEXT,created_at TEXT);""");return c
+CREATE TABLE IF NOT EXISTS exam_versions(attempt_id INTEGER PRIMARY KEY,student_id TEXT,course_id TEXT,version TEXT,questions TEXT,answers TEXT,created_at TEXT);
+CREATE TABLE IF NOT EXISTS recovery_banks(course_id TEXT,item_id TEXT,ce TEXT,kind TEXT,prompt TEXT,options TEXT,answer TEXT,feedback TEXT,PRIMARY KEY(course_id,item_id));
+CREATE TABLE IF NOT EXISTS recovery_results(student_id TEXT,course_id TEXT,score REAL,criteria_passed TEXT,status TEXT,updated_at TEXT,PRIMARY KEY(student_id,course_id));""");return c
 
 DEFAULT={"portfolio_weight":40,"exam_weight":60,"pass_score":50,"ce_pass_percent":80,"ce_pass_score":50,"exam_enabled":False,"exam_questions_per_ce":3,"exam_minutes":45,"require_both_instruments":False}
 LIMITS={"practice":3,"portfolio":2,"exam":1,"recovery":1}
@@ -37,6 +39,8 @@ class SubmitAttempt(BaseModel): payload:dict|None=None
 class AnswerIn(BaseModel): response:object|None=None;ce:str|None=None
 class BankQuestion(BaseModel): id:str;ce:str;q:str;options:list[str];answer:object
 class BankIn(BaseModel): questions:list[BankQuestion]
+class RecoveryItem(BaseModel): id:str;ce:str;kind:str='choice';prompt:str;options:list[str]=[];answer:object|None=None;feedback:str=''
+class RecoveryBankIn(BaseModel): items:list[RecoveryItem]
 def auth(token):
  if not secrets.compare_digest(token or "",TEACHER_TOKEN): raise HTTPException(401,"Teacher token required")
 def config_row(c,course):
@@ -89,6 +93,38 @@ def recovery(student_id:str,course_id:str):
  c=con();r=c.execute("SELECT criteria,status,created_at FROM recovery_plans WHERE student_id=? AND course_id=?",(student_id,course_id)).fetchone();c.close()
  if not r:return {"plan":None}
  return {"plan":{"criteria":json.loads(r["criteria"] or "[]"),"status":r["status"],"created_at":r["created_at"]}}
+
+@app.put("/api/teacher/recovery-bank/{course_id}")
+def put_recovery_bank(course_id:str,x:RecoveryBankIn,x_teacher_token:str|None=Header(None)):
+ auth(x_teacher_token);c=con();c.execute("DELETE FROM recovery_banks WHERE course_id=?",(course_id,))
+ for i in x.items:c.execute("INSERT INTO recovery_banks VALUES(?,?,?,?,?,?,?,?)",(course_id,i.id,i.ce,i.kind,i.prompt,json.dumps(i.options,ensure_ascii=False),json.dumps(i.answer,ensure_ascii=False),i.feedback))
+ c.commit();c.close();return {"items":len(x.items)}
+
+@app.get("/api/recovery/{student_id}/{course_id}/content")
+def recovery_content(student_id:str,course_id:str):
+ c=con();p=c.execute("SELECT criteria,status FROM recovery_plans WHERE student_id=? AND course_id=?",(student_id,course_id)).fetchone()
+ if not p:c.close();return {"plan":None}
+ ces=json.loads(p["criteria"] or "[]");rows=[dict(r) for r in c.execute("SELECT item_id,ce,kind,prompt,options,feedback FROM recovery_banks WHERE course_id=? ORDER BY ce,item_id",(course_id,)) if r["ce"] in ces];c.close()
+ for r in rows:r["options"]=json.loads(r["options"] or "[]")
+ return {"plan":{"criteria":ces,"status":p["status"],"items":rows}}
+
+@app.post("/api/recovery/start")
+def recovery_start(x:AttemptIn):
+ c=con();p=c.execute("SELECT criteria,status FROM recovery_plans WHERE student_id=? AND course_id=?",(x.student_id,x.course_id)).fetchone();c.close()
+ if not p:raise HTTPException(403,"No existe plan de recuperación")
+ x.kind="recovery";x.item_id="recovery-final";return start_attempt(x)
+
+@app.post("/api/recovery/{attempt_id}/submit")
+def recovery_submit(attempt_id:int,x:SubmitAttempt):
+ c=con();a=c.execute("SELECT * FROM attempts WHERE id=?",(attempt_id,)).fetchone()
+ if not a or a["kind"]!="recovery":c.close();raise HTTPException(404,"Intento de recuperación no encontrado")
+ if a["status"]!="started":c.close();raise HTTPException(409,"Recuperación ya entregada")
+ p=c.execute("SELECT criteria FROM recovery_plans WHERE student_id=? AND course_id=?",(a["student_id"],a["course_id"])).fetchone();ces=json.loads(p["criteria"] or "[]");answers=(x.payload or {}).get("answers",{});rows=[dict(r) for r in c.execute("SELECT * FROM recovery_banks WHERE course_id=?",(a["course_id"],)) if r["ce"] in ces];by={}
+ for r in rows:
+  d=by.setdefault(r["ce"],{"ok":0,"n":0});d["n"]+=1
+  if answers.get(r["item_id"])==json.loads(r["answer"]):d["ok"]+=1
+ passed=[ce for ce,v in by.items() if v["n"] and v["ok"]/v["n"]>=.5];score=round(sum(v["ok"] for v in by.values())/max(1,sum(v["n"] for v in by.values()))*100,2);status="passed" if len(passed)==len(ces) else "pending"
+ c.execute("UPDATE attempts SET status='submitted',submitted_at=?,payload=? WHERE id=?",(now(),json.dumps({"answers":answers,"score":score,"by_ce":by},ensure_ascii=False),attempt_id));c.execute("INSERT OR REPLACE INTO recovery_results VALUES(?,?,?,?,?,?)",(a["student_id"],a["course_id"],score,json.dumps(passed),status,now()));c.execute("UPDATE recovery_plans SET status=? WHERE student_id=? AND course_id=?",(status,a["student_id"],a["course_id"]));c.commit();c.close();return {"score":score,"by_ce":by,"criteria_passed":passed,"status":status}
 
 @app.put("/api/teacher/exam-bank/{course_id}")
 def put_exam_bank(course_id:str,x:BankIn,x_teacher_token:str|None=Header(None)):
