@@ -190,3 +190,43 @@ def test_private_portfolio_keys_are_provisioned_only_through_teacher_api():
  assert client.put("/api/teacher/portfolio-bank/PRIVATE",headers=H,json=bank).status_code==200
  db=module.con();row=db.execute("SELECT answer FROM portfolio_banks WHERE course_id='PRIVATE' AND item_id='secret1'").fetchone();db.close()
  assert row is not None and row["answer"]=="1"
+
+
+def _public_portfolio_metadata():
+ from pathlib import Path
+ import json
+ bank_dir=Path(module.__file__).resolve().parent/"banks";items=[]
+ for unit in ("ut1","ut2","ut3","ut4"):
+  items.extend(json.loads((bank_dir/f"{unit}_portfolio.json").read_text(encoding="utf-8"))["items"])
+ return items
+
+def _private_keys(items):
+ def dummy(q):
+  kind=q["kind"]
+  if kind=="multi":return []
+  if kind in ("order","match"):return []
+  if kind=="tf":return True
+  if kind=="choice":return 0
+  return "respuesta"
+ return [{"id":q["id"],"ce":q["ce"],"kind":q["kind"],"answer":dummy(q)} for q in items]
+
+def test_private_key_provisioning_requires_teacher_and_exact_198():
+ public=_public_portfolio_metadata();keys=_private_keys(public)
+ assert len(keys)==198
+ assert client.put("/api/teacher/portfolio-keys/GRH0652",json={"items":keys}).status_code==401
+ r=client.put("/api/teacher/portfolio-keys/GRH0652",headers=H,json={"items":keys[:-1]})
+ assert r.status_code==400
+ r=client.put("/api/teacher/portfolio-keys/GRH0652",headers=H,json={"items":keys})
+ assert r.status_code==200 and r.json()["items"]==198
+ db=module.con();n=db.execute("SELECT COUNT(*) n FROM portfolio_banks WHERE course_id='GRH0652'").fetchone()["n"];db.close()
+ assert n==198
+
+def test_private_key_provisioning_rejects_metadata_tampering_and_rolls_back():
+ public=_public_portfolio_metadata();keys=_private_keys(public)
+ assert client.put("/api/teacher/portfolio-keys/GRH0652",headers=H,json={"items":keys}).status_code==200
+ db=module.con();before=db.execute("SELECT item_id,ce,kind,answer FROM portfolio_banks WHERE course_id='GRH0652' ORDER BY item_id").fetchall();before=[tuple(x) for x in before];db.close()
+ bad=[dict(x) for x in keys];bad[0]["ce"]="9.z"
+ r=client.put("/api/teacher/portfolio-keys/GRH0652",headers=H,json={"items":bad})
+ assert r.status_code==400
+ db=module.con();after=db.execute("SELECT item_id,ce,kind,answer FROM portfolio_banks WHERE course_id='GRH0652' ORDER BY item_id").fetchall();after=[tuple(x) for x in after];db.close()
+ assert after==before
