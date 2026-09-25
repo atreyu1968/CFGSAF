@@ -26,3 +26,12 @@ def test_no_ra1_practice_navigation_in_other_units():
   text=(ROOT/"scorm"/unit/"index.html").read_text(encoding="utf-8")
   nav=text[:text.find('<div class="content">')]
   assert 'data-target="pract-1' not in nav
+
+def test_exam_and_self_assessment_are_separate_in_player():
+ for unit in EXPECTED:
+  js=(ROOT/"scorm"/unit/"assets"/"scorm.js").read_text(encoding="utf-8")
+  assert "let examQuestions=[];" in js
+  assert "EXAM.splice(0,EXAM.length,...gate.questions)" not in js
+  assert "examQuestions=(gate.questions||[])" in js
+  assert "const pool=shuffle([...EXAM])" in js
+  assert "Entregar examen</button>" in js
