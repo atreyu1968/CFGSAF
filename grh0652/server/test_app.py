@@ -38,3 +38,16 @@ def test_close_generates_only_failed_recovery():
  r=client.post("/api/teacher/close/GRH0652_UT3",headers=H);assert r.status_code==200;assert r.json()["recovery_plans"]==1
  p=client.get("/api/recovery/fail/GRH0652_UT3").json()["plan"];assert p["criteria"]==["3.c","3.f"]
  assert client.get("/api/recovery/pass/GRH0652_UT3").json()["plan"] is None
+
+def test_exam_snapshot_and_deadline_are_persisted():
+    enable_exam()
+    put_bank()
+    r=client.post("/api/exam/start",json={"student_id":"timed","course_id":"UT1","kind":"exam","item_id":"final"})
+    assert r.status_code==200
+    data=r.json()
+    assert data["version"] and data["deadline_at"]
+    assert data["config"]["exam_minutes"]==45
+    again=client.post("/api/exam/start",json={"student_id":"timed","course_id":"UT1","kind":"exam","item_id":"final"})
+    assert again.status_code==200
+    assert again.json()["version"]==data["version"]
+    assert again.json()["deadline_at"]==data["deadline_at"]
