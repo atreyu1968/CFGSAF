@@ -13,9 +13,13 @@ app=FastAPI(title="GRH0652 Evidence API")
 app.add_middleware(CORSMiddleware,allow_origins=ORIGINS or [],allow_credentials=False,allow_methods=["GET","POST","PUT"],allow_headers=["Content-Type","X-Teacher-Token","X-Student-Token"])
 
 def now(): return datetime.datetime.now(datetime.UTC).isoformat()
+_schema_ready=False
+
 def con():
+ global _schema_ready
  c=sqlite3.connect(DB,timeout=10);c.row_factory=sqlite3.Row;c.execute("PRAGMA journal_mode=WAL");c.execute("PRAGMA foreign_keys=ON");c.execute("PRAGMA busy_timeout=5000")
- c.executescript("""CREATE TABLE IF NOT EXISTS students(student_id TEXT PRIMARY KEY,token TEXT NOT NULL UNIQUE,created_at TEXT);
+ if not _schema_ready:
+  c.executescript("""CREATE TABLE IF NOT EXISTS students(student_id TEXT PRIMARY KEY,token TEXT NOT NULL UNIQUE,created_at TEXT);
 CREATE TABLE IF NOT EXISTS states(student_id TEXT,course_id TEXT,state TEXT,updated_at TEXT,PRIMARY KEY(student_id,course_id));
 CREATE TABLE IF NOT EXISTS evidence(id INTEGER PRIMARY KEY AUTOINCREMENT,student_id TEXT,course_id TEXT,kind TEXT,ce TEXT,item_id TEXT,attempt INTEGER,response TEXT,correct INTEGER,score REAL,payload TEXT,created_at TEXT);
 CREATE TABLE IF NOT EXISTS results(student_id TEXT,course_id TEXT,portfolio REAL,exam REAL,final REAL,ce_passed INTEGER,ce_total INTEGER,ra_passed INTEGER,recovery TEXT,updated_at TEXT,PRIMARY KEY(student_id,course_id));
@@ -28,19 +32,29 @@ CREATE TABLE IF NOT EXISTS exam_versions(attempt_id INTEGER PRIMARY KEY,student_
 CREATE TABLE IF NOT EXISTS recovery_banks(course_id TEXT,item_id TEXT,ce TEXT,kind TEXT,prompt TEXT,options TEXT,answer TEXT,feedback TEXT,PRIMARY KEY(course_id,item_id));
 CREATE TABLE IF NOT EXISTS portfolio_banks(course_id TEXT,item_id TEXT,ce TEXT,kind TEXT,answer TEXT,PRIMARY KEY(course_id,item_id));
 CREATE TABLE IF NOT EXISTS recovery_results(student_id TEXT,course_id TEXT,score REAL,criteria_passed TEXT,status TEXT,updated_at TEXT,PRIMARY KEY(student_id,course_id));""")
+  _schema_ready=True
  cols={r["name"] for r in c.execute("PRAGMA table_info(exam_versions)")}
  if "config" not in cols:c.execute("ALTER TABLE exam_versions ADD COLUMN config TEXT")
  if "deadline_at" not in cols:c.execute("ALTER TABLE exam_versions ADD COLUMN deadline_at TEXT")
  bcols={r["name"] for r in c.execute("PRAGMA table_info(exam_banks)")}
  if "type" not in bcols:c.execute("ALTER TABLE exam_banks ADD COLUMN type TEXT NOT NULL DEFAULT 'choice'")
- # Seed versioned portfolio answer banks from repository without exposing them to the browser.
- if c.execute("SELECT COUNT(*) n FROM portfolio_banks WHERE course_id='GRH0652'").fetchone()["n"]==0:
-  bank_dir=Path(__file__).resolve().parent/"banks"
-  for unit in ("ut1","ut2","ut3","ut4"):
-   p=bank_dir/f"{unit}_portfolio.json"
-   if p.exists():
-    for q in json.loads(p.read_text(encoding="utf-8")).get("items",[]):
-     c.execute("INSERT OR REPLACE INTO portfolio_banks(course_id,item_id,ce,kind,answer) VALUES(?,?,?,?,?)",("GRH0652",q["id"],q["ce"],q["kind"],json.dumps(q.get("answer"),ensure_ascii=False)))
+ # Synchronize the bundled GRH0652 portfolio bank on every startup so existing SQLite
+ # databases receive corrected/new keys; teacher-managed banks for other courses are untouched.
+ bank_dir=Path(__file__).resolve().parent/"banks";bundled=[]
+ for unit in ("ut1","ut2","ut3","ut4"):
+  p=bank_dir/f"{unit}_portfolio.json"
+  if p.exists():bundled.extend(json.loads(p.read_text(encoding="utf-8")).get("items",[]))
+ if bundled:
+  fingerprint=json.dumps([(q["id"],q["ce"],q["kind"],q.get("answer")) for q in bundled],ensure_ascii=False,separators=(",",":"))
+  import hashlib
+  version=hashlib.sha256(fingerprint.encode()).hexdigest()
+  c.execute("CREATE TABLE IF NOT EXISTS bank_versions(course_id TEXT PRIMARY KEY,version TEXT NOT NULL,updated_at TEXT)")
+  current=c.execute("SELECT version FROM bank_versions WHERE course_id='GRH0652'").fetchone()
+  if not current or current["version"]!=version:
+   ids=[q["id"] for q in bundled];marks=",".join("?" for _ in ids)
+   c.execute(f"DELETE FROM portfolio_banks WHERE course_id='GRH0652' AND item_id NOT IN ({marks})",ids)
+   for q in bundled:c.execute("INSERT OR REPLACE INTO portfolio_banks(course_id,item_id,ce,kind,answer) VALUES(?,?,?,?,?)",("GRH0652",q["id"],q["ce"],q["kind"],json.dumps(q.get("answer"),ensure_ascii=False)))
+   c.execute("INSERT OR REPLACE INTO bank_versions(course_id,version,updated_at) VALUES(?,?,?)",("GRH0652",version,now()))
  c.commit();return c
 
 DEFAULT={"portfolio_weight":40,"exam_weight":60,"pass_score":50,"ce_pass_percent":80,"ce_pass_score":50,"exam_enabled":False,"exam_questions_per_ce":3,"exam_minutes":45,"require_both_instruments":False}
@@ -60,14 +74,17 @@ class RecoveryItem(BaseModel): id:str;ce:str;kind:str='choice';prompt:str;option
 class RecoveryBankIn(BaseModel): items:list[RecoveryItem]
 def auth(token):
  if not secrets.compare_digest(token or "",TEACHER_TOKEN): raise HTTPException(401,"Teacher token required")
-def student_auth(token):
+def student_auth(token,c=None):
  if not token: raise HTTPException(401,"Student token required")
- c=con();r=c.execute("SELECT student_id FROM students WHERE token=?",(token,)).fetchone();c.close()
+ own=c is None;db=c or con();r=db.execute("SELECT student_id FROM students WHERE token=?",(token,)).fetchone()
+ if own:db.close()
  if not r: raise HTTPException(401,"Invalid student token")
  return r["student_id"]
-def require_student(claimed,token):
- student_id=student_auth(token)
- if claimed!=student_id: raise HTTPException(403,"Student identity mismatch")
+def require_student(claimed,token,c=None):
+ student_id=student_auth(token,c)
+ if claimed!=student_id:
+  if c is not None:c.rollback()
+  raise HTTPException(403,"Student identity mismatch")
  return student_id
 def config_row(c,course):
  r=c.execute("SELECT config,version FROM configs WHERE course_id=?",(course,)).fetchone()
@@ -106,7 +123,7 @@ def start_attempt(x:AttemptIn,x_student_token:str|None=Header(None)):
 @app.post("/api/attempts/{attempt_id}/submit")
 def submit_attempt(attempt_id:int,x:SubmitAttempt,x_student_token:str|None=Header(None)):
  c=con();r=c.execute("SELECT status,student_id FROM attempts WHERE id=?",(attempt_id,)).fetchone()
- if r: require_student(r["student_id"],x_student_token)
+ if r: require_student(r["student_id"],x_student_token,c)
  if not r:c.close();raise HTTPException(404,"Intento no encontrado")
  if r["status"]!="started":c.close();raise HTTPException(409,"Intento ya entregado")
  c.execute("UPDATE attempts SET status='submitted',submitted_at=?,payload=? WHERE id=?",(now(),json.dumps(x.payload or {},ensure_ascii=False),attempt_id));c.commit();c.close();return {"ok":True}
@@ -114,7 +131,7 @@ def submit_attempt(attempt_id:int,x:SubmitAttempt,x_student_token:str|None=Heade
 def answer_attempt(attempt_id:int,x:AnswerIn,x_student_token:str|None=Header(None)):
  c=con();c.execute("BEGIN IMMEDIATE");r=c.execute("SELECT * FROM attempts WHERE id=?",(attempt_id,)).fetchone()
  if not r: c.rollback();c.close();raise HTTPException(404,"Intento no encontrado")
- require_student(r["student_id"],x_student_token)
+ require_student(r["student_id"],x_student_token,c)
  if r["status"]!="started": c.rollback();c.close();raise HTTPException(409,"Intento cerrado")
  p=json.loads(r["payload"] or "{}");p["response"]=x.response
  c.execute("UPDATE attempts SET payload=? WHERE id=?",(json.dumps(p,ensure_ascii=False),attempt_id))
@@ -278,7 +295,7 @@ def evidence(x:EventIn,x_student_token:str|None=Header(None)):
   if kind=="multi" and isinstance(given,list) and isinstance(expected,list):ok=sorted(given)==sorted(expected)
   elif kind=="free":ok=str(given or "").strip().casefold()==str(expected or "").strip().casefold()
   elif kind=="order":ok=given==expected
-  elif kind=="match":ok=given==expected
+  elif kind=="match":ok=isinstance(given,list) and isinstance(expected,list) and [str(v) for v in given]==[str(v) for v in expected]
   else:ok=given==expected
   correct=ok;score=100 if ok else 0
  c.execute("INSERT INTO evidence(student_id,course_id,kind,ce,item_id,attempt,response,correct,score,payload,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)",(x.student_id,x.course_id,x.kind,x.ce,x.item_id,x.attempt,json.dumps(x.response,ensure_ascii=False),None if correct is None else int(correct),score,json.dumps(x.payload or {},ensure_ascii=False),now()));c.commit();c.close();return {"ok":True,"correct":correct,"score":score}

@@ -154,3 +154,32 @@ def test_portfolio_score_is_server_authoritative():
  forged["response"]=1;forged["correct"]=False;forged["score"]=0;forged["attempt"]=2
  r=client.post("/api/evidence",headers=SH(forged["student_id"]),json=forged);assert r.status_code==200
  assert r.json()["correct"] is True and r.json()["score"]==100
+
+
+def test_portfolio_match_normalizes_browser_string_indices():
+ bank={"items":[{"id":"m1","ce":"c1","kind":"match","prompt":"Relaciona","options":[],"answer":[0,1,2]}]}
+ assert client.put("/api/teacher/portfolio-bank/MATCH",headers=H,json=bank).status_code==200
+ body={"student_id":"match-student","course_id":"MATCH","kind":"portfolio","ce":"c1","item_id":"m1","attempt":1,"response":["0","1","2"],"correct":False,"score":0,"payload":{}}
+ r=client.post("/api/evidence",headers=SH("match-student"),json=body)
+ assert r.status_code==200,r.text
+ assert r.json()["correct"] is True and r.json()["score"]==100
+ body["attempt"]=2;body["response"]=["0","2","1"]
+ r=client.post("/api/evidence",headers=SH("match-student"),json=body)
+ assert r.status_code==200,r.text
+ assert r.json()["correct"] is False and r.json()["score"]==0
+
+
+def test_bundled_portfolio_resyncs_existing_sqlite_without_touching_other_courses():
+ db=module.con()
+ db.execute("INSERT OR REPLACE INTO portfolio_banks(course_id,item_id,ce,kind,answer) VALUES(?,?,?,?,?)",("GRH0652","1a1","1.a","choice","999"))
+ db.execute("INSERT OR REPLACE INTO portfolio_banks(course_id,item_id,ce,kind,answer) VALUES(?,?,?,?,?)",("GRH0652","obsolete","1.a","choice","0"))
+ db.execute("INSERT OR REPLACE INTO portfolio_banks(course_id,item_id,ce,kind,answer) VALUES(?,?,?,?,?)",("CUSTOM","keep","x","choice","7"))
+ db.execute("DELETE FROM bank_versions WHERE course_id='GRH0652'")
+ db.commit();db.close()
+ db=module.con()
+ fixed=db.execute("SELECT answer FROM portfolio_banks WHERE course_id='GRH0652' AND item_id='1a1'").fetchone()
+ obsolete=db.execute("SELECT 1 FROM portfolio_banks WHERE course_id='GRH0652' AND item_id='obsolete'").fetchone()
+ custom=db.execute("SELECT answer FROM portfolio_banks WHERE course_id='CUSTOM' AND item_id='keep'").fetchone();db.close()
+ assert fixed is not None and fixed["answer"]!="999"
+ assert obsolete is None
+ assert custom is not None and custom["answer"]=="7"
