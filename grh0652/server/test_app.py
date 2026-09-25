@@ -33,11 +33,21 @@ def test_config_weights_and_version():
  good={"portfolio_weight":50,"exam_weight":50,"pass_score":50,"ce_pass_percent":80,"ce_pass_score":50,"exam_enabled":False,"exam_questions_per_ce":3,"exam_minutes":45,"require_both_instruments":False}
  r=client.put("/api/config/GRH0652_UT2",headers=H,json=good);assert r.status_code==200;assert r.json()["version"]==1
 def test_close_generates_only_failed_recovery():
- client.post("/api/result",json={"student_id":"fail","course_id":"GRH0652_UT3","portfolio":50,"exam":40,"final":44,"ce_passed":5,"ce_total":8,"ra_passed":False,"recovery":["3.c","3.f"]})
- client.post("/api/result",json={"student_id":"pass","course_id":"GRH0652_UT3","portfolio":80,"exam":80,"final":80,"ce_passed":8,"ce_total":8,"ra_passed":True,"recovery":[]})
- r=client.post("/api/teacher/close/GRH0652_UT3",headers=H);assert r.status_code==200;assert r.json()["recovery_plans"]==1
- p=client.get("/api/recovery/fail/GRH0652_UT3").json()["plan"];assert p["criteria"]==["3.c","3.f"]
- assert client.get("/api/recovery/pass/GRH0652_UT3").json()["plan"] is None
+ cfg={"portfolio_weight":40,"exam_weight":60,"pass_score":50,"ce_pass_percent":80,"ce_pass_score":50,"exam_enabled":True,"exam_questions_per_ce":1,"exam_minutes":45,"require_both_instruments":False}
+ assert client.put("/api/config/CLOSE",headers=H,json=cfg).status_code==200
+ bank={"questions":[{"id":"cq1","ce":"3.c","q":"C","options":["Sí","No"],"answer":0},{"id":"fq1","ce":"3.f","q":"F","options":["Sí","No"],"answer":0}]}
+ assert client.put("/api/teacher/exam-bank/CLOSE",headers=H,json=bank).status_code==200
+ for student,score in (("fail",0),("pass",100)):
+  for ce,item in (("3.c","pc"),("3.f","pf")):
+   assert client.post("/api/evidence",json={"student_id":student,"course_id":"CLOSE","kind":"portfolio","ce":ce,"item_id":item,"attempt":1,"response":"x","correct":score==100,"score":score,"payload":{}}).status_code==200
+  st=client.post("/api/exam/start",json={"student_id":student,"course_id":"CLOSE","kind":"exam","item_id":"final"});assert st.status_code==200
+  ans={q["id"]:(0 if score==100 else 1) for q in st.json()["questions"]}
+  assert client.post(f"/api/exam/{st.json()['attempt_id']}/submit",json={"payload":{"answers":ans}}).status_code==200
+  forged={"student_id":student,"course_id":"CLOSE","portfolio":100,"exam":100,"final":100,"ce_passed":2,"ce_total":2,"ra_passed":True,"recovery":[]}
+  assert client.post("/api/result",json=forged).status_code==200
+ r=client.post("/api/teacher/close/CLOSE",headers=H);assert r.status_code==200;assert r.json()["recovery_plans"]==1
+ p=client.get("/api/recovery/fail/CLOSE").json()["plan"];assert p["criteria"]==["3.c","3.f"]
+ assert client.get("/api/recovery/pass/CLOSE").json()["plan"] is None
 
 def test_exam_snapshot_and_deadline_are_persisted():
     cfg={"portfolio_weight":40,"exam_weight":60,"pass_score":50,"ce_pass_percent":80,"ce_pass_score":50,"exam_enabled":True,"exam_questions_per_ce":1,"exam_minutes":45,"require_both_instruments":False}
