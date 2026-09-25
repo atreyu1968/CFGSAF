@@ -35,8 +35,14 @@
       "id": "2.ap4",
       "ce": "2.a",
       "kind": "order",
-      "prompt": "Ordena el procedimiento profesional. Revisa la secuencia completa.",
-      "options": []
+      "prompt": "Ordena las actuaciones del supuesto en una secuencia profesional. Revisa la secuencia completa.",
+      "options": [
+        "Identificar la modificación planteada",
+        "Comprobar norma, convenio y contrato",
+        "Determinar requisitos y efectos",
+        "Formalizar y comunicar cuando proceda",
+        "Archivar justificantes y documentación"
+      ]
     },
     {
       "id": "2.ap5",
@@ -97,8 +103,14 @@
       "id": "2.bp4",
       "ce": "2.b",
       "kind": "order",
-      "prompt": "Ordena el procedimiento profesional. Revisa la secuencia completa.",
-      "options": []
+      "prompt": "Ordena las actuaciones del supuesto en una secuencia profesional. Revisa la secuencia completa.",
+      "options": [
+        "Identificar la causa de suspensión",
+        "Comprobar requisitos y documentación",
+        "Determinar efectos sobre trabajo y salario",
+        "Realizar comunicaciones necesarias",
+        "Archivar la incidencia y sus justificantes"
+      ]
     },
     {
       "id": "2.bp5",
@@ -159,8 +171,14 @@
       "id": "2.cp4",
       "ce": "2.c",
       "kind": "order",
-      "prompt": "Ordena el procedimiento profesional. Revisa la secuencia completa.",
-      "options": []
+      "prompt": "Ordena las actuaciones del supuesto en una secuencia profesional. Revisa la secuencia completa.",
+      "options": [
+        "Identificar la causa de extinción",
+        "Verificar requisitos, plazos y forma",
+        "Calcular cantidades pendientes",
+        "Preparar y entregar la documentación",
+        "Registrar y archivar el cierre"
+      ]
     },
     {
       "id": "2.cp5",
@@ -221,8 +239,14 @@
       "id": "2.dp4",
       "ce": "2.d",
       "kind": "order",
-      "prompt": "Ordena el procedimiento profesional. Revisa la secuencia completa.",
-      "options": []
+      "prompt": "Ordena las actuaciones del supuesto en una secuencia profesional. Revisa la secuencia completa.",
+      "options": [
+        "Reunir contrato, convenio e incidencias",
+        "Determinar conceptos pendientes",
+        "Calcular devengos y deducciones aplicables",
+        "Obtener el saldo de liquidación",
+        "Revisar y documentar el finiquito"
+      ]
     },
     {
       "id": "2.dp5",
@@ -283,8 +307,14 @@
       "id": "2.ep4",
       "ce": "2.e",
       "kind": "order",
-      "prompt": "Ordena el procedimiento profesional. Revisa la secuencia completa.",
-      "options": []
+      "prompt": "Ordena las actuaciones del supuesto en una secuencia profesional. Revisa la secuencia completa.",
+      "options": [
+        "Identificar el trámite y su destinatario",
+        "Comprobar plazo y datos necesarios",
+        "Preparar la comunicación",
+        "Enviar por el canal habilitado",
+        "Guardar acuse o justificante"
+      ]
     },
     {
       "id": "2.ep5",
@@ -345,8 +375,14 @@
       "id": "2.fp4",
       "ce": "2.f",
       "kind": "order",
-      "prompt": "Ordena el procedimiento profesional. Revisa la secuencia completa.",
-      "options": []
+      "prompt": "Ordena las actuaciones del supuesto en una secuencia profesional. Revisa la secuencia completa.",
+      "options": [
+        "Abrir el expediente de la incidencia",
+        "Clasificar y nombrar la documentación",
+        "Restringir el acceso según autorización",
+        "Registrar comunicaciones y cambios",
+        "Cerrar y conservar el expediente con trazabilidad"
+      ]
     },
     {
       "id": "2.fp5",
