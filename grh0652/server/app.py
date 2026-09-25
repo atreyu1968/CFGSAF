@@ -10,7 +10,7 @@ if not TEACHER_TOKEN:
     raise RuntimeError("Define GRH_TEACHER_TOKEN antes de iniciar el servidor")
 ORIGINS=[x.strip() for x in os.getenv("GRH_ALLOWED_ORIGINS","").split(",") if x.strip()]
 app=FastAPI(title="GRH0652 Evidence API")
-app.add_middleware(CORSMiddleware,allow_origins=ORIGINS or [],allow_credentials=False,allow_methods=["GET","POST","PUT"],allow_headers=["Content-Type","X-Teacher-Token"])
+app.add_middleware(CORSMiddleware,allow_origins=ORIGINS or [],allow_credentials=False,allow_methods=["GET","POST","PUT"],allow_headers=["Content-Type","X-Teacher-Token","X-Student-Token"])
 
 def now(): return datetime.datetime.now(datetime.UTC).isoformat()
 def con():
