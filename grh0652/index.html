@@ -24,7 +24,7 @@ footer{text-align:center;padding:28px;color:#71808a;font-size:.85rem}
 <section class="card"><span class="badge">SCORM 1.2 · UT1</span><h2>Gestión de la contratación laboral</h2><p>Teoría completa, práctica formativa, Portafolio de Actividades evaluable y examen tipo test controlado por el profesor.</p>
 <div class="stats"><div class="stat"><b>11</b>bloques teóricos</div><div class="stat"><b>3</b>intentos práctica</div><div class="stat"><b>2 + 1</b>portafolio + examen</div></div>
 <label for="student">Nombre o identificador del alumno/a</label><input id="student" autocomplete="off" placeholder="Ej.: Ana Pérez · AF2-07">
-<button id="launch">Ejecutar SCORM UT1</button>
+<button id="launch">Entrar al módulo GRH 0652</button>
 <p class="note">El progreso se conserva localmente y, cuando se configura el servidor de evidencias, queda centralizado por alumno para consulta docente, reanudación y recuperación.</p><p class="note"><a href="teacher.html">Acceso al panel docente</a></p></section>
 <aside class="card"><h2>Qué hace el reproductor</h2><div class="steps">
 <div class="step"><div class="num">1</div><div><b>Crea la API SCORM</b><div class="note">Expone el objeto API que espera un SCO SCORM 1.2.</div></div></div>
@@ -35,5 +35,5 @@ footer{text-align:center;padding:28px;color:#71808a;font-size:.85rem}
 <footer>Francisco Javier González Rolo · GRH 0652 · 2026-2027</footer>
 <script>
 const s=document.getElementById('student');s.value=localStorage.getItem('grh0652.student')||'';
-document.getElementById('launch').onclick=()=>{const v=s.value.trim();if(!v){alert('Introduce un nombre o identificador.');s.focus();return}localStorage.setItem('grh0652.student',v);location.href='player.html?student='+encodeURIComponent(v)};
+document.getElementById('launch').onclick=()=>{const v=s.value.trim();if(!v){alert('Introduce un nombre o identificador.');s.focus();return}localStorage.setItem('grh0652.student',v);location.href='course.html?student='+encodeURIComponent(v)};
 </script></body></html>
