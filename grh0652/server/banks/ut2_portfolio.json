@@ -1,0 +1,508 @@
+{
+  "items": [
+    {
+      "id": "2.ap1",
+      "ce": "2.a",
+      "kind": "choice",
+      "prompt": "Caso: debes gestionar normativa. ¿Cuál es el primer paso profesional?",
+      "options": [
+        "Identificar el supuesto y comprobar la fuente vigente",
+        "Usar una plantilla antigua",
+        "Comunicar sin revisar el expediente",
+        "Archivar antes de decidir"
+      ],
+      "answer": 0,
+      "feedback": "Primero se identifica el supuesto y su marco aplicable."
+    },
+    {
+      "id": "2.ap2",
+      "ce": "2.a",
+      "kind": "tf",
+      "prompt": "En procedimiento, la trazabilidad documental forma parte de una gestión correcta.",
+      "options": [],
+      "answer": true,
+      "feedback": "La evidencia permite reconstruir el procedimiento."
+    },
+    {
+      "id": "2.ap3",
+      "ce": "2.a",
+      "kind": "multi",
+      "prompt": "Selecciona las comprobaciones necesarias para fuente aplicable.",
+      "options": [
+        "Normativa/convenio vigente",
+        "Fecha y hechos del expediente",
+        "Evidencia de comunicación",
+        "Una plantilla sin verificar"
+      ],
+      "answer": [
+        0,
+        1,
+        2
+      ],
+      "feedback": "Norma, hechos y evidencias deben poder justificarse."
+    },
+    {
+      "id": "2.ap4",
+      "ce": "2.a",
+      "kind": "order",
+      "prompt": "Ordena el procedimiento profesional.",
+      "options": [],
+      "answer": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "feedback": "El orden evita ejecutar trámites antes de conocer su fundamento."
+    },
+    {
+      "id": "2.ap5",
+      "ce": "2.a",
+      "kind": "choice",
+      "prompt": "¿Qué error compromete más el expediente?",
+      "options": [
+        "No poder acreditar la fecha o el contenido comunicado",
+        "Registrar responsable",
+        "Conservar justificante",
+        "Comprobar el convenio"
+      ],
+      "answer": 0,
+      "feedback": "La ausencia de evidencia puede impedir acreditar el procedimiento."
+    },
+    {
+      "id": "2.ap6",
+      "ce": "2.a",
+      "kind": "choice",
+      "prompt": "Al cerrar un caso de normativa, ¿qué debe quedar registrado?",
+      "options": [
+        "Hechos, fuente, cálculos, comunicaciones y documentos",
+        "Solo el resultado final",
+        "Solo la plantilla utilizada",
+        "Únicamente un correo informal"
+      ],
+      "answer": 0,
+      "feedback": "El expediente debe ser reconstruible y auditable."
+    },
+    {
+      "id": "2.bp1",
+      "ce": "2.b",
+      "kind": "choice",
+      "prompt": "Caso: debes gestionar finiquito. ¿Cuál es el primer paso profesional?",
+      "options": [
+        "Identificar el supuesto y comprobar la fuente vigente",
+        "Usar una plantilla antigua",
+        "Comunicar sin revisar el expediente",
+        "Archivar antes de decidir"
+      ],
+      "answer": 0,
+      "feedback": "Primero se identifica el supuesto y su marco aplicable."
+    },
+    {
+      "id": "2.bp2",
+      "ce": "2.b",
+      "kind": "tf",
+      "prompt": "En vacaciones pendientes, la trazabilidad documental forma parte de una gestión correcta.",
+      "options": [],
+      "answer": true,
+      "feedback": "La evidencia permite reconstruir el procedimiento."
+    },
+    {
+      "id": "2.bp3",
+      "ce": "2.b",
+      "kind": "multi",
+      "prompt": "Selecciona las comprobaciones necesarias para indemnización.",
+      "options": [
+        "Normativa/convenio vigente",
+        "Fecha y hechos del expediente",
+        "Evidencia de comunicación",
+        "Una plantilla sin verificar"
+      ],
+      "answer": [
+        0,
+        1,
+        2
+      ],
+      "feedback": "Norma, hechos y evidencias deben poder justificarse."
+    },
+    {
+      "id": "2.bp4",
+      "ce": "2.b",
+      "kind": "order",
+      "prompt": "Ordena el procedimiento profesional.",
+      "options": [],
+      "answer": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "feedback": "El orden evita ejecutar trámites antes de conocer su fundamento."
+    },
+    {
+      "id": "2.bp5",
+      "ce": "2.b",
+      "kind": "choice",
+      "prompt": "¿Qué error compromete más el expediente?",
+      "options": [
+        "No poder acreditar la fecha o el contenido comunicado",
+        "Registrar responsable",
+        "Conservar justificante",
+        "Comprobar el convenio"
+      ],
+      "answer": 0,
+      "feedback": "La ausencia de evidencia puede impedir acreditar el procedimiento."
+    },
+    {
+      "id": "2.bp6",
+      "ce": "2.b",
+      "kind": "choice",
+      "prompt": "Al cerrar un caso de finiquito, ¿qué debe quedar registrado?",
+      "options": [
+        "Hechos, fuente, cálculos, comunicaciones y documentos",
+        "Solo el resultado final",
+        "Solo la plantilla utilizada",
+        "Únicamente un correo informal"
+      ],
+      "answer": 0,
+      "feedback": "El expediente debe ser reconstruible y auditable."
+    },
+    {
+      "id": "2.cp1",
+      "ce": "2.c",
+      "kind": "choice",
+      "prompt": "Caso: debes gestionar carta. ¿Cuál es el primer paso profesional?",
+      "options": [
+        "Identificar el supuesto y comprobar la fuente vigente",
+        "Usar una plantilla antigua",
+        "Comunicar sin revisar el expediente",
+        "Archivar antes de decidir"
+      ],
+      "answer": 0,
+      "feedback": "Primero se identifica el supuesto y su marco aplicable."
+    },
+    {
+      "id": "2.cp2",
+      "ce": "2.c",
+      "kind": "tf",
+      "prompt": "En expediente, la trazabilidad documental forma parte de una gestión correcta.",
+      "options": [],
+      "answer": true,
+      "feedback": "La evidencia permite reconstruir el procedimiento."
+    },
+    {
+      "id": "2.cp3",
+      "ce": "2.c",
+      "kind": "multi",
+      "prompt": "Selecciona las comprobaciones necesarias para documentación.",
+      "options": [
+        "Normativa/convenio vigente",
+        "Fecha y hechos del expediente",
+        "Evidencia de comunicación",
+        "Una plantilla sin verificar"
+      ],
+      "answer": [
+        0,
+        1,
+        2
+      ],
+      "feedback": "Norma, hechos y evidencias deben poder justificarse."
+    },
+    {
+      "id": "2.cp4",
+      "ce": "2.c",
+      "kind": "order",
+      "prompt": "Ordena el procedimiento profesional.",
+      "options": [],
+      "answer": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "feedback": "El orden evita ejecutar trámites antes de conocer su fundamento."
+    },
+    {
+      "id": "2.cp5",
+      "ce": "2.c",
+      "kind": "choice",
+      "prompt": "¿Qué error compromete más el expediente?",
+      "options": [
+        "No poder acreditar la fecha o el contenido comunicado",
+        "Registrar responsable",
+        "Conservar justificante",
+        "Comprobar el convenio"
+      ],
+      "answer": 0,
+      "feedback": "La ausencia de evidencia puede impedir acreditar el procedimiento."
+    },
+    {
+      "id": "2.cp6",
+      "ce": "2.c",
+      "kind": "choice",
+      "prompt": "Al cerrar un caso de carta, ¿qué debe quedar registrado?",
+      "options": [
+        "Hechos, fuente, cálculos, comunicaciones y documentos",
+        "Solo el resultado final",
+        "Solo la plantilla utilizada",
+        "Únicamente un correo informal"
+      ],
+      "answer": 0,
+      "feedback": "El expediente debe ser reconstruible y auditable."
+    },
+    {
+      "id": "2.dp1",
+      "ce": "2.d",
+      "kind": "choice",
+      "prompt": "Caso: debes gestionar canal oficial. ¿Cuál es el primer paso profesional?",
+      "options": [
+        "Identificar el supuesto y comprobar la fuente vigente",
+        "Usar una plantilla antigua",
+        "Comunicar sin revisar el expediente",
+        "Archivar antes de decidir"
+      ],
+      "answer": 0,
+      "feedback": "Primero se identifica el supuesto y su marco aplicable."
+    },
+    {
+      "id": "2.dp2",
+      "ce": "2.d",
+      "kind": "tf",
+      "prompt": "En acuse, la trazabilidad documental forma parte de una gestión correcta.",
+      "options": [],
+      "answer": true,
+      "feedback": "La evidencia permite reconstruir el procedimiento."
+    },
+    {
+      "id": "2.dp3",
+      "ce": "2.d",
+      "kind": "multi",
+      "prompt": "Selecciona las comprobaciones necesarias para comunicación.",
+      "options": [
+        "Normativa/convenio vigente",
+        "Fecha y hechos del expediente",
+        "Evidencia de comunicación",
+        "Una plantilla sin verificar"
+      ],
+      "answer": [
+        0,
+        1,
+        2
+      ],
+      "feedback": "Norma, hechos y evidencias deben poder justificarse."
+    },
+    {
+      "id": "2.dp4",
+      "ce": "2.d",
+      "kind": "order",
+      "prompt": "Ordena el procedimiento profesional.",
+      "options": [],
+      "answer": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "feedback": "El orden evita ejecutar trámites antes de conocer su fundamento."
+    },
+    {
+      "id": "2.dp5",
+      "ce": "2.d",
+      "kind": "choice",
+      "prompt": "¿Qué error compromete más el expediente?",
+      "options": [
+        "No poder acreditar la fecha o el contenido comunicado",
+        "Registrar responsable",
+        "Conservar justificante",
+        "Comprobar el convenio"
+      ],
+      "answer": 0,
+      "feedback": "La ausencia de evidencia puede impedir acreditar el procedimiento."
+    },
+    {
+      "id": "2.dp6",
+      "ce": "2.d",
+      "kind": "choice",
+      "prompt": "Al cerrar un caso de canal oficial, ¿qué debe quedar registrado?",
+      "options": [
+        "Hechos, fuente, cálculos, comunicaciones y documentos",
+        "Solo el resultado final",
+        "Solo la plantilla utilizada",
+        "Únicamente un correo informal"
+      ],
+      "answer": 0,
+      "feedback": "El expediente debe ser reconstruible y auditable."
+    },
+    {
+      "id": "2.ep1",
+      "ce": "2.e",
+      "kind": "choice",
+      "prompt": "Caso: debes gestionar información a la persona trabajadora. ¿Cuál es el primer paso profesional?",
+      "options": [
+        "Identificar el supuesto y comprobar la fuente vigente",
+        "Usar una plantilla antigua",
+        "Comunicar sin revisar el expediente",
+        "Archivar antes de decidir"
+      ],
+      "answer": 0,
+      "feedback": "Primero se identifica el supuesto y su marco aplicable."
+    },
+    {
+      "id": "2.ep2",
+      "ce": "2.e",
+      "kind": "tf",
+      "prompt": "En fecha de efectos, la trazabilidad documental forma parte de una gestión correcta.",
+      "options": [],
+      "answer": true,
+      "feedback": "La evidencia permite reconstruir el procedimiento."
+    },
+    {
+      "id": "2.ep3",
+      "ce": "2.e",
+      "kind": "multi",
+      "prompt": "Selecciona las comprobaciones necesarias para trazabilidad.",
+      "options": [
+        "Normativa/convenio vigente",
+        "Fecha y hechos del expediente",
+        "Evidencia de comunicación",
+        "Una plantilla sin verificar"
+      ],
+      "answer": [
+        0,
+        1,
+        2
+      ],
+      "feedback": "Norma, hechos y evidencias deben poder justificarse."
+    },
+    {
+      "id": "2.ep4",
+      "ce": "2.e",
+      "kind": "order",
+      "prompt": "Ordena el procedimiento profesional.",
+      "options": [],
+      "answer": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "feedback": "El orden evita ejecutar trámites antes de conocer su fundamento."
+    },
+    {
+      "id": "2.ep5",
+      "ce": "2.e",
+      "kind": "choice",
+      "prompt": "¿Qué error compromete más el expediente?",
+      "options": [
+        "No poder acreditar la fecha o el contenido comunicado",
+        "Registrar responsable",
+        "Conservar justificante",
+        "Comprobar el convenio"
+      ],
+      "answer": 0,
+      "feedback": "La ausencia de evidencia puede impedir acreditar el procedimiento."
+    },
+    {
+      "id": "2.ep6",
+      "ce": "2.e",
+      "kind": "choice",
+      "prompt": "Al cerrar un caso de información a la persona trabajadora, ¿qué debe quedar registrado?",
+      "options": [
+        "Hechos, fuente, cálculos, comunicaciones y documentos",
+        "Solo el resultado final",
+        "Solo la plantilla utilizada",
+        "Únicamente un correo informal"
+      ],
+      "answer": 0,
+      "feedback": "El expediente debe ser reconstruible y auditable."
+    },
+    {
+      "id": "2.fp1",
+      "ce": "2.f",
+      "kind": "choice",
+      "prompt": "Caso: debes gestionar registro digital. ¿Cuál es el primer paso profesional?",
+      "options": [
+        "Identificar el supuesto y comprobar la fuente vigente",
+        "Usar una plantilla antigua",
+        "Comunicar sin revisar el expediente",
+        "Archivar antes de decidir"
+      ],
+      "answer": 0,
+      "feedback": "Primero se identifica el supuesto y su marco aplicable."
+    },
+    {
+      "id": "2.fp2",
+      "ce": "2.f",
+      "kind": "tf",
+      "prompt": "En archivo, la trazabilidad documental forma parte de una gestión correcta.",
+      "options": [],
+      "answer": true,
+      "feedback": "La evidencia permite reconstruir el procedimiento."
+    },
+    {
+      "id": "2.fp3",
+      "ce": "2.f",
+      "kind": "multi",
+      "prompt": "Selecciona las comprobaciones necesarias para protección de datos.",
+      "options": [
+        "Normativa/convenio vigente",
+        "Fecha y hechos del expediente",
+        "Evidencia de comunicación",
+        "Una plantilla sin verificar"
+      ],
+      "answer": [
+        0,
+        1,
+        2
+      ],
+      "feedback": "Norma, hechos y evidencias deben poder justificarse."
+    },
+    {
+      "id": "2.fp4",
+      "ce": "2.f",
+      "kind": "order",
+      "prompt": "Ordena el procedimiento profesional.",
+      "options": [],
+      "answer": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "feedback": "El orden evita ejecutar trámites antes de conocer su fundamento."
+    },
+    {
+      "id": "2.fp5",
+      "ce": "2.f",
+      "kind": "choice",
+      "prompt": "¿Qué error compromete más el expediente?",
+      "options": [
+        "No poder acreditar la fecha o el contenido comunicado",
+        "Registrar responsable",
+        "Conservar justificante",
+        "Comprobar el convenio"
+      ],
+      "answer": 0,
+      "feedback": "La ausencia de evidencia puede impedir acreditar el procedimiento."
+    },
+    {
+      "id": "2.fp6",
+      "ce": "2.f",
+      "kind": "choice",
+      "prompt": "Al cerrar un caso de registro digital, ¿qué debe quedar registrado?",
+      "options": [
+        "Hechos, fuente, cálculos, comunicaciones y documentos",
+        "Solo el resultado final",
+        "Solo la plantilla utilizada",
+        "Únicamente un correo informal"
+      ],
+      "answer": 0,
+      "feedback": "El expediente debe ser reconstruible y auditable."
+    }
+  ]
+}

@@ -37,6 +37,7 @@ def test_close_generates_only_failed_recovery():
  assert client.put("/api/config/CLOSE",headers=H,json=cfg).status_code==200
  bank={"questions":[{"id":"cq1","ce":"3.c","q":"C","options":[],"answer":True,"type":"tf"},{"id":"fq1","ce":"3.f","q":"F","options":[],"answer":True,"type":"tf"}]}
  assert client.put("/api/teacher/exam-bank/CLOSE",headers=H,json=bank).status_code==200
+ assert client.put("/api/teacher/portfolio-bank/CLOSE",headers=H,json={"items":[{"id":"pc","ce":"3.c","kind":"choice","prompt":"P","options":[],"answer":"x"},{"id":"pf","ce":"3.f","kind":"choice","prompt":"P","options":[],"answer":"x"}]}).status_code==200
  for student,score in (("fail",0),("pass",100)):
   for ce,item in (("3.c","pc"),("3.f","pf")):
    assert client.post("/api/evidence",json={"student_id":student,"course_id":"CLOSE","kind":"portfolio","ce":ce,"item_id":item,"attempt":1,"response":"x","correct":score==100,"score":score,"payload":{}}).status_code==200
@@ -111,6 +112,7 @@ def test_result_ignores_client_claims_and_recomputes_from_server_evidence():
  assert client.put("/api/config/AUTH",headers=H,json=cfg).status_code==200
  bank={"questions":[{"id":"q1","ce":"c1","q":"Q1","options":[],"answer":True,"type":"tf"},{"id":"q2","ce":"c2","q":"Q2","options":[],"answer":True,"type":"tf"}]}
  assert client.put("/api/teacher/exam-bank/AUTH",headers=H,json=bank).status_code==200
+ assert client.put("/api/teacher/portfolio-bank/AUTH",headers=H,json={"items":[{"id":"p1","ce":"c1","kind":"choice","prompt":"P","options":[],"answer":"x"},{"id":"p2","ce":"c2","kind":"choice","prompt":"P","options":[],"answer":"wrong"}]}).status_code==200
  for ce,item,score in [("c1","p1",100),("c2","p2",0)]:
   assert client.post("/api/evidence",json={"student_id":"auth","course_id":"AUTH","kind":"portfolio","ce":ce,"item_id":item,"attempt":1,"response":"x","correct":score==100,"score":score,"payload":{}}).status_code==200
  start=client.post("/api/exam/start",json={"student_id":"auth","course_id":"AUTH","kind":"exam","item_id":"final"});assert start.status_code==200,start.text
@@ -126,6 +128,7 @@ def test_missing_ce_cannot_disappear_from_authoritative_denominator():
  assert client.put("/api/config/UNIVERSE",headers=H,json=cfg).status_code==200
  bank={"questions":[{"id":"u1","ce":"c1","q":"Q1","options":[],"answer":True,"type":"tf"},{"id":"u2","ce":"c2","q":"Q2","options":[],"answer":True,"type":"tf"}]}
  assert client.put("/api/teacher/exam-bank/UNIVERSE",headers=H,json=bank).status_code==200
+ assert client.put("/api/teacher/portfolio-bank/UNIVERSE",headers=H,json={"items":[{"id":"p1","ce":"c1","kind":"choice","prompt":"P","options":[],"answer":"x"}]}).status_code==200
  assert client.post("/api/evidence",json={"student_id":"u","course_id":"UNIVERSE","kind":"portfolio","ce":"c1","item_id":"p1","attempt":1,"response":"x","correct":True,"score":100,"payload":{}}).status_code==200
  st=client.post("/api/exam/start",json={"student_id":"u","course_id":"UNIVERSE","kind":"exam","item_id":"final"});assert st.status_code==200
  answers={q["id"]:(True if q["ce"]=="c1" else False) for q in st.json()["questions"]}
@@ -133,3 +136,15 @@ def test_missing_ce_cannot_disappear_from_authoritative_denominator():
  forged={"student_id":"u","course_id":"UNIVERSE","portfolio":100,"exam":100,"final":100,"ce_passed":2,"ce_total":2,"ra_passed":True,"recovery":[]}
  r=client.post("/api/result",json=forged);assert r.status_code==200,r.text
  d=r.json();assert d["ce_total"]==2;assert d["ce"]["c2"]["portfolio"]==0;assert d["ce"]["c2"]["passed"] is False;assert "c2" in d["recovery"]
+
+def test_portfolio_score_is_server_authoritative():
+ bank={"items":[{"id":"p1","ce":"c1","kind":"choice","prompt":"P","options":["A","B"],"answer":1}]}
+ assert client.put("/api/teacher/portfolio-bank/PORT",headers=H,json=bank).status_code==200
+ forged={"student_id":"s","course_id":"PORT","kind":"portfolio","ce":"c1","item_id":"p1","attempt":1,"response":0,"correct":True,"score":100,"payload":{}}
+ r=client.post("/api/evidence",json=forged);assert r.status_code==200,r.text
+ assert r.json()["correct"] is False and r.json()["score"]==0
+ c=module.con();row=c.execute("SELECT correct,score FROM evidence WHERE student_id='s' AND course_id='PORT' AND item_id='p1'").fetchone();c.close()
+ assert row["correct"]==0 and row["score"]==0
+ forged["response"]=1;forged["correct"]=False;forged["score"]=0;forged["attempt"]=2
+ r=client.post("/api/evidence",json=forged);assert r.status_code==200
+ assert r.json()["correct"] is True and r.json()["score"]==100

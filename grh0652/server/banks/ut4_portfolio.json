@@ -1,0 +1,844 @@
+{
+  "items": [
+    {
+      "id": "4.ap1",
+      "ce": "4.a",
+      "kind": "choice",
+      "prompt": "Para resolver un supuesto sobre Procesos retributivos y modalidades salariales, ¿qué debe fijarse antes del cálculo?",
+      "options": [
+        "Periodo, datos de origen y parámetros vigentes",
+        "Un porcentaje recordado",
+        "El líquido deseado",
+        "Una nómina antigua"
+      ],
+      "answer": 0,
+      "feedback": "Todo cálculo debe quedar vinculado a su periodo y datos."
+    },
+    {
+      "id": "4.ap2",
+      "ce": "4.a",
+      "kind": "tf",
+      "prompt": "Los parámetros legales variables usados en Procesos retributivos y modalidades salariales deben conservar su periodo y fuente.",
+      "options": [],
+      "answer": true,
+      "feedback": "Así se evita aplicar cifras de otro ejercicio."
+    },
+    {
+      "id": "4.ap3",
+      "ce": "4.a",
+      "kind": "multi",
+      "prompt": "Selecciona evidencias que permiten reproducir un cálculo.",
+      "options": [
+        "Datos de entrada",
+        "Operaciones realizadas",
+        "Fuente/versión de parámetros",
+        "Solo el resultado final"
+      ],
+      "answer": [
+        0,
+        1,
+        2
+      ],
+      "feedback": "Resultado sin datos, operaciones y parámetros no es auditable."
+    },
+    {
+      "id": "4.ap4",
+      "ce": "4.a",
+      "kind": "order",
+      "prompt": "Ordena el control de una nómina.",
+      "options": [],
+      "answer": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "feedback": "La comprobación final depende de datos y parámetros previos."
+    },
+    {
+      "id": "4.ap5",
+      "ce": "4.a",
+      "kind": "choice",
+      "prompt": "¿Qué señal obliga a revisar el cálculo?",
+      "options": [
+        "El parámetro usado no indica a qué periodo corresponde",
+        "Las operaciones están documentadas",
+        "La fuente es oficial",
+        "El periodo está identificado"
+      ],
+      "answer": 0,
+      "feedback": "Un parámetro sin periodo puede estar obsoleto."
+    },
+    {
+      "id": "4.ap6",
+      "ce": "4.a",
+      "kind": "choice",
+      "prompt": "En Procesos retributivos y modalidades salariales, ¿qué práctica reduce errores?",
+      "options": [
+        "Separar datos, reglas, operaciones y resultado",
+        "Sobrescribir cifras sin registro",
+        "Copiar la nómina anterior",
+        "Ocultar las bases intermedias"
+      ],
+      "answer": 0,
+      "feedback": "Separar capas facilita revisión y actualización."
+    },
+    {
+      "id": "4.bp1",
+      "ce": "4.b",
+      "kind": "choice",
+      "prompt": "Para resolver un supuesto sobre SMI, IPREM e índices de referencia, ¿qué debe fijarse antes del cálculo?",
+      "options": [
+        "Periodo, datos de origen y parámetros vigentes",
+        "Un porcentaje recordado",
+        "El líquido deseado",
+        "Una nómina antigua"
+      ],
+      "answer": 0,
+      "feedback": "Todo cálculo debe quedar vinculado a su periodo y datos."
+    },
+    {
+      "id": "4.bp2",
+      "ce": "4.b",
+      "kind": "tf",
+      "prompt": "Los parámetros legales variables usados en SMI, IPREM e índices de referencia deben conservar su periodo y fuente.",
+      "options": [],
+      "answer": true,
+      "feedback": "Así se evita aplicar cifras de otro ejercicio."
+    },
+    {
+      "id": "4.bp3",
+      "ce": "4.b",
+      "kind": "multi",
+      "prompt": "Selecciona evidencias que permiten reproducir un cálculo.",
+      "options": [
+        "Datos de entrada",
+        "Operaciones realizadas",
+        "Fuente/versión de parámetros",
+        "Solo el resultado final"
+      ],
+      "answer": [
+        0,
+        1,
+        2
+      ],
+      "feedback": "Resultado sin datos, operaciones y parámetros no es auditable."
+    },
+    {
+      "id": "4.bp4",
+      "ce": "4.b",
+      "kind": "order",
+      "prompt": "Ordena el control de una nómina.",
+      "options": [],
+      "answer": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "feedback": "La comprobación final depende de datos y parámetros previos."
+    },
+    {
+      "id": "4.bp5",
+      "ce": "4.b",
+      "kind": "choice",
+      "prompt": "¿Qué señal obliga a revisar el cálculo?",
+      "options": [
+        "El parámetro usado no indica a qué periodo corresponde",
+        "Las operaciones están documentadas",
+        "La fuente es oficial",
+        "El periodo está identificado"
+      ],
+      "answer": 0,
+      "feedback": "Un parámetro sin periodo puede estar obsoleto."
+    },
+    {
+      "id": "4.bp6",
+      "ce": "4.b",
+      "kind": "choice",
+      "prompt": "En SMI, IPREM e índices de referencia, ¿qué práctica reduce errores?",
+      "options": [
+        "Separar datos, reglas, operaciones y resultado",
+        "Sobrescribir cifras sin registro",
+        "Copiar la nómina anterior",
+        "Ocultar las bases intermedias"
+      ],
+      "answer": 0,
+      "feedback": "Separar capas facilita revisión y actualización."
+    },
+    {
+      "id": "4.cp1",
+      "ce": "4.c",
+      "kind": "choice",
+      "prompt": "Para resolver un supuesto sobre Incentivos y retribución variable, ¿qué debe fijarse antes del cálculo?",
+      "options": [
+        "Periodo, datos de origen y parámetros vigentes",
+        "Un porcentaje recordado",
+        "El líquido deseado",
+        "Una nómina antigua"
+      ],
+      "answer": 0,
+      "feedback": "Todo cálculo debe quedar vinculado a su periodo y datos."
+    },
+    {
+      "id": "4.cp2",
+      "ce": "4.c",
+      "kind": "tf",
+      "prompt": "Los parámetros legales variables usados en Incentivos y retribución variable deben conservar su periodo y fuente.",
+      "options": [],
+      "answer": true,
+      "feedback": "Así se evita aplicar cifras de otro ejercicio."
+    },
+    {
+      "id": "4.cp3",
+      "ce": "4.c",
+      "kind": "multi",
+      "prompt": "Selecciona evidencias que permiten reproducir un cálculo.",
+      "options": [
+        "Datos de entrada",
+        "Operaciones realizadas",
+        "Fuente/versión de parámetros",
+        "Solo el resultado final"
+      ],
+      "answer": [
+        0,
+        1,
+        2
+      ],
+      "feedback": "Resultado sin datos, operaciones y parámetros no es auditable."
+    },
+    {
+      "id": "4.cp4",
+      "ce": "4.c",
+      "kind": "order",
+      "prompt": "Ordena el control de una nómina.",
+      "options": [],
+      "answer": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "feedback": "La comprobación final depende de datos y parámetros previos."
+    },
+    {
+      "id": "4.cp5",
+      "ce": "4.c",
+      "kind": "choice",
+      "prompt": "¿Qué señal obliga a revisar el cálculo?",
+      "options": [
+        "El parámetro usado no indica a qué periodo corresponde",
+        "Las operaciones están documentadas",
+        "La fuente es oficial",
+        "El periodo está identificado"
+      ],
+      "answer": 0,
+      "feedback": "Un parámetro sin periodo puede estar obsoleto."
+    },
+    {
+      "id": "4.cp6",
+      "ce": "4.c",
+      "kind": "choice",
+      "prompt": "En Incentivos y retribución variable, ¿qué práctica reduce errores?",
+      "options": [
+        "Separar datos, reglas, operaciones y resultado",
+        "Sobrescribir cifras sin registro",
+        "Copiar la nómina anterior",
+        "Ocultar las bases intermedias"
+      ],
+      "answer": 0,
+      "feedback": "Separar capas facilita revisión y actualización."
+    },
+    {
+      "id": "4.dp1",
+      "ce": "4.d",
+      "kind": "choice",
+      "prompt": "Para resolver un supuesto sobre Conceptos y estructura de nómina, ¿qué debe fijarse antes del cálculo?",
+      "options": [
+        "Periodo, datos de origen y parámetros vigentes",
+        "Un porcentaje recordado",
+        "El líquido deseado",
+        "Una nómina antigua"
+      ],
+      "answer": 0,
+      "feedback": "Todo cálculo debe quedar vinculado a su periodo y datos."
+    },
+    {
+      "id": "4.dp2",
+      "ce": "4.d",
+      "kind": "tf",
+      "prompt": "Los parámetros legales variables usados en Conceptos y estructura de nómina deben conservar su periodo y fuente.",
+      "options": [],
+      "answer": true,
+      "feedback": "Así se evita aplicar cifras de otro ejercicio."
+    },
+    {
+      "id": "4.dp3",
+      "ce": "4.d",
+      "kind": "multi",
+      "prompt": "Selecciona evidencias que permiten reproducir un cálculo.",
+      "options": [
+        "Datos de entrada",
+        "Operaciones realizadas",
+        "Fuente/versión de parámetros",
+        "Solo el resultado final"
+      ],
+      "answer": [
+        0,
+        1,
+        2
+      ],
+      "feedback": "Resultado sin datos, operaciones y parámetros no es auditable."
+    },
+    {
+      "id": "4.dp4",
+      "ce": "4.d",
+      "kind": "order",
+      "prompt": "Ordena el control de una nómina.",
+      "options": [],
+      "answer": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "feedback": "La comprobación final depende de datos y parámetros previos."
+    },
+    {
+      "id": "4.dp5",
+      "ce": "4.d",
+      "kind": "choice",
+      "prompt": "¿Qué señal obliga a revisar el cálculo?",
+      "options": [
+        "El parámetro usado no indica a qué periodo corresponde",
+        "Las operaciones están documentadas",
+        "La fuente es oficial",
+        "El periodo está identificado"
+      ],
+      "answer": 0,
+      "feedback": "Un parámetro sin periodo puede estar obsoleto."
+    },
+    {
+      "id": "4.dp6",
+      "ce": "4.d",
+      "kind": "choice",
+      "prompt": "En Conceptos y estructura de nómina, ¿qué práctica reduce errores?",
+      "options": [
+        "Separar datos, reglas, operaciones y resultado",
+        "Sobrescribir cifras sin registro",
+        "Copiar la nómina anterior",
+        "Ocultar las bases intermedias"
+      ],
+      "answer": 0,
+      "feedback": "Separar capas facilita revisión y actualización."
+    },
+    {
+      "id": "4.ep1",
+      "ce": "4.e",
+      "kind": "choice",
+      "prompt": "Para resolver un supuesto sobre Devengos y deducciones, ¿qué debe fijarse antes del cálculo?",
+      "options": [
+        "Periodo, datos de origen y parámetros vigentes",
+        "Un porcentaje recordado",
+        "El líquido deseado",
+        "Una nómina antigua"
+      ],
+      "answer": 0,
+      "feedback": "Todo cálculo debe quedar vinculado a su periodo y datos."
+    },
+    {
+      "id": "4.ep2",
+      "ce": "4.e",
+      "kind": "tf",
+      "prompt": "Los parámetros legales variables usados en Devengos y deducciones deben conservar su periodo y fuente.",
+      "options": [],
+      "answer": true,
+      "feedback": "Así se evita aplicar cifras de otro ejercicio."
+    },
+    {
+      "id": "4.ep3",
+      "ce": "4.e",
+      "kind": "multi",
+      "prompt": "Selecciona evidencias que permiten reproducir un cálculo.",
+      "options": [
+        "Datos de entrada",
+        "Operaciones realizadas",
+        "Fuente/versión de parámetros",
+        "Solo el resultado final"
+      ],
+      "answer": [
+        0,
+        1,
+        2
+      ],
+      "feedback": "Resultado sin datos, operaciones y parámetros no es auditable."
+    },
+    {
+      "id": "4.ep4",
+      "ce": "4.e",
+      "kind": "order",
+      "prompt": "Ordena el control de una nómina.",
+      "options": [],
+      "answer": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "feedback": "La comprobación final depende de datos y parámetros previos."
+    },
+    {
+      "id": "4.ep5",
+      "ce": "4.e",
+      "kind": "choice",
+      "prompt": "¿Qué señal obliga a revisar el cálculo?",
+      "options": [
+        "El parámetro usado no indica a qué periodo corresponde",
+        "Las operaciones están documentadas",
+        "La fuente es oficial",
+        "El periodo está identificado"
+      ],
+      "answer": 0,
+      "feedback": "Un parámetro sin periodo puede estar obsoleto."
+    },
+    {
+      "id": "4.ep6",
+      "ce": "4.e",
+      "kind": "choice",
+      "prompt": "En Devengos y deducciones, ¿qué práctica reduce errores?",
+      "options": [
+        "Separar datos, reglas, operaciones y resultado",
+        "Sobrescribir cifras sin registro",
+        "Copiar la nómina anterior",
+        "Ocultar las bases intermedias"
+      ],
+      "answer": 0,
+      "feedback": "Separar capas facilita revisión y actualización."
+    },
+    {
+      "id": "4.fp1",
+      "ce": "4.f",
+      "kind": "choice",
+      "prompt": "Para resolver un supuesto sobre Bases, cuotas e IRPF, ¿qué debe fijarse antes del cálculo?",
+      "options": [
+        "Periodo, datos de origen y parámetros vigentes",
+        "Un porcentaje recordado",
+        "El líquido deseado",
+        "Una nómina antigua"
+      ],
+      "answer": 0,
+      "feedback": "Todo cálculo debe quedar vinculado a su periodo y datos."
+    },
+    {
+      "id": "4.fp2",
+      "ce": "4.f",
+      "kind": "tf",
+      "prompt": "Los parámetros legales variables usados en Bases, cuotas e IRPF deben conservar su periodo y fuente.",
+      "options": [],
+      "answer": true,
+      "feedback": "Así se evita aplicar cifras de otro ejercicio."
+    },
+    {
+      "id": "4.fp3",
+      "ce": "4.f",
+      "kind": "multi",
+      "prompt": "Selecciona evidencias que permiten reproducir un cálculo.",
+      "options": [
+        "Datos de entrada",
+        "Operaciones realizadas",
+        "Fuente/versión de parámetros",
+        "Solo el resultado final"
+      ],
+      "answer": [
+        0,
+        1,
+        2
+      ],
+      "feedback": "Resultado sin datos, operaciones y parámetros no es auditable."
+    },
+    {
+      "id": "4.fp4",
+      "ce": "4.f",
+      "kind": "order",
+      "prompt": "Ordena el control de una nómina.",
+      "options": [],
+      "answer": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "feedback": "La comprobación final depende de datos y parámetros previos."
+    },
+    {
+      "id": "4.fp5",
+      "ce": "4.f",
+      "kind": "choice",
+      "prompt": "¿Qué señal obliga a revisar el cálculo?",
+      "options": [
+        "El parámetro usado no indica a qué periodo corresponde",
+        "Las operaciones están documentadas",
+        "La fuente es oficial",
+        "El periodo está identificado"
+      ],
+      "answer": 0,
+      "feedback": "Un parámetro sin periodo puede estar obsoleto."
+    },
+    {
+      "id": "4.fp6",
+      "ce": "4.f",
+      "kind": "choice",
+      "prompt": "En Bases, cuotas e IRPF, ¿qué práctica reduce errores?",
+      "options": [
+        "Separar datos, reglas, operaciones y resultado",
+        "Sobrescribir cifras sin registro",
+        "Copiar la nómina anterior",
+        "Ocultar las bases intermedias"
+      ],
+      "answer": 0,
+      "feedback": "Separar capas facilita revisión y actualización."
+    },
+    {
+      "id": "4.gp1",
+      "ce": "4.g",
+      "kind": "choice",
+      "prompt": "Para resolver un supuesto sobre Recibo salarial y documentos de cotización, ¿qué debe fijarse antes del cálculo?",
+      "options": [
+        "Periodo, datos de origen y parámetros vigentes",
+        "Un porcentaje recordado",
+        "El líquido deseado",
+        "Una nómina antigua"
+      ],
+      "answer": 0,
+      "feedback": "Todo cálculo debe quedar vinculado a su periodo y datos."
+    },
+    {
+      "id": "4.gp2",
+      "ce": "4.g",
+      "kind": "tf",
+      "prompt": "Los parámetros legales variables usados en Recibo salarial y documentos de cotización deben conservar su periodo y fuente.",
+      "options": [],
+      "answer": true,
+      "feedback": "Así se evita aplicar cifras de otro ejercicio."
+    },
+    {
+      "id": "4.gp3",
+      "ce": "4.g",
+      "kind": "multi",
+      "prompt": "Selecciona evidencias que permiten reproducir un cálculo.",
+      "options": [
+        "Datos de entrada",
+        "Operaciones realizadas",
+        "Fuente/versión de parámetros",
+        "Solo el resultado final"
+      ],
+      "answer": [
+        0,
+        1,
+        2
+      ],
+      "feedback": "Resultado sin datos, operaciones y parámetros no es auditable."
+    },
+    {
+      "id": "4.gp4",
+      "ce": "4.g",
+      "kind": "order",
+      "prompt": "Ordena el control de una nómina.",
+      "options": [],
+      "answer": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "feedback": "La comprobación final depende de datos y parámetros previos."
+    },
+    {
+      "id": "4.gp5",
+      "ce": "4.g",
+      "kind": "choice",
+      "prompt": "¿Qué señal obliga a revisar el cálculo?",
+      "options": [
+        "El parámetro usado no indica a qué periodo corresponde",
+        "Las operaciones están documentadas",
+        "La fuente es oficial",
+        "El periodo está identificado"
+      ],
+      "answer": 0,
+      "feedback": "Un parámetro sin periodo puede estar obsoleto."
+    },
+    {
+      "id": "4.gp6",
+      "ce": "4.g",
+      "kind": "choice",
+      "prompt": "En Recibo salarial y documentos de cotización, ¿qué práctica reduce errores?",
+      "options": [
+        "Separar datos, reglas, operaciones y resultado",
+        "Sobrescribir cifras sin registro",
+        "Copiar la nómina anterior",
+        "Ocultar las bases intermedias"
+      ],
+      "answer": 0,
+      "feedback": "Separar capas facilita revisión y actualización."
+    },
+    {
+      "id": "4.hp1",
+      "ce": "4.h",
+      "kind": "choice",
+      "prompt": "Para resolver un supuesto sobre Plazos de pago y presentación, ¿qué debe fijarse antes del cálculo?",
+      "options": [
+        "Periodo, datos de origen y parámetros vigentes",
+        "Un porcentaje recordado",
+        "El líquido deseado",
+        "Una nómina antigua"
+      ],
+      "answer": 0,
+      "feedback": "Todo cálculo debe quedar vinculado a su periodo y datos."
+    },
+    {
+      "id": "4.hp2",
+      "ce": "4.h",
+      "kind": "tf",
+      "prompt": "Los parámetros legales variables usados en Plazos de pago y presentación deben conservar su periodo y fuente.",
+      "options": [],
+      "answer": true,
+      "feedback": "Así se evita aplicar cifras de otro ejercicio."
+    },
+    {
+      "id": "4.hp3",
+      "ce": "4.h",
+      "kind": "multi",
+      "prompt": "Selecciona evidencias que permiten reproducir un cálculo.",
+      "options": [
+        "Datos de entrada",
+        "Operaciones realizadas",
+        "Fuente/versión de parámetros",
+        "Solo el resultado final"
+      ],
+      "answer": [
+        0,
+        1,
+        2
+      ],
+      "feedback": "Resultado sin datos, operaciones y parámetros no es auditable."
+    },
+    {
+      "id": "4.hp4",
+      "ce": "4.h",
+      "kind": "order",
+      "prompt": "Ordena el control de una nómina.",
+      "options": [],
+      "answer": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "feedback": "La comprobación final depende de datos y parámetros previos."
+    },
+    {
+      "id": "4.hp5",
+      "ce": "4.h",
+      "kind": "choice",
+      "prompt": "¿Qué señal obliga a revisar el cálculo?",
+      "options": [
+        "El parámetro usado no indica a qué periodo corresponde",
+        "Las operaciones están documentadas",
+        "La fuente es oficial",
+        "El periodo está identificado"
+      ],
+      "answer": 0,
+      "feedback": "Un parámetro sin periodo puede estar obsoleto."
+    },
+    {
+      "id": "4.hp6",
+      "ce": "4.h",
+      "kind": "choice",
+      "prompt": "En Plazos de pago y presentación, ¿qué práctica reduce errores?",
+      "options": [
+        "Separar datos, reglas, operaciones y resultado",
+        "Sobrescribir cifras sin registro",
+        "Copiar la nómina anterior",
+        "Ocultar las bases intermedias"
+      ],
+      "answer": 0,
+      "feedback": "Separar capas facilita revisión y actualización."
+    },
+    {
+      "id": "4.ip1",
+      "ce": "4.i",
+      "kind": "choice",
+      "prompt": "Para resolver un supuesto sobre Vías de comunicación, ¿qué debe fijarse antes del cálculo?",
+      "options": [
+        "Periodo, datos de origen y parámetros vigentes",
+        "Un porcentaje recordado",
+        "El líquido deseado",
+        "Una nómina antigua"
+      ],
+      "answer": 0,
+      "feedback": "Todo cálculo debe quedar vinculado a su periodo y datos."
+    },
+    {
+      "id": "4.ip2",
+      "ce": "4.i",
+      "kind": "tf",
+      "prompt": "Los parámetros legales variables usados en Vías de comunicación deben conservar su periodo y fuente.",
+      "options": [],
+      "answer": true,
+      "feedback": "Así se evita aplicar cifras de otro ejercicio."
+    },
+    {
+      "id": "4.ip3",
+      "ce": "4.i",
+      "kind": "multi",
+      "prompt": "Selecciona evidencias que permiten reproducir un cálculo.",
+      "options": [
+        "Datos de entrada",
+        "Operaciones realizadas",
+        "Fuente/versión de parámetros",
+        "Solo el resultado final"
+      ],
+      "answer": [
+        0,
+        1,
+        2
+      ],
+      "feedback": "Resultado sin datos, operaciones y parámetros no es auditable."
+    },
+    {
+      "id": "4.ip4",
+      "ce": "4.i",
+      "kind": "order",
+      "prompt": "Ordena el control de una nómina.",
+      "options": [],
+      "answer": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "feedback": "La comprobación final depende de datos y parámetros previos."
+    },
+    {
+      "id": "4.ip5",
+      "ce": "4.i",
+      "kind": "choice",
+      "prompt": "¿Qué señal obliga a revisar el cálculo?",
+      "options": [
+        "El parámetro usado no indica a qué periodo corresponde",
+        "Las operaciones están documentadas",
+        "La fuente es oficial",
+        "El periodo está identificado"
+      ],
+      "answer": 0,
+      "feedback": "Un parámetro sin periodo puede estar obsoleto."
+    },
+    {
+      "id": "4.ip6",
+      "ce": "4.i",
+      "kind": "choice",
+      "prompt": "En Vías de comunicación, ¿qué práctica reduce errores?",
+      "options": [
+        "Separar datos, reglas, operaciones y resultado",
+        "Sobrescribir cifras sin registro",
+        "Copiar la nómina anterior",
+        "Ocultar las bases intermedias"
+      ],
+      "answer": 0,
+      "feedback": "Separar capas facilita revisión y actualización."
+    },
+    {
+      "id": "4.jp1",
+      "ce": "4.j",
+      "kind": "choice",
+      "prompt": "Para resolver un supuesto sobre Aplicaciones informáticas y archivo, ¿qué debe fijarse antes del cálculo?",
+      "options": [
+        "Periodo, datos de origen y parámetros vigentes",
+        "Un porcentaje recordado",
+        "El líquido deseado",
+        "Una nómina antigua"
+      ],
+      "answer": 0,
+      "feedback": "Todo cálculo debe quedar vinculado a su periodo y datos."
+    },
+    {
+      "id": "4.jp2",
+      "ce": "4.j",
+      "kind": "tf",
+      "prompt": "Los parámetros legales variables usados en Aplicaciones informáticas y archivo deben conservar su periodo y fuente.",
+      "options": [],
+      "answer": true,
+      "feedback": "Así se evita aplicar cifras de otro ejercicio."
+    },
+    {
+      "id": "4.jp3",
+      "ce": "4.j",
+      "kind": "multi",
+      "prompt": "Selecciona evidencias que permiten reproducir un cálculo.",
+      "options": [
+        "Datos de entrada",
+        "Operaciones realizadas",
+        "Fuente/versión de parámetros",
+        "Solo el resultado final"
+      ],
+      "answer": [
+        0,
+        1,
+        2
+      ],
+      "feedback": "Resultado sin datos, operaciones y parámetros no es auditable."
+    },
+    {
+      "id": "4.jp4",
+      "ce": "4.j",
+      "kind": "order",
+      "prompt": "Ordena el control de una nómina.",
+      "options": [],
+      "answer": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "feedback": "La comprobación final depende de datos y parámetros previos."
+    },
+    {
+      "id": "4.jp5",
+      "ce": "4.j",
+      "kind": "choice",
+      "prompt": "¿Qué señal obliga a revisar el cálculo?",
+      "options": [
+        "El parámetro usado no indica a qué periodo corresponde",
+        "Las operaciones están documentadas",
+        "La fuente es oficial",
+        "El periodo está identificado"
+      ],
+      "answer": 0,
+      "feedback": "Un parámetro sin periodo puede estar obsoleto."
+    },
+    {
+      "id": "4.jp6",
+      "ce": "4.j",
+      "kind": "choice",
+      "prompt": "En Aplicaciones informáticas y archivo, ¿qué práctica reduce errores?",
+      "options": [
+        "Separar datos, reglas, operaciones y resultado",
+        "Sobrescribir cifras sin registro",
+        "Copiar la nómina anterior",
+        "Ocultar las bases intermedias"
+      ],
+      "answer": 0,
+      "feedback": "Separar capas facilita revisión y actualización."
+    }
+  ]
+}
