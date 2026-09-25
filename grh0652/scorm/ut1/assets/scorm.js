@@ -120,7 +120,7 @@ function renderExam(){
 }
 async function startExam(){
  if(state.examTaken){alert('El examen solo permite un intento.');return}if(!state.evaluationConfig||!state.evaluationConfig.exam_enabled){alert('El profesor todavía no ha activado el examen.');return}
- const ev=evidence();if(ev&&ev.api){const gate=await ev.startAttempt('exam','final',{unit:UNIT_ID});if(!gate||gate.error){alert('No se puede iniciar el examen: '+(gate?.error||'servidor no disponible'));return}state.serverExamAttempt=gate.attempt;state.serverExamAttemptId=gate.id||null;}
+ const ev=evidence();if(ev&&ev.api){const gate=await ev.startExam({unit:UNIT_ID});if(!gate||gate.error){alert('No se puede iniciar el examen: '+(gate?.error||'servidor no disponible'));return}state.serverExamAttempt=gate.attempt;state.serverExamAttemptId=gate.attempt_id;state.examVersion=gate.version||state.examVersion;EXAM.splice(0,EXAM.length,...gate.questions);}
  examActive=true;autoSubmitPending=false;state.incidents=0;state.attempts=(state.attempts||0)+1;document.body.classList.add('exam-mode');$('#examIntro')?.classList.add('hidden');$('#examResult').innerHTML='';$('#examBox')?.classList.remove('hidden');renderExam();requestFull();sync();
 }
 function registerIncident(reason){
@@ -143,9 +143,8 @@ async function submitExam(auto){
  if(!examActive)return;
  const answers=EXAM.map(examAnswer),answered=answers.filter(x=>x!==null).length;
  if(!auto&&answered<EXAM.length&&!confirm('Has respondido '+answered+' de '+EXAM.length+'. ¿Quieres entregar igualmente?'))return;
- let good=0;const by={};EXAM.forEach((q,i)=>{const a=answers[i],ok=isCorrect(q,a);if(ok)good++;by[q.ce]=by[q.ce]||{ok:0,n:0};by[q.ce].n++;if(ok)by[q.ce].ok++;const card=document.getElementById('qcard-'+q.id),fb=document.getElementById('qfb-'+q.id);card?.classList.add(ok?'correct':'wrong');if(fb){fb.classList.remove('hidden');fb.classList.add(ok?'ok':'bad');fb.innerHTML=`<b>${ok?'Respuesta registrada.':'Respuesta registrada.'}</b>`}recordInteraction(q,a,ok,i)});
- const score=Math.round(good/EXAM.length*100);state.examTaken=true;state.examScore=score;state.best=score;state.last='autoevaluacion';examActive=false;document.body.classList.remove('exam-mode');$('#examBox')?.classList.add('hidden');
- const evaluation=calculateEvaluation(by);try{const ev=evidence();if(ev&&ev.api&&state.serverExamAttemptId)await ev.submitAttempt(state.serverExamAttemptId,{score,evaluation})}catch(e){}
+ let good=0,by={},score=0;const ev=evidence();if(ev&&ev.api&&state.serverExamAttemptId){const amap={};EXAM.forEach((q,i)=>amap[q.id]=answers[i]);const graded=await ev.submitExam(state.serverExamAttemptId,amap);if(!graded||graded.error){alert('No se pudo entregar el examen: '+(graded?.error||'error de servidor'));return}score=graded.score;by=graded.by_ce||{};good=Object.values(by).reduce((a,v)=>a+(v.ok||0),0);EXAM.forEach((q,i)=>recordInteraction(q,answers[i],false,i));}else{EXAM.forEach((q,i)=>{const a=answers[i],ok=isCorrect(q,a);if(ok)good++;by[q.ce]=by[q.ce]||{ok:0,n:0};by[q.ce].n++;if(ok)by[q.ce].ok++});score=Math.round(good/EXAM.length*100);}state.examTaken=true;state.examScore=score;state.best=score;state.last='autoevaluacion';examActive=false;document.body.classList.remove('exam-mode');$('#examBox')?.classList.add('hidden');
+ const evaluation=calculateEvaluation(by);
  if(connected&&api){try{api.LMSSetValue('cmi.core.score.raw',String(Math.round(evaluation.final)));api.LMSSetValue('cmi.core.lesson_status',evaluation.ra?'passed':'failed')}catch(e){}}
  try{if(evidence())evidence().event({kind:'exam',attempt:1,score:score,payload:{by_ce:by,incidents:state.incidents,variant:EXAM.map(q=>q.id)}})}catch(e){}
  const breakdown=CRITERIA.map(c=>{const v=by[c.id]||{ok:0,n:0};return `<div><b>CE ${safe(c.id)}</b><br>${Math.round((v.ok/(v.n||1))*100)}%</div>`}).join('');

@@ -18,3 +18,7 @@ Publique el servicio detrás de HTTPS. En el aula web configure la URL con `?api
 El servidor ya no arranca sin `GRH_TEACHER_TOKEN`. Configure también `GRH_ALLOWED_ORIGINS` con los orígenes HTTPS autorizados, separados por comas. SQLite trabaja en WAL.
 
 Los intentos críticos se registran en servidor: práctica máximo 3, Portafolio máximo 2, examen máximo 1 y recuperación máximo 1. El examen debe iniciarse contra `/api/attempts/start`; refrescar o reconectar recupera el intento iniciado y no concede uno nuevo. El panel docente puede cerrar cada evaluación; al cerrarla se congela la configuración y se crean planes de recuperación para los CE pendientes de cada alumno.
+
+
+## Exámenes generados en servidor
+El banco evaluable se carga en `exam_banks` mediante el endpoint docente `PUT /api/teacher/exam-bank/{course_id}`. Al iniciar una convocatoria, el servidor selecciona el número configurado de preguntas por CE, aleatoriza preguntas y opciones y persiste una versión exacta por intento. La respuesta correcta no se incluye en el payload enviado al alumno. La misma versión se recupera si el navegador se reconecta.

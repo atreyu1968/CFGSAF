@@ -13,5 +13,7 @@ window.EVIDENCE={api:API,
  async startAttempt(kind,itemId,payload){return call('/api/attempts/start',{method:'POST',body:JSON.stringify({student_id:student(),course_id:course(),kind,item_id:itemId,payload:payload||{}})})},
  async answerAttempt(id,response,ce){return call('/api/attempts/'+encodeURIComponent(id)+'/answer',{method:'POST',body:JSON.stringify({response,ce:ce||null})})},
  async submitAttempt(id,payload){return call('/api/attempts/'+encodeURIComponent(id)+'/submit',{method:'POST',body:JSON.stringify({payload:payload||{}})})},
+ async startExam(payload){return call('/api/exam/start',{method:'POST',body:JSON.stringify({student_id:student(),course_id:course(),kind:'exam',item_id:'final',payload:payload||{}})})},
+ async submitExam(id,answers){return call('/api/exam/'+encodeURIComponent(id)+'/submit',{method:'POST',body:JSON.stringify({payload:{answers}})})},
  async recovery(courseId){return call('/api/recovery/'+encodeURIComponent(student())+'/'+encodeURIComponent(courseId||course()))}
 };})();
