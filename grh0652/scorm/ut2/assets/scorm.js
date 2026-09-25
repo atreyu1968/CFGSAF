@@ -87,7 +87,7 @@ function exerciseHTML(ce,e,i){
 }
 function moveOrder(btn,d){const li=btn.closest('li'),ul=li.parentNode;if(d<0&&li.previousElementSibling)ul.insertBefore(li,li.previousElementSibling);if(d>0&&li.nextElementSibling)ul.insertBefore(li.nextElementSibling,li)}
 function getEx(ce,id){return (PRACTICE[ce]||[]).find(x=>x.id===id)}
-function checkExercise(ce,id){
+async function checkExercise(ce,id){
  const e=getEx(ce,id);if(!e)return;let ok=false,answered=true;
  if(e.type==='choice'){const x=$(`input[name="ex-${e.id}"]:checked`);if(!x)answered=false;else ok=Number(x.value)===e.answer}
  else if(e.type==='tf'){const x=$(`input[name="ex-${e.id}"]:checked`);if(!x)answered=false;else ok=(x.value==='true')===e.answer}
@@ -95,6 +95,7 @@ function checkExercise(ce,id){
  else if(e.type==='order'){const got=$$(`#order-${e.id} .order-item`).map(x=>x.dataset.key);ok=JSON.stringify(got)===JSON.stringify(e.answer)}
  else if(e.type==='match'){const got=e.pairs.map((p,j)=>document.getElementById(`match-${e.id}-${j}`)?.value);if(got.some(v=>v===''))answered=false;else ok=got.every((v,j)=>Number(v)===j)}
  if(!answered){alert('Completa la actividad antes de comprobar.');return}
+ const ev=evidence();if(ev&&ev.api){const gate=await ev.startAttempt('portfolio',id,{ce});if(!gate||gate.error){alert('No se puede registrar este intento: '+(gate?.error||'servidor no disponible'));return}await ev.answerAttempt(gate.id,answerForExercise(e),ce);await ev.submitAttempt(gate.id,{correct:ok,score:ok?100:0});}
  const fb=document.getElementById('fb-'+e.id);fb.classList.remove('hidden','ok','bad');fb.classList.add(ok?'ok':'bad');fb.innerHTML=`<b>${ok?'Correcto.':'Revisa la respuesta.'}</b> ${safe(e.feedback||'')}`;
  if(ok&&!state.mastered.includes(e.id)){state.mastered.push(e.id);document.getElementById('card-'+e.id)?.classList.add('done');sync()}else updateProgress();
 }
@@ -142,7 +143,7 @@ async function submitExam(auto){
  if(!examActive)return;
  const answers=EXAM.map(examAnswer),answered=answers.filter(x=>x!==null).length;
  if(!auto&&answered<EXAM.length&&!confirm('Has respondido '+answered+' de '+EXAM.length+'. ¿Quieres entregar igualmente?'))return;
- let good=0;const by={};EXAM.forEach((q,i)=>{const a=answers[i],ok=isCorrect(q,a);if(ok)good++;by[q.ce]=by[q.ce]||{ok:0,n:0};by[q.ce].n++;if(ok)by[q.ce].ok++;const card=document.getElementById('qcard-'+q.id),fb=document.getElementById('qfb-'+q.id);card?.classList.add(ok?'correct':'wrong');if(fb){fb.classList.remove('hidden');fb.classList.add(ok?'ok':'bad');fb.innerHTML=`<b>${ok?'Correcto.':'Respuesta correcta: '+safe(correctText(q))+'.'}</b> ${safe(q.feedback||'')}`}recordInteraction(q,a,ok,i)});
+ let good=0;const by={};EXAM.forEach((q,i)=>{const a=answers[i],ok=isCorrect(q,a);if(ok)good++;by[q.ce]=by[q.ce]||{ok:0,n:0};by[q.ce].n++;if(ok)by[q.ce].ok++;const card=document.getElementById('qcard-'+q.id),fb=document.getElementById('qfb-'+q.id);card?.classList.add(ok?'correct':'wrong');if(fb){fb.classList.remove('hidden');fb.classList.add(ok?'ok':'bad');fb.innerHTML=`<b>${ok?'Respuesta registrada.':'Respuesta registrada.'}</b>`}recordInteraction(q,a,ok,i)});
  const score=Math.round(good/EXAM.length*100);state.examTaken=true;state.examScore=score;state.best=score;state.last='autoevaluacion';examActive=false;document.body.classList.remove('exam-mode');$('#examBox')?.classList.add('hidden');
  const evaluation=calculateEvaluation(by);try{const ev=evidence();if(ev&&ev.api&&state.serverExamAttemptId)await ev.submitAttempt(state.serverExamAttemptId,{score,evaluation})}catch(e){}
  if(connected&&api){try{api.LMSSetValue('cmi.core.score.raw',String(Math.round(evaluation.final)));api.LMSSetValue('cmi.core.lesson_status',evaluation.ra?'passed':'failed')}catch(e){}}
@@ -188,9 +189,9 @@ function installFormativePractice(){
    else if(e.type==='tf')choices=[{label:'Verdadero',value:true,ok:e.answer===true},{label:'Falso',value:false,ok:e.answer===false}];
    else {choices=[{label:'He completado el procedimiento propuesto',value:'done',ok:true}]}
    shuffle(choices).forEach((o,j)=>{const l=document.createElement('label');l.className='option';l.innerHTML='<input type="radio" name="fp-'+e.id+'" value="'+j+'"> '+safe(o.label);l.dataset.ok=o.ok?'1':'0';opts.appendChild(l)});
-   q.querySelector('.fp-check').onclick=()=>{const chosen=q.querySelector('input:checked');if(!chosen){alert('Selecciona una respuesta.');return}const n=(state.practiceAttempts[e.id]||0)+1;state.practiceAttempts[e.id]=n;const lab=chosen.closest('label'),ok=lab.dataset.ok==='1',fb=q.querySelector('.feedback');fb.classList.remove('hidden','ok','bad');fb.classList.add(ok?'ok':'bad');
+   q.querySelector('.fp-check').onclick=async()=>{const chosen=q.querySelector('input:checked');if(!chosen){alert('Selecciona una respuesta.');return}let n=(state.practiceAttempts[e.id]||0)+1;const ev=evidence();let serverId=null;if(ev&&ev.api){const gate=await ev.startAttempt('practice',e.id,{ce:c.id});if(!gate||gate.error){alert('No se puede registrar este intento: '+(gate?.error||'servidor no disponible'));return}n=gate.attempt;serverId=gate.id}state.practiceAttempts[e.id]=n;const lab=chosen.closest('label'),ok=lab.dataset.ok==='1',fb=q.querySelector('.feedback');fb.classList.remove('hidden','ok','bad');fb.classList.add(ok?'ok':'bad');
     if(ok)fb.innerHTML='<b>Correcto.</b> '+safe(e.feedback||'');else if(n>=3){const sol=Array.from(opts.querySelectorAll('label')).find(x=>x.dataset.ok==='1')?.textContent.trim()||'Consulta la explicación.';fb.innerHTML='<b>Has agotado los 3 intentos.</b> Solución orientativa: '+safe(sol)+'. '+safe(e.feedback||'');q.querySelector('.fp-check').disabled=true}else fb.innerHTML='<b>Respuesta incorrecta.</b> Revisa el contenido. Te quedan '+(3-n)+' intento(s).';
-    try{if(evidence())evidence().event({kind:'practice',ce:c.id,item_id:e.id,attempt:n,response:lab.textContent.trim(),correct:ok,payload:{max_attempts:3}})}catch(x){};sync()
+    try{if(ev&&serverId){await ev.answerAttempt(serverId,lab.textContent.trim(),c.id);await ev.submitAttempt(serverId,{correct:ok})}if(evidence())evidence().event({kind:'practice',ce:c.id,item_id:e.id,attempt:n,response:lab.textContent.trim(),correct:ok,payload:{max_attempts:3}})}catch(x){};sync()
    }
   })
  })
