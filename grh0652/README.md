@@ -1,31 +1,29 @@
-# GRH 0652 · Reproductor SCORM en GitHub Pages
+# GRH 0652 · Aula SCORM · evaluación criterial
 
-Esta carpeta contiene una **versión específica para GitHub Pages del SCORM 1.2 real de la UT1**, acompañada por un reproductor que expone la API que espera un SCO SCORM 1.2.
+Implementación de la UT1 / RA1 de Gestión de Recursos Humanos.
 
-## Arquitectura
+## Flujo del alumnado
+1. Teoría e infografías.
+2. Práctica guiada no evaluable: 3 intentos por ejercicio; al agotarlos se muestra orientación/solución.
+3. Portafolio de Actividades: evaluable, máximo 2 intentos por actividad.
+4. Examen tipo test: evaluable, 1 intento, solo disponible cuando lo activa el profesor.
+5. Cálculo por criterios y RA.
+6. Programa de recuperación automático con los CE no superados.
 
-- `index.html`: portal para el alumnado.
-- `player.html`: reproductor que crea la API SCORM 1.2 y carga el SCO en un iframe.
-- `assets/scorm-api.js`: implementación local de la API SCORM 1.2.
-- `scorm/ut1/imsmanifest.xml`: manifiesto SCORM.
-- `scorm/ut1/index.html`: SCO de la UT1.
-- `scorm/ut1/assets/style.css`: estilos.
-- `scorm/ut1/assets/scorm.js`: navegación, 54 actividades, examen de 36 preguntas y seguimiento.
-- `scorm/ut1/assets/infografias/`: recursos visuales de la unidad.
-- `scorm/ut1/assets/media/`: esquemas de apoyo.
+## Reglas configurables
+El panel `teacher.html` permite configurar pesos Portafolio/Examen, nota mínima del RA, porcentaje mínimo de CE superados (80 % por defecto), nota mínima por CE, número de preguntas por CE, duración y activación del examen.
 
-## Seguimiento
+## Anticopia
+El examen se genera por alumno con orden de preguntas y respuestas alterado, conservando el CE evaluado y la trazabilidad de la versión recibida.
 
-GitHub Pages es estático. El reproductor guarda en `localStorage`, separado por alumno y curso:
+## Persistencia
+Sin servidor, el SCORM conserva una copia local. Para evaluación real multiusuario debe ejecutarse `server/app.py` detrás de HTTPS y configurar su URL. El backend guarda estado, evidencias, intentos, respuestas, resultados y recuperación por alumno. El alumno puede reanudar desde otro dispositivo cuando usa el mismo identificador y el servidor está configurado.
 
-- cmi.core.lesson_location
-- cmi.suspend_data
-- cmi.core.lesson_status
-- cmi.core.score.raw
-- interacciones registradas por el SCO
-
-Este seguimiento permite reanudar en el mismo navegador, pero **no es un registro centralizado ni una calificación oficial**. Para ello debe utilizarse el ZIP SCORM en Moodle u otro LMS.
-
-## Autor
-
-Francisco Javier González Rolo
+## Estructura
+- `index.html`: acceso del alumnado.
+- `player.html`: reproductor SCORM 1.2.
+- `teacher.html`: panel docente.
+- `assets/scorm-api.js`: API SCORM 1.2.
+- `assets/evidence-store.js`: adaptador de persistencia.
+- `scorm/ut1/`: SCO real.
+- `server/`: API FastAPI + SQLite.

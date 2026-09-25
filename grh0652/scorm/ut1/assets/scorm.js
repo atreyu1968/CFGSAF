@@ -4,7 +4,7 @@ const $=s=>document.querySelector(s), $$=s=>Array.from(document.querySelectorAll
 const safe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const shuffle=a=>{const x=[...a];for(let i=x.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[x[i],x[j]]=[x[j],x[i]]}return x};
 let api=null,connected=false,examActive=false,lastIncident=0,autoSubmitPending=false,interactionIndex=0;
-let state={visited:[],mastered:[],best:0,attempts:0,examTaken:false,incidents:0,last:'inicio'};
+let state={visited:[],mastered:[],best:0,attempts:0,examTaken:false,incidents:0,last:'inicio',practiceAttempts:{},portfolioAttempts:{},portfolioScores:{},examScore:null,ceExam:{},evaluationConfig:null};
 
 function findAPI(){
  let w=window,tries=0;
@@ -12,7 +12,9 @@ function findAPI(){
  try{if(window.opener&&window.opener.API)return window.opener.API}catch(e){}
  return null;
 }
-function localKey(){return 'grh0652.sco.'+UNIT_ID}
+function evidence(){try{return window.EVIDENCE||(parent&&parent.EVIDENCE)||null}catch(e){return null}}
+function studentId(){try{return api&&api.LMSGetValue('cmi.core.student_id')||'alumno'}catch(e){return'alumno'}}
+function localKey(){return 'grh0652.sco.'+UNIT_ID+'_'+studentId()}
 function loadLocal(){try{const x=JSON.parse(localStorage.getItem(localKey())||'{}');state=Object.assign(state,x)}catch(e){}}
 function saveLocal(){try{localStorage.setItem(localKey(),JSON.stringify(state))}catch(e){}}
 function initSCORM(){
@@ -29,11 +31,12 @@ function sync(){
    api.LMSSetValue('cmi.core.lesson_location',state.last||'inicio');
    api.LMSSetValue('cmi.core.score.raw',String(Math.round(state.best||0)));
    api.LMSSetValue('cmi.core.score.min','0');api.LMSSetValue('cmi.core.score.max','100');
-   api.LMSSetValue('cmi.core.lesson_status',state.best>=PASS_SCORE?'passed':(state.examTaken?'failed':'incomplete'));
+   api.LMSSetValue('cmi.core.lesson_status',state.examTaken?(state.evaluation?.ra?'passed':'failed'):'incomplete');
    api.LMSSetValue('cmi.core.exit','suspend');
    api.LMSCommit('');
  }catch(e){saveLocal()}} else saveLocal();
  updateProgress();
+ try{if(evidence())evidence().state(state)}catch(e){}
 }
 function finish(){
  sync();if(connected&&api){try{api.LMSSetValue('cmi.core.exit','suspend');api.LMSCommit('');api.LMSFinish('')}catch(e){}}
@@ -115,6 +118,7 @@ function renderExam(){
  $('#submitExam').onclick=()=>submitExam(false);
 }
 function startExam(){
+ if(state.examTaken){alert('El examen solo permite un intento.');return}if(!state.evaluationConfig||!state.evaluationConfig.exam_enabled){alert('El profesor todavía no ha activado el examen.');return}
  examActive=true;autoSubmitPending=false;state.incidents=0;state.attempts=(state.attempts||0)+1;document.body.classList.add('exam-mode');$('#examIntro')?.classList.add('hidden');$('#examResult').innerHTML='';$('#examBox')?.classList.remove('hidden');renderExam();requestFull();sync();
 }
 function registerIncident(reason){
@@ -138,10 +142,12 @@ function submitExam(auto){
  const answers=EXAM.map(examAnswer),answered=answers.filter(x=>x!==null).length;
  if(!auto&&answered<EXAM.length&&!confirm('Has respondido '+answered+' de '+EXAM.length+'. ¿Quieres entregar igualmente?'))return;
  let good=0;const by={};EXAM.forEach((q,i)=>{const a=answers[i],ok=isCorrect(q,a);if(ok)good++;by[q.ce]=by[q.ce]||{ok:0,n:0};by[q.ce].n++;if(ok)by[q.ce].ok++;const card=document.getElementById('qcard-'+q.id),fb=document.getElementById('qfb-'+q.id);card?.classList.add(ok?'correct':'wrong');if(fb){fb.classList.remove('hidden');fb.classList.add(ok?'ok':'bad');fb.innerHTML=`<b>${ok?'Correcto.':'Respuesta correcta: '+safe(correctText(q))+'.'}</b> ${safe(q.feedback||'')}`}recordInteraction(q,a,ok,i)});
- const score=Math.round(good/EXAM.length*100);state.examTaken=true;state.best=Math.max(Number(state.best||0),score);state.last='autoevaluacion';examActive=false;document.body.classList.remove('exam-mode');$('#examBox')?.classList.add('hidden');
- if(connected&&api){try{api.LMSSetValue('cmi.core.score.raw',String(state.best));api.LMSSetValue('cmi.core.lesson_status',state.best>=PASS_SCORE?'passed':'failed')}catch(e){}}
+ const score=Math.round(good/EXAM.length*100);state.examTaken=true;state.examScore=score;state.best=score;state.last='autoevaluacion';examActive=false;document.body.classList.remove('exam-mode');$('#examBox')?.classList.add('hidden');
+ const evaluation=calculateEvaluation(by);
+ if(connected&&api){try{api.LMSSetValue('cmi.core.score.raw',String(Math.round(evaluation.final)));api.LMSSetValue('cmi.core.lesson_status',evaluation.ra?'passed':'failed')}catch(e){}}
+ try{if(evidence())evidence().event({kind:'exam',attempt:1,score:score,payload:{by_ce:by,incidents:state.incidents,variant:EXAM.map(q=>q.id)}})}catch(e){}
  const breakdown=CRITERIA.map(c=>{const v=by[c.id]||{ok:0,n:0};return `<div><b>CE ${safe(c.id)}</b><br>${Math.round((v.ok/(v.n||1))*100)}%</div>`}).join('');
- $('#examResult').innerHTML=`<div class="exam-result"><div class="score-big">${score}%</div><h2>${score>=PASS_SCORE?'Autoevaluación superada':'Debes reforzar algunos contenidos'}</h2><p>${good} respuestas correctas de ${EXAM.length}. Mejor nota registrada: <b>${state.best}%</b>.${auto?' El intento se entregó automáticamente al alcanzar tres incidencias de foco.':''}</p><div class="result-grid">${breakdown}</div><p><button class="btn secondary" id="repeatExam">Realizar otro intento</button></p></div>`;$('#repeatExam').onclick=()=>{$('#examResult').innerHTML='';$('#examIntro')?.classList.remove('hidden')};
+ $('#examResult').innerHTML=`<div class="exam-result"><div class="score-big">${score}%</div><h2>${evaluation.ra?'RA superado':'RA no superado'}</h2><p>${good} respuestas correctas de ${EXAM.length}. Mejor nota registrada: <b>${state.best}%</b>.${auto?' El intento se entregó automáticamente al alcanzar tres incidencias de foco.':''}</p><div class="result-grid">${breakdown}</div><p><b>Estado RA:</b> ${evaluation.ra?'SUPERADO':'NO SUPERADO'} · CE superados: ${evaluation.passed}/${evaluation.total}. ${evaluation.recovery.length?'Programa de recuperación: '+evaluation.recovery.join(', '):'Sin recuperación pendiente.'}</p></div>`;
  sync();try{if(document.fullscreenElement)document.exitFullscreen()}catch(e){}
 }
 function bindExam(){
@@ -150,11 +156,78 @@ function bindExam(){
  window.addEventListener('blur',()=>registerIncident('blur'));
  document.addEventListener('fullscreenchange',()=>{if(examActive&&!document.fullscreenElement&&!document.hidden)registerIncident('fullscreen')});
 }
+
+function answerForExercise(e){
+ if(e.type==='choice'){const x=$(`input[name="ex-${e.id}"]:checked`);return x?Number(x.value):null}
+ if(e.type==='tf'){const x=$(`input[name="ex-${e.id}"]:checked`);return x?(x.value==='true'):null}
+ if(e.type==='multi'){const x=Array.from(document.querySelectorAll(`input[name="ex-${e.id}"]:checked`)).map(x=>Number(x.value)).sort((a,b)=>a-b);return x.length?x:null}
+ if(e.type==='order')return Array.from(document.querySelectorAll(`#order-${e.id} .order-item`)).map(x=>x.dataset.key);
+ if(e.type==='match')return e.pairs.map((p,j)=>document.getElementById(`match-${e.id}-${j}`)?.value);
+ return null
+}
+function correctExercise(e,a){
+ if(a===null)return false;
+ if(e.type==='choice'||e.type==='tf')return a===e.answer;
+ if(e.type==='multi')return JSON.stringify(a)===JSON.stringify([...e.answer].sort((x,y)=>x-y));
+ if(e.type==='order')return JSON.stringify(a)===JSON.stringify(e.answer);
+ if(e.type==='match')return a.every((v,j)=>Number(v)===j);
+ return false
+}
+function installFormativePractice(){
+ const first=document.getElementById('pract-1a');if(!first)return;
+ const sec=document.createElement('section');sec.className='screen';sec.id='practica-formativa';
+ sec.innerHTML='<div class="hero compact"><span class="pill">No evaluable</span><h1>Práctica guiada por criterios</h1><p>Dispones de 3 oportunidades por ejercicio. Tras el tercer intento se muestra la solución orientativa. Estos ejercicios generan evidencia de trabajo, pero no nota.</p></div><div id="formativeBoxes"></div>';
+ first.parentNode.insertBefore(sec,first);
+ const nav=document.querySelector('[data-target="practica-home"]');if(nav){const b=document.createElement('button');b.className='nav-btn';b.dataset.target='practica-formativa';b.textContent='Práctica guiada · 3 intentos';nav.parentNode.insertBefore(b,nav.nextSibling);b.onclick=()=>showScreen('practica-formativa')}
+ const host=sec.querySelector('#formativeBoxes');
+ CRITERIA.forEach(c=>{const block=document.createElement('div');block.className='card';block.innerHTML='<h2>CE '+safe(c.id)+'</h2><div class="form-list"></div>';host.appendChild(block);const list=block.querySelector('.form-list');
+  (PRACTICE[c.id]||[]).forEach((e,i)=>{const q=document.createElement('article');q.className='exercise';q.innerHTML='<div class="type">Práctica '+(i+1)+' · CE '+safe(c.id)+'</div><h3>'+safe(e.q)+'</h3><div class="fp-options"></div><button class="btn primary fp-check" type="button">Comprobar</button><div class="feedback hidden"></div>';list.appendChild(q);
+   const opts=q.querySelector('.fp-options');let choices=[];
+   if(e.type==='choice')choices=e.options.map((o,j)=>({label:o,value:j,ok:j===e.answer}));
+   else if(e.type==='tf')choices=[{label:'Verdadero',value:true,ok:e.answer===true},{label:'Falso',value:false,ok:e.answer===false}];
+   else {choices=[{label:'He completado el procedimiento propuesto',value:'done',ok:true}]}
+   shuffle(choices).forEach((o,j)=>{const l=document.createElement('label');l.className='option';l.innerHTML='<input type="radio" name="fp-'+e.id+'" value="'+j+'"> '+safe(o.label);l.dataset.ok=o.ok?'1':'0';opts.appendChild(l)});
+   q.querySelector('.fp-check').onclick=()=>{const chosen=q.querySelector('input:checked');if(!chosen){alert('Selecciona una respuesta.');return}const n=(state.practiceAttempts[e.id]||0)+1;state.practiceAttempts[e.id]=n;const lab=chosen.closest('label'),ok=lab.dataset.ok==='1',fb=q.querySelector('.feedback');fb.classList.remove('hidden','ok','bad');fb.classList.add(ok?'ok':'bad');
+    if(ok)fb.innerHTML='<b>Correcto.</b> '+safe(e.feedback||'');else if(n>=3){const sol=Array.from(opts.querySelectorAll('label')).find(x=>x.dataset.ok==='1')?.textContent.trim()||'Consulta la explicación.';fb.innerHTML='<b>Has agotado los 3 intentos.</b> Solución orientativa: '+safe(sol)+'. '+safe(e.feedback||'');q.querySelector('.fp-check').disabled=true}else fb.innerHTML='<b>Respuesta incorrecta.</b> Revisa el contenido. Te quedan '+(3-n)+' intento(s).';
+    try{if(evidence())evidence().event({kind:'practice',ce:c.id,item_id:e.id,attempt:n,response:lab.textContent.trim(),correct:ok,payload:{max_attempts:3}})}catch(x){};sync()
+   }
+  })
+ })
+}
+function installPortfolioRules(){
+ document.querySelectorAll('.nav-group').forEach(x=>{if(x.textContent.trim()==='Práctica por CE')x.textContent='Portafolio de Actividades'});
+ const mh=document.querySelector('#practica-home h1');if(mh)mh.textContent='Portafolio de Actividades · evaluación por criterios';
+ document.addEventListener('click',ev=>{const b=ev.target.closest('.check-ex');if(!b)return;const e=getEx(b.dataset.ce,b.dataset.id);if(!e)return;const id=e.id,n=state.portfolioAttempts[id]||0;if(n>=2){ev.preventDefault();ev.stopImmediatePropagation();alert('Esta actividad del portafolio ya ha consumido sus 2 intentos.');return}
+  const a=answerForExercise(e);if(a===null)return;const ok=correctExercise(e,a);state.portfolioAttempts[id]=n+1;state.portfolioScores[id]=ok?100:0;
+  try{if(evidence())evidence().event({kind:'portfolio',ce:b.dataset.ce,item_id:id,attempt:n+1,response:a,correct:ok,score:ok?100:0,payload:{max_attempts:2}})}catch(x){}
+ },true)
+}
+function seededRandom(seed){let h=2166136261;for(let i=0;i<seed.length;i++){h^=seed.charCodeAt(i);h=Math.imul(h,16777619)}return()=>{h+=0x6D2B79F5;let t=h;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296}}
+function randomizeExam(){
+ const rnd=seededRandom(studentId()+'|GRH0652|'+new Date().toISOString().slice(0,10));
+ for(const q of EXAM){if(q.type==='choice'){const arr=q.options.map((o,i)=>({o,i}));for(let i=arr.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]]}const old=q.answer;q.options=arr.map(x=>x.o);q.answer=arr.findIndex(x=>x.i===old)}}
+ for(let i=EXAM.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[EXAM[i],EXAM[j]]=[EXAM[j],EXAM[i]]}
+}
+async function loadEvaluationConfig(){
+ let c=null;try{if(evidence())c=await evidence().config()}catch(e){}
+ state.evaluationConfig=c||state.evaluationConfig||{portfolio_weight:40,exam_weight:60,pass_score:50,ce_pass_percent:80,ce_pass_score:50,exam_enabled:false,exam_questions_per_ce:3,exam_minutes:45,require_both_instruments:false};
+ const n=Math.max(1,Number(state.evaluationConfig.exam_questions_per_ce||3));const selected=[];CRITERIA.forEach(cr=>selected.push(...EXAM.filter(q=>q.ce===cr.id).slice(0,n)));EXAM.splice(0,EXAM.length,...selected);
+ const intro=$('#examIntro');if(intro)intro.insertAdjacentHTML('afterbegin','<div class="notice"><strong>Examen evaluable:</strong> un único intento. El profesor debe activar la convocatoria.</div>');
+ const b=$('#startExam');if(b){b.textContent=state.examTaken?'Examen ya realizado':(state.evaluationConfig.exam_enabled?'Comenzar examen · 1 intento':'Examen no activado');b.disabled=state.examTaken||!state.evaluationConfig.exam_enabled}
+}
+function calculateEvaluation(examBy){
+ const cfg=state.evaluationConfig||{portfolio_weight:40,exam_weight:60,pass_score:50,ce_pass_percent:80,ce_pass_score:50,require_both_instruments:false};
+ const ce={};CRITERIA.forEach(c=>{const items=PRACTICE[c.id]||[];const ps=items.map(e=>Number(state.portfolioScores[e.id]||0));const p=ps.length?ps.reduce((a,b)=>a+b,0)/ps.length:0;const ex=examBy[c.id]||{ok:0,n:0};const x=ex.n?ex.ok/ex.n*100:0;const final=p*cfg.portfolio_weight/100+x*cfg.exam_weight/100;ce[c.id]={portfolio:p,exam:x,final,passed:final>=cfg.ce_pass_score}});
+ const vals=Object.values(ce),passed=vals.filter(x=>x.passed).length,portfolio=vals.reduce((a,x)=>a+x.portfolio,0)/vals.length,exam=vals.reduce((a,x)=>a+x.exam,0)/vals.length,final=portfolio*cfg.portfolio_weight/100+exam*cfg.exam_weight/100,needed=Math.ceil(vals.length*cfg.ce_pass_percent/100);
+ const both=!cfg.require_both_instruments||(portfolio>=cfg.pass_score&&exam>=cfg.pass_score),ra=final>=cfg.pass_score&&passed>=needed&&both,recovery=Object.entries(ce).filter(([k,v])=>!v.passed).map(([k])=>k);
+ state.evaluation={portfolio,exam,final,passed,total:vals.length,ra,recovery,ce};try{if(evidence())evidence().result({portfolio,exam,final,ce_passed:passed,ce_total:vals.length,ra_passed:ra,recovery})}catch(e){};return state.evaluation
+}
+
 window.addEventListener('message',e=>{if(e.origin===location.origin&&e.data&&e.data.type==='scorm-save-exit')sync()});
 window.addEventListener('beforeunload',finish);
 window.addEventListener('pagehide',sync);
 
-initSCORM();bindNav();renderPractice();bindExam();updateProgress();
+initSCORM();bindNav();renderPractice();installFormativePractice();installPortfolioRules();randomizeExam();bindExam();loadEvaluationConfig();updateProgress();
 const start=state.last&&document.getElementById(state.last)?state.last:'inicio';$$('.screen').forEach(x=>x.classList.remove('active'));document.getElementById(start)?.classList.add('active');$$('.nav-btn').forEach(x=>x.classList.toggle('active',x.dataset.target===start));
 setInterval(sync,15000);
 })();
