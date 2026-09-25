@@ -82,7 +82,9 @@ def student_auth(token,c=None):
  return r["student_id"]
 def require_student(claimed,token,c=None):
  student_id=student_auth(token,c)
- if claimed!=student_id: raise HTTPException(403,"Student identity mismatch")
+ if claimed!=student_id:
+  if c is not None:c.rollback()
+  raise HTTPException(403,"Student identity mismatch")
  return student_id
 def config_row(c,course):
  r=c.execute("SELECT config,version FROM configs WHERE course_id=?",(course,)).fetchone()
