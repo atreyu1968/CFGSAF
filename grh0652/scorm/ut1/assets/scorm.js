@@ -29,7 +29,7 @@ function sync(){
    api.LMSSetValue('cmi.core.lesson_location',state.last||'inicio');
    api.LMSSetValue('cmi.core.score.raw',String(Math.round(state.best||0)));
    api.LMSSetValue('cmi.core.score.min','0');api.LMSSetValue('cmi.core.score.max','100');
-   api.LMSSetValue('cmi.core.lesson_status',state.best>=PASS_SCORE?'passed':(state.examTaken?'failed':'incomplete'));
+   api.LMSSetValue('cmi.core.lesson_status',state.examTaken?(state.evaluation?.ra?'passed':'failed'):'incomplete');
    api.LMSSetValue('cmi.core.exit','suspend');
    api.LMSCommit('');
  }catch(e){saveLocal()}} else saveLocal();
@@ -141,7 +141,7 @@ function submitExam(auto){
  if(!auto&&answered<EXAM.length&&!confirm('Has respondido '+answered+' de '+EXAM.length+'. ¿Quieres entregar igualmente?'))return;
  let good=0;const by={};EXAM.forEach((q,i)=>{const a=answers[i],ok=isCorrect(q,a);if(ok)good++;by[q.ce]=by[q.ce]||{ok:0,n:0};by[q.ce].n++;if(ok)by[q.ce].ok++;const card=document.getElementById('qcard-'+q.id),fb=document.getElementById('qfb-'+q.id);card?.classList.add(ok?'correct':'wrong');if(fb){fb.classList.remove('hidden');fb.classList.add(ok?'ok':'bad');fb.innerHTML=`<b>${ok?'Correcto.':'Respuesta correcta: '+safe(correctText(q))+'.'}</b> ${safe(q.feedback||'')}`}recordInteraction(q,a,ok,i)});
  const score=Math.round(good/EXAM.length*100);state.examTaken=true;state.examScore=score;state.best=score;state.last='autoevaluacion';examActive=false;document.body.classList.remove('exam-mode');$('#examBox')?.classList.add('hidden');
- if(connected&&api){try{api.LMSSetValue('cmi.core.score.raw',String(state.best));api.LMSSetValue('cmi.core.lesson_status',state.best>=PASS_SCORE?'passed':'failed')}catch(e){}}
+ if(connected&&api){try{api.LMSSetValue('cmi.core.score.raw',String(Math.round(evaluation?.final||score)));api.LMSSetValue('cmi.core.lesson_status',evaluation?.ra?'passed':'failed')}catch(e){}}
  const evaluation=calculateEvaluation(by);try{if(evidence())evidence().event({kind:'exam',attempt:1,score:score,payload:{by_ce:by,incidents:state.incidents,variant:EXAM.map(q=>q.id)}})}catch(e){}
  const breakdown=CRITERIA.map(c=>{const v=by[c.id]||{ok:0,n:0};return `<div><b>CE ${safe(c.id)}</b><br>${Math.round((v.ok/(v.n||1))*100)}%</div>`}).join('');
  $('#examResult').innerHTML=`<div class="exam-result"><div class="score-big">${score}%</div><h2>${evaluation.ra?'RA superado':'RA no superado'}</h2><p>${good} respuestas correctas de ${EXAM.length}. Mejor nota registrada: <b>${state.best}%</b>.${auto?' El intento se entregó automáticamente al alcanzar tres incidencias de foco.':''}</p><div class="result-grid">${breakdown}</div><p><b>Estado RA:</b> ${evaluation.ra?'SUPERADO':'NO SUPERADO'} · CE superados: ${evaluation.passed}/${evaluation.total}. ${evaluation.recovery.length?'Programa de recuperación: '+evaluation.recovery.join(', '):'Sin recuperación pendiente.'}</p></div>`;
