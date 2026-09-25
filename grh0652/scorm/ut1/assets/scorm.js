@@ -157,6 +157,15 @@ function renderSelfAssessment(){
 }
 function bindSelfAssessment(){const b=$('#startSelf');if(b)b.onclick=renderSelfAssessment;renderSelfAssessment()}
 
+async function loadRecovery(){
+ const box=$('#recoveryBox'),ev=evidence();if(!box||!ev||!ev.api){if(box)box.innerHTML='<p>La recuperación requiere conexión con el servidor.</p>';return}
+ const r=await ev.recoveryContent();if(!r||r.error||!r.plan){box.innerHTML='<p>No tienes un programa de recuperación activo.</p>';return}
+ const p=r.plan;if(p.status==='passed'){box.innerHTML='<h2>Recuperación superada</h2><p>Has completado los criterios pendientes.</p>';return}
+ const by={};(p.items||[]).forEach(i=>(by[i.ce]=by[i.ce]||[]).push(i));let html='<h2>Criterios pendientes: '+p.criteria.map(safe).join(', ')+'</h2><p>Repasa la teoría del criterio, realiza las nuevas actividades y entrega la prueba de recuperación.</p>';
+ Object.entries(by).forEach(([ce,items])=>{html+='<div class="card"><h3>CE '+safe(ce)+'</h3><p><b>Refuerzo:</b> revisa el apartado teórico y los errores detectados en tu evaluación ordinaria.</p>';items.forEach(i=>{html+='<article class="question"><p>'+safe(i.prompt)+'</p>'+i.options.map((o,j)=>'<label class="option"><input type="radio" name="rec-'+safe(i.item_id)+'" value="'+j+'"> '+safe(o)+'</label>').join('')+'</article>'});html+='</div>'});html+='<button id="submitRecovery" class="btn primary big">Entregar recuperación</button>';box.innerHTML=html;
+ $('#submitRecovery').onclick=async()=>{const gate=await ev.startRecovery();if(!gate||gate.error){alert(gate?.error||'No se puede iniciar la recuperación');return}const answers={};(p.items||[]).forEach(i=>{const x=$('input[name="rec-'+i.item_id+'"]:checked');answers[i.item_id]=x?Number(x.value):null});const out=await ev.submitRecovery(gate.id,answers);if(!out||out.error){alert(out?.error||'No se pudo entregar');return}$('#recoveryResult').innerHTML='<div class="exam-result"><div class="score-big">'+Math.round(out.score)+'%</div><h2>'+(out.status==='passed'?'Recuperación superada':'Aún quedan criterios pendientes')+'</h2><p>CE superados en recuperación: '+out.criteria_passed.map(safe).join(', ')+'</p></div>';loadRecovery()}
+}
+
 function bindExam(){
  const b=$('#startExam');if(b)b.onclick=startExam;
  document.addEventListener('visibilitychange',()=>{if(examActive){if(document.hidden)registerIncident('visibility');else if(autoSubmitPending&&state.incidents>=3)submitExam(true)}});
@@ -234,7 +243,7 @@ window.addEventListener('message',e=>{if(e.origin===location.origin&&e.data&&e.d
 window.addEventListener('beforeunload',finish);
 window.addEventListener('pagehide',sync);
 
-initSCORM();bindNav();renderPractice();installFormativePractice();installPortfolioRules();randomizeExam();bindSelfAssessment();bindExam();loadEvaluationConfig();updateProgress();
+initSCORM();bindNav();renderPractice();installFormativePractice();installPortfolioRules();randomizeExam();bindSelfAssessment();bindExam();loadEvaluationConfig();loadRecovery();updateProgress();
 const start=state.last&&document.getElementById(state.last)?state.last:'inicio';$$('.screen').forEach(x=>x.classList.remove('active'));document.getElementById(start)?.classList.add('active');$$('.nav-btn').forEach(x=>x.classList.toggle('active',x.dataset.target===start));
 setInterval(sync,15000);
 })();
