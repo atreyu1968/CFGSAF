@@ -5,9 +5,12 @@ import app as module
 from fastapi.testclient import TestClient
 client=TestClient(module.app)
 H={"X-Teacher-Token":"test-token"}
+def SH(student):
+ r=client.post(f"/api/teacher/students/{student}",headers=H);assert r.status_code==200
+ return {"X-Student-Token":r.json()["token"]}
 def start(kind,item="x",student="s1",course="GRH0652_UT1"):
- return client.post("/api/attempts/start",json={"student_id":student,"course_id":course,"kind":kind,"item_id":item,"payload":{}})
-def submit(i,payload=None):return client.post(f"/api/attempts/{i}/submit",json={"payload":payload or {}})
+ return client.post("/api/attempts/start",headers=SH(student),json={"student_id":student,"course_id":course,"kind":kind,"item_id":item,"payload":{}})
+def submit(i,payload=None,student="s1"):return client.post(f"/api/attempts/{i}/submit",headers=SH(student),json={"payload":payload or {}})
 def test_health():assert client.get("/health").json()["ok"]
 def test_practice_three_attempt_limit():
  for n in range(3):
@@ -24,10 +27,10 @@ def test_exam_one_attempt_and_resume():
  bank={"questions":[{"id":"q1","ce":"1.a","q":"A","options":["Sí","No"],"answer":0},{"id":"q2","ce":"1.b","q":"B","options":["Sí","No"],"answer":1}]}
  assert client.put("/api/teacher/exam-bank/GRH0652_UT1",headers=H,json=bank).status_code==200
  body={"student_id":"exam1","course_id":"GRH0652_UT1","kind":"exam","item_id":"final","payload":{}}
- a=client.post("/api/exam/start",json=body);assert a.status_code==200
- b=client.post("/api/exam/start",json=body);assert b.status_code==200;assert b.json()["attempt_id"]==a.json()["attempt_id"];assert b.json()["questions"]==a.json()["questions"]
+ a=client.post("/api/exam/start",headers=SH("exam1"),json=body);assert a.status_code==200
+ b=client.post("/api/exam/start",headers=SH("exam1"),json=body);assert b.status_code==200;assert b.json()["attempt_id"]==a.json()["attempt_id"];assert b.json()["questions"]==a.json()["questions"]
  answers={q["id"]:0 for q in a.json()["questions"]};done=client.post(f"/api/exam/{a.json()['attempt_id']}/submit",json={"payload":{"answers":answers}});assert done.status_code==200
- assert client.post("/api/exam/start",json=body).status_code==409
+ assert client.post("/api/exam/start",headers=SH("exam1"),json=body).status_code==409
 def test_config_weights_and_version():
  bad={"portfolio_weight":50,"exam_weight":60};assert client.put("/api/config/GRH0652_UT2",headers=H,json=bad).status_code==400
  good={"portfolio_weight":50,"exam_weight":50,"pass_score":50,"ce_pass_percent":80,"ce_pass_score":50,"exam_enabled":False,"exam_questions_per_ce":3,"exam_minutes":45,"require_both_instruments":False}
@@ -80,10 +83,10 @@ def test_missing_exam_bank_does_not_consume_attempt():
  cfg={"portfolio_weight":40,"exam_weight":60,"pass_score":50,"ce_pass_percent":80,"ce_pass_score":50,"exam_enabled":True,"exam_questions_per_ce":1,"exam_minutes":45,"require_both_instruments":False}
  assert client.put("/api/config/ATOMIC",headers=H,json=cfg).status_code==200
  body={"student_id":"atomic","course_id":"ATOMIC","kind":"exam","item_id":"final","payload":{}}
- first=client.post("/api/exam/start",json=body);assert first.status_code==409
+ first=client.post("/api/exam/start",headers=SH("exam1"),json=body);assert first.status_code==409
  bank={"questions":[{"id":"a1","ce":"a","q":"A","options":["Sí","No"],"answer":0,"type":"choice"}]}
  assert client.put("/api/teacher/exam-bank/ATOMIC",headers=H,json=bank).status_code==200
- second=client.post("/api/exam/start",json=body);assert second.status_code==200
+ second=client.post("/api/exam/start",headers=SH("exam1"),json=body);assert second.status_code==200
  assert second.json()["attempt"]==1
 
 def test_recovery_uses_configured_ce_threshold_and_closes_passed_plan():
