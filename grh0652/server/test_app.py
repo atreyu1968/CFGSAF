@@ -111,7 +111,7 @@ def test_result_ignores_client_claims_and_recomputes_from_server_evidence():
   assert client.post("/api/evidence",json={"student_id":"auth","course_id":"AUTH","kind":"portfolio","ce":ce,"item_id":item,"attempt":1,"response":"x","correct":score==100,"score":score,"payload":{}}).status_code==200
  start=client.post("/api/exam/start",json={"student_id":"auth","course_id":"AUTH","kind":"exam","item_id":"final"});assert start.status_code==200
  qs=start.json()["questions"];answers={}
- for q in qs: answers[q["id"]]=0 if q["ce"]=="c1" else 1
+ for q in qs: answers[q["id"]]=q["options"].index("A") if q["ce"]=="c1" else q["options"].index("B")
  assert client.post(f"/api/exam/{start.json()['attempt_id']}/submit",json={"payload":{"answers":answers}}).status_code==200
  forged={"student_id":"auth","course_id":"AUTH","portfolio":100,"exam":100,"final":100,"ce_passed":2,"ce_total":2,"ra_passed":True,"recovery":[]}
  r=client.post("/api/result",json=forged);assert r.status_code==200,r.text
