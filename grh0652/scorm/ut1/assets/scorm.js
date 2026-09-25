@@ -144,7 +144,7 @@ function submitExam(auto){
  if(connected&&api){try{api.LMSSetValue('cmi.core.score.raw',String(state.best));api.LMSSetValue('cmi.core.lesson_status',state.best>=PASS_SCORE?'passed':'failed')}catch(e){}}
  const evaluation=calculateEvaluation(by);try{if(window.EVIDENCE)EVIDENCE.event({kind:'exam',attempt:1,score:score,payload:{by_ce:by,incidents:state.incidents,variant:EXAM.map(q=>q.id)}})}catch(e){}
  const breakdown=CRITERIA.map(c=>{const v=by[c.id]||{ok:0,n:0};return `<div><b>CE ${safe(c.id)}</b><br>${Math.round((v.ok/(v.n||1))*100)}%</div>`}).join('');
- $('#examResult').innerHTML=`<div class="exam-result"><div class="score-big">${score}%</div><h2>${score>=PASS_SCORE?'Autoevaluación superada':'Debes reforzar algunos contenidos'}</h2><p>${good} respuestas correctas de ${EXAM.length}. Mejor nota registrada: <b>${state.best}%</b>.${auto?' El intento se entregó automáticamente al alcanzar tres incidencias de foco.':''}</p><div class="result-grid">${breakdown}</div><p><button class="btn secondary" id="repeatExam">Realizar otro intento</button></p></div>`;
+ $('#examResult').innerHTML=`<div class="exam-result"><div class="score-big">${score}%</div><h2>${evaluation.ra?'RA superado':'RA no superado'}</h2><p>${good} respuestas correctas de ${EXAM.length}. Mejor nota registrada: <b>${state.best}%</b>.${auto?' El intento se entregó automáticamente al alcanzar tres incidencias de foco.':''}</p><div class="result-grid">${breakdown}</div><p><b>Estado RA:</b> ${evaluation.ra?'SUPERADO':'NO SUPERADO'} · CE superados: ${evaluation.passed}/${evaluation.total}. ${evaluation.recovery.length?'Programa de recuperación: '+evaluation.recovery.join(', '):'Sin recuperación pendiente.'}</p></div>`;
  sync();try{if(document.fullscreenElement)document.exitFullscreen()}catch(e){}
 }
 function bindExam(){
@@ -157,8 +157,8 @@ function bindExam(){
 function answerForExercise(e){
  if(e.type==='choice'){const x=$(`input[name="ex-${e.id}"]:checked`);return x?Number(x.value):null}
  if(e.type==='tf'){const x=$(`input[name="ex-${e.id}"]:checked`);return x?(x.value==='true'):null}
- if(e.type==='multi'){const x=$(`input[name="ex-${e.id}"]:checked`).map(x=>Number(x.value)).sort((a,b)=>a-b);return x.length?x:null}
- if(e.type==='order')return $ (`#order-${e.id} .order-item`).map(x=>x.dataset.key);
+ if(e.type==='multi'){const x=Array.from(document.querySelectorAll(`input[name="ex-${e.id}"]:checked`)).map(x=>Number(x.value)).sort((a,b)=>a-b);return x.length?x:null}
+ if(e.type==='order')return Array.from(document.querySelectorAll(`#order-${e.id} .order-item`)).map(x=>x.dataset.key);
  if(e.type==='match')return e.pairs.map((p,j)=>document.getElementById(`match-${e.id}-${j}`)?.value);
  return null
 }
