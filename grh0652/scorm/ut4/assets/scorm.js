@@ -117,8 +117,9 @@ function renderExam(){
  }).join('')+`<button class="btn primary big" id="submitExam" type="button">Entregar autoevaluación</button>`;
  $('#submitExam').onclick=()=>submitExam(false);
 }
-function startExam(){
+async function startExam(){
  if(state.examTaken){alert('El examen solo permite un intento.');return}if(!state.evaluationConfig||!state.evaluationConfig.exam_enabled){alert('El profesor todavía no ha activado el examen.');return}
+ const ev=evidence();if(ev&&ev.api){const gate=await ev.startAttempt('exam','final',{unit:UNIT_ID});if(!gate||gate.error){alert('No se puede iniciar el examen: '+(gate?.error||'servidor no disponible'));return}state.serverExamAttempt=gate.attempt;state.serverExamAttemptId=gate.id||null;}
  examActive=true;autoSubmitPending=false;state.incidents=0;state.attempts=(state.attempts||0)+1;document.body.classList.add('exam-mode');$('#examIntro')?.classList.add('hidden');$('#examResult').innerHTML='';$('#examBox')?.classList.remove('hidden');renderExam();requestFull();sync();
 }
 function registerIncident(reason){
@@ -137,13 +138,13 @@ function correctText(q){if(q.type==='choice')return q.options[q.answer];if(q.typ
 function recordInteraction(q,a,ok,i){
  if(!connected||!api)return;try{const n=(state.attempts-1)*EXAM.length+i;api.LMSSetValue(`cmi.interactions.${n}.id`,q.id+'-a'+state.attempts);api.LMSSetValue(`cmi.interactions.${n}.type`,q.type==='tf'?'true-false':'choice');api.LMSSetValue(`cmi.interactions.${n}.student_response`,answerText(q,a).slice(0,240));api.LMSSetValue(`cmi.interactions.${n}.result`,ok?'correct':'wrong')}catch(e){}
 }
-function submitExam(auto){
+async function submitExam(auto){
  if(!examActive)return;
  const answers=EXAM.map(examAnswer),answered=answers.filter(x=>x!==null).length;
  if(!auto&&answered<EXAM.length&&!confirm('Has respondido '+answered+' de '+EXAM.length+'. ¿Quieres entregar igualmente?'))return;
  let good=0;const by={};EXAM.forEach((q,i)=>{const a=answers[i],ok=isCorrect(q,a);if(ok)good++;by[q.ce]=by[q.ce]||{ok:0,n:0};by[q.ce].n++;if(ok)by[q.ce].ok++;const card=document.getElementById('qcard-'+q.id),fb=document.getElementById('qfb-'+q.id);card?.classList.add(ok?'correct':'wrong');if(fb){fb.classList.remove('hidden');fb.classList.add(ok?'ok':'bad');fb.innerHTML=`<b>${ok?'Correcto.':'Respuesta correcta: '+safe(correctText(q))+'.'}</b> ${safe(q.feedback||'')}`}recordInteraction(q,a,ok,i)});
  const score=Math.round(good/EXAM.length*100);state.examTaken=true;state.examScore=score;state.best=score;state.last='autoevaluacion';examActive=false;document.body.classList.remove('exam-mode');$('#examBox')?.classList.add('hidden');
- const evaluation=calculateEvaluation(by);
+ const evaluation=calculateEvaluation(by);try{const ev=evidence();if(ev&&ev.api&&state.serverExamAttemptId)await ev.submitAttempt(state.serverExamAttemptId,{score,evaluation})}catch(e){}
  if(connected&&api){try{api.LMSSetValue('cmi.core.score.raw',String(Math.round(evaluation.final)));api.LMSSetValue('cmi.core.lesson_status',evaluation.ra?'passed':'failed')}catch(e){}}
  try{if(evidence())evidence().event({kind:'exam',attempt:1,score:score,payload:{by_ce:by,incidents:state.incidents,variant:EXAM.map(q=>q.id)}})}catch(e){}
  const breakdown=CRITERIA.map(c=>{const v=by[c.id]||{ok:0,n:0};return `<div><b>CE ${safe(c.id)}</b><br>${Math.round((v.ok/(v.n||1))*100)}%</div>`}).join('');
