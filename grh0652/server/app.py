@@ -24,7 +24,11 @@ CREATE TABLE IF NOT EXISTS recovery_plans(student_id TEXT,course_id TEXT,criteri
 CREATE TABLE IF NOT EXISTS exam_banks(course_id TEXT,question_id TEXT,ce TEXT,question TEXT,options TEXT,answer TEXT,PRIMARY KEY(course_id,question_id));
 CREATE TABLE IF NOT EXISTS exam_versions(attempt_id INTEGER PRIMARY KEY,student_id TEXT,course_id TEXT,version TEXT,questions TEXT,answers TEXT,created_at TEXT,config TEXT,deadline_at TEXT);
 CREATE TABLE IF NOT EXISTS recovery_banks(course_id TEXT,item_id TEXT,ce TEXT,kind TEXT,prompt TEXT,options TEXT,answer TEXT,feedback TEXT,PRIMARY KEY(course_id,item_id));
-CREATE TABLE IF NOT EXISTS recovery_results(student_id TEXT,course_id TEXT,score REAL,criteria_passed TEXT,status TEXT,updated_at TEXT,PRIMARY KEY(student_id,course_id));""");\n cols={r["name"] for r in c.execute("PRAGMA table_info(exam_versions)")}\n if "config" not in cols:c.execute("ALTER TABLE exam_versions ADD COLUMN config TEXT")\n if "deadline_at" not in cols:c.execute("ALTER TABLE exam_versions ADD COLUMN deadline_at TEXT")\n c.commit();return c
+CREATE TABLE IF NOT EXISTS recovery_results(student_id TEXT,course_id TEXT,score REAL,criteria_passed TEXT,status TEXT,updated_at TEXT,PRIMARY KEY(student_id,course_id));""")
+ cols={r["name"] for r in c.execute("PRAGMA table_info(exam_versions)")}
+ if "config" not in cols:c.execute("ALTER TABLE exam_versions ADD COLUMN config TEXT")
+ if "deadline_at" not in cols:c.execute("ALTER TABLE exam_versions ADD COLUMN deadline_at TEXT")
+ c.commit();return c
 
 DEFAULT={"portfolio_weight":40,"exam_weight":60,"pass_score":50,"ce_pass_percent":80,"ce_pass_score":50,"exam_enabled":False,"exam_questions_per_ce":3,"exam_minutes":45,"require_both_instruments":False}
 LIMITS={"practice":3,"portfolio":2,"exam":1,"recovery":1}
