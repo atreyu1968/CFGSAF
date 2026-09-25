@@ -13,9 +13,13 @@ app=FastAPI(title="GRH0652 Evidence API")
 app.add_middleware(CORSMiddleware,allow_origins=ORIGINS or [],allow_credentials=False,allow_methods=["GET","POST","PUT"],allow_headers=["Content-Type","X-Teacher-Token","X-Student-Token"])
 
 def now(): return datetime.datetime.now(datetime.UTC).isoformat()
+_schema_ready=False
+
 def con():
+ global _schema_ready
  c=sqlite3.connect(DB,timeout=10);c.row_factory=sqlite3.Row;c.execute("PRAGMA journal_mode=WAL");c.execute("PRAGMA foreign_keys=ON");c.execute("PRAGMA busy_timeout=5000")
- c.executescript("""CREATE TABLE IF NOT EXISTS students(student_id TEXT PRIMARY KEY,token TEXT NOT NULL UNIQUE,created_at TEXT);
+ if not _schema_ready:
+  c.executescript("""CREATE TABLE IF NOT EXISTS students(student_id TEXT PRIMARY KEY,token TEXT NOT NULL UNIQUE,created_at TEXT);
 CREATE TABLE IF NOT EXISTS states(student_id TEXT,course_id TEXT,state TEXT,updated_at TEXT,PRIMARY KEY(student_id,course_id));
 CREATE TABLE IF NOT EXISTS evidence(id INTEGER PRIMARY KEY AUTOINCREMENT,student_id TEXT,course_id TEXT,kind TEXT,ce TEXT,item_id TEXT,attempt INTEGER,response TEXT,correct INTEGER,score REAL,payload TEXT,created_at TEXT);
 CREATE TABLE IF NOT EXISTS results(student_id TEXT,course_id TEXT,portfolio REAL,exam REAL,final REAL,ce_passed INTEGER,ce_total INTEGER,ra_passed INTEGER,recovery TEXT,updated_at TEXT,PRIMARY KEY(student_id,course_id));
@@ -28,6 +32,7 @@ CREATE TABLE IF NOT EXISTS exam_versions(attempt_id INTEGER PRIMARY KEY,student_
 CREATE TABLE IF NOT EXISTS recovery_banks(course_id TEXT,item_id TEXT,ce TEXT,kind TEXT,prompt TEXT,options TEXT,answer TEXT,feedback TEXT,PRIMARY KEY(course_id,item_id));
 CREATE TABLE IF NOT EXISTS portfolio_banks(course_id TEXT,item_id TEXT,ce TEXT,kind TEXT,answer TEXT,PRIMARY KEY(course_id,item_id));
 CREATE TABLE IF NOT EXISTS recovery_results(student_id TEXT,course_id TEXT,score REAL,criteria_passed TEXT,status TEXT,updated_at TEXT,PRIMARY KEY(student_id,course_id));""")
+  _schema_ready=True
  cols={r["name"] for r in c.execute("PRAGMA table_info(exam_versions)")}
  if "config" not in cols:c.execute("ALTER TABLE exam_versions ADD COLUMN config TEXT")
  if "deadline_at" not in cols:c.execute("ALTER TABLE exam_versions ADD COLUMN deadline_at TEXT")
