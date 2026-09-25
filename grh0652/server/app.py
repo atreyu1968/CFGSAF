@@ -38,23 +38,8 @@ CREATE TABLE IF NOT EXISTS recovery_results(student_id TEXT,course_id TEXT,score
  if "deadline_at" not in cols:c.execute("ALTER TABLE exam_versions ADD COLUMN deadline_at TEXT")
  bcols={r["name"] for r in c.execute("PRAGMA table_info(exam_banks)")}
  if "type" not in bcols:c.execute("ALTER TABLE exam_banks ADD COLUMN type TEXT NOT NULL DEFAULT 'choice'")
- # Synchronize the bundled GRH0652 portfolio bank on every startup so existing SQLite
- # databases receive corrected/new keys; teacher-managed banks for other courses are untouched.
- bank_dir=Path(__file__).resolve().parent/"banks";bundled=[]
- for unit in ("ut1","ut2","ut3","ut4"):
-  p=bank_dir/f"{unit}_portfolio.json"
-  if p.exists():bundled.extend(json.loads(p.read_text(encoding="utf-8")).get("items",[]))
- if bundled:
-  fingerprint=json.dumps([(q["id"],q["ce"],q["kind"],q.get("answer")) for q in bundled],ensure_ascii=False,separators=(",",":"))
-  import hashlib
-  version=hashlib.sha256(fingerprint.encode()).hexdigest()
-  c.execute("CREATE TABLE IF NOT EXISTS bank_versions(course_id TEXT PRIMARY KEY,version TEXT NOT NULL,updated_at TEXT)")
-  current=c.execute("SELECT version FROM bank_versions WHERE course_id='GRH0652'").fetchone()
-  if not current or current["version"]!=version:
-   ids=[q["id"] for q in bundled];marks=",".join("?" for _ in ids)
-   c.execute(f"DELETE FROM portfolio_banks WHERE course_id='GRH0652' AND item_id NOT IN ({marks})",ids)
-   for q in bundled:c.execute("INSERT OR REPLACE INTO portfolio_banks(course_id,item_id,ce,kind,answer) VALUES(?,?,?,?,?)",("GRH0652",q["id"],q["ce"],q["kind"],json.dumps(q.get("answer"),ensure_ascii=False)))
-   c.execute("INSERT OR REPLACE INTO bank_versions(course_id,version,updated_at) VALUES(?,?,?)",("GRH0652",version,now()))
+ # Portfolio answer keys are intentionally not loaded from repository files.
+ # Production keys must be provisioned into SQLite through the authenticated teacher endpoint.
  c.commit();return c
 
 DEFAULT={"portfolio_weight":40,"exam_weight":60,"pass_score":50,"ce_pass_percent":80,"ce_pass_score":50,"exam_enabled":False,"exam_questions_per_ce":3,"exam_minutes":45,"require_both_instruments":False}
@@ -205,7 +190,7 @@ def get_portfolio(course_id:str,x_student_token:str|None=Header(None)):
   p=bank_dir/f"{unit}_portfolio.json"
   if p.exists():
    for q in json.loads(p.read_text(encoding="utf-8")).get("items",[]):
-    items.append({k:v for k,v in q.items() if k not in ("answer","feedback")})
+    items.append(q)
  return {"course_id":course_id,"items":items}
 
 @app.put("/api/teacher/portfolio-bank/{course_id}")
