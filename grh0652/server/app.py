@@ -135,7 +135,12 @@ def recovery_submit(attempt_id:int,x:SubmitAttempt):
 @app.put("/api/teacher/exam-bank/{course_id}")
 def put_exam_bank(course_id:str,x:BankIn,x_teacher_token:str|None=Header(None)):
  auth(x_teacher_token);c=con();c.execute("DELETE FROM exam_banks WHERE course_id=?",(course_id,))
- for q in x.questions:c.execute("INSERT INTO exam_banks VALUES(?,?,?,?,?,?)",(course_id,q.id,q.ce,q.q,json.dumps(q.options,ensure_ascii=False),json.dumps(q.answer,ensure_ascii=False)))
+ for q in x.questions:
+  if q.type not in ("choice","tf","multi"):c.close();raise HTTPException(400,"Tipo de pregunta no válido")
+  if q.type=="choice" and (not isinstance(q.answer,int) or isinstance(q.answer,bool) or q.answer<0 or q.answer>=len(q.options)):c.close();raise HTTPException(400,"Respuesta choice no válida")
+  if q.type=="tf" and not isinstance(q.answer,bool):c.close();raise HTTPException(400,"Respuesta tf no válida")
+  if q.type=="multi" and (not isinstance(q.answer,list) or not q.answer or any(not isinstance(i,int) or isinstance(i,bool) or i<0 or i>=len(q.options) for i in q.answer)):c.close();raise HTTPException(400,"Respuesta multi no válida")
+  c.execute("INSERT INTO exam_banks(course_id,question_id,ce,question,options,answer,type) VALUES(?,?,?,?,?,?,?)",(course_id,q.id,q.ce,q.q,json.dumps(q.options,ensure_ascii=False),json.dumps(q.answer,ensure_ascii=False),q.type))
  c.commit();c.close();return {"questions":len(x.questions)}
 
 @app.post("/api/exam/start")
