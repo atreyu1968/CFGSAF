@@ -62,14 +62,17 @@ def student_auth(token):
  if not token: raise HTTPException(401,"Student token required")
  c=con();r=c.execute("SELECT student_id FROM students WHERE token=?",(token,)).fetchone();c.close()
  if not r: raise HTTPException(401,"Invalid student token")
- return r["student_id"]\ndef require_student(claimed,token):
+ return r["student_id"]
+def require_student(claimed,token):
  student_id=student_auth(token)
  if claimed!=student_id: raise HTTPException(403,"Student identity mismatch")
- return student_id\ndef config_row(c,course):
+ return student_id
+def config_row(c,course):
  r=c.execute("SELECT config,version FROM configs WHERE course_id=?",(course,)).fetchone()
  return (json.loads(r["config"]),r["version"]) if r else (DEFAULT,0)
 
-@app.post("/api/teacher/students/{student_id}")\ndef create_student(student_id:str,x_teacher_token:str|None=Header(None)):
+@app.post("/api/teacher/students/{student_id}")
+def create_student(student_id:str,x_teacher_token:str|None=Header(None)):
  auth(x_teacher_token);token=secrets.token_urlsafe(32);c=con();c.execute("INSERT OR REPLACE INTO students(student_id,token,created_at) VALUES(?,?,?)",(student_id,token,now()));c.commit();c.close();return {"student_id":student_id,"token":token}\n\n@app.get("/health")
 def health(): return {"ok":True}
 @app.get("/api/config/{course_id}")
