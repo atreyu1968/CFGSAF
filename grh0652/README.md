@@ -27,3 +27,13 @@ Sin servidor, el SCORM conserva una copia local. Para evaluación real multiusua
 - `assets/evidence-store.js`: adaptador de persistencia.
 - `scorm/ut1/`: SCO real.
 - `server/`: API FastAPI + SQLite.
+
+
+## Arquitectura multi-RA
+El módulo 0652 se organiza en cuatro RA/unidades, no seis:
+- RA1 / UT1: Gestión de la contratación laboral.
+- RA2 / UT2: Modificación, suspensión y extinción del contrato.
+- RA3 / UT3: Obligaciones empresariales con la Seguridad Social.
+- RA4 / UT4: Retribución, nóminas, cotización e IRPF.
+
+`course.html` es el dashboard del alumnado. El reproductor, la persistencia y el panel docente se han parametrizado para usar un `course_id` distinto por RA. RA2-RA4 quedan registrados pero bloqueados hasta incorporar sus SCO pedagógicos definitivos y sus CE oficiales; no se replica contenido de RA1 como sustituto.
