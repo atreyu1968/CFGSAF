@@ -4,12 +4,12 @@
       "id": "4.ap1",
       "ce": "4.a",
       "kind": "choice",
-      "prompt": "Para resolver un supuesto sobre Procesos retributivos y modalidades salariales, ¿qué debe fijarse antes del cálculo?",
+      "prompt": "Para resolver un supuesto sobre Procesos retributivos y modalidades salariales, ¿qué debe fijarse antes del cálculo? Revisa todas las alternativas antes de responder.",
       "options": [
-        "Periodo, datos de origen y parámetros vigentes",
         "Un porcentaje recordado",
         "El líquido deseado",
-        "Una nómina antigua"
+        "Una nómina antigua",
+        "Periodo, datos de origen y parámetros vigentes"
       ]
     },
     {
@@ -42,36 +42,36 @@
       "id": "4.ap5",
       "ce": "4.a",
       "kind": "choice",
-      "prompt": "¿Qué señal obliga a revisar el cálculo?",
+      "prompt": "¿Qué señal obliga a revisar el cálculo? Revisa todas las alternativas antes de responder.",
       "options": [
-        "El parámetro usado no indica a qué periodo corresponde",
-        "Las operaciones están documentadas",
         "La fuente es oficial",
-        "El periodo está identificado"
+        "El periodo está identificado",
+        "El parámetro usado no indica a qué periodo corresponde",
+        "Las operaciones están documentadas"
       ]
     },
     {
       "id": "4.ap6",
       "ce": "4.a",
       "kind": "choice",
-      "prompt": "En Procesos retributivos y modalidades salariales, ¿qué práctica reduce errores?",
+      "prompt": "En Procesos retributivos y modalidades salariales, ¿qué práctica reduce errores? Revisa todas las alternativas antes de responder.",
       "options": [
+        "Ocultar las bases intermedias",
         "Separar datos, reglas, operaciones y resultado",
         "Sobrescribir cifras sin registro",
-        "Copiar la nómina anterior",
-        "Ocultar las bases intermedias"
+        "Copiar la nómina anterior"
       ]
     },
     {
       "id": "4.bp1",
       "ce": "4.b",
       "kind": "choice",
-      "prompt": "Para resolver un supuesto sobre SMI, IPREM e índices de referencia, ¿qué debe fijarse antes del cálculo?",
+      "prompt": "Para resolver un supuesto sobre SMI, IPREM e índices de referencia, ¿qué debe fijarse antes del cálculo? Revisa todas las alternativas antes de responder.",
       "options": [
-        "Periodo, datos de origen y parámetros vigentes",
         "Un porcentaje recordado",
         "El líquido deseado",
-        "Una nómina antigua"
+        "Una nómina antigua",
+        "Periodo, datos de origen y parámetros vigentes"
       ]
     },
     {
@@ -104,36 +104,36 @@
       "id": "4.bp5",
       "ce": "4.b",
       "kind": "choice",
-      "prompt": "¿Qué señal obliga a revisar el cálculo?",
+      "prompt": "¿Qué señal obliga a revisar el cálculo? Revisa todas las alternativas antes de responder.",
       "options": [
-        "El parámetro usado no indica a qué periodo corresponde",
-        "Las operaciones están documentadas",
         "La fuente es oficial",
-        "El periodo está identificado"
+        "El periodo está identificado",
+        "El parámetro usado no indica a qué periodo corresponde",
+        "Las operaciones están documentadas"
       ]
     },
     {
       "id": "4.bp6",
       "ce": "4.b",
       "kind": "choice",
-      "prompt": "En SMI, IPREM e índices de referencia, ¿qué práctica reduce errores?",
+      "prompt": "En SMI, IPREM e índices de referencia, ¿qué práctica reduce errores? Revisa todas las alternativas antes de responder.",
       "options": [
+        "Ocultar las bases intermedias",
         "Separar datos, reglas, operaciones y resultado",
         "Sobrescribir cifras sin registro",
-        "Copiar la nómina anterior",
-        "Ocultar las bases intermedias"
+        "Copiar la nómina anterior"
       ]
     },
     {
       "id": "4.cp1",
       "ce": "4.c",
       "kind": "choice",
-      "prompt": "Para resolver un supuesto sobre Incentivos y retribución variable, ¿qué debe fijarse antes del cálculo?",
+      "prompt": "Para resolver un supuesto sobre Incentivos y retribución variable, ¿qué debe fijarse antes del cálculo? Revisa todas las alternativas antes de responder.",
       "options": [
-        "Periodo, datos de origen y parámetros vigentes",
         "Un porcentaje recordado",
         "El líquido deseado",
-        "Una nómina antigua"
+        "Una nómina antigua",
+        "Periodo, datos de origen y parámetros vigentes"
       ]
     },
     {
@@ -166,36 +166,36 @@
       "id": "4.cp5",
       "ce": "4.c",
       "kind": "choice",
-      "prompt": "¿Qué señal obliga a revisar el cálculo?",
+      "prompt": "¿Qué señal obliga a revisar el cálculo? Revisa todas las alternativas antes de responder.",
       "options": [
-        "El parámetro usado no indica a qué periodo corresponde",
-        "Las operaciones están documentadas",
         "La fuente es oficial",
-        "El periodo está identificado"
+        "El periodo está identificado",
+        "El parámetro usado no indica a qué periodo corresponde",
+        "Las operaciones están documentadas"
       ]
     },
     {
       "id": "4.cp6",
       "ce": "4.c",
       "kind": "choice",
-      "prompt": "En Incentivos y retribución variable, ¿qué práctica reduce errores?",
+      "prompt": "En Incentivos y retribución variable, ¿qué práctica reduce errores? Revisa todas las alternativas antes de responder.",
       "options": [
+        "Ocultar las bases intermedias",
         "Separar datos, reglas, operaciones y resultado",
         "Sobrescribir cifras sin registro",
-        "Copiar la nómina anterior",
-        "Ocultar las bases intermedias"
+        "Copiar la nómina anterior"
       ]
     },
     {
       "id": "4.dp1",
       "ce": "4.d",
       "kind": "choice",
-      "prompt": "Para resolver un supuesto sobre Conceptos y estructura de nómina, ¿qué debe fijarse antes del cálculo?",
+      "prompt": "Para resolver un supuesto sobre Conceptos y estructura de nómina, ¿qué debe fijarse antes del cálculo? Revisa todas las alternativas antes de responder.",
       "options": [
-        "Periodo, datos de origen y parámetros vigentes",
         "Un porcentaje recordado",
         "El líquido deseado",
-        "Una nómina antigua"
+        "Una nómina antigua",
+        "Periodo, datos de origen y parámetros vigentes"
       ]
     },
     {
@@ -228,36 +228,36 @@
       "id": "4.dp5",
       "ce": "4.d",
       "kind": "choice",
-      "prompt": "¿Qué señal obliga a revisar el cálculo?",
+      "prompt": "¿Qué señal obliga a revisar el cálculo? Revisa todas las alternativas antes de responder.",
       "options": [
-        "El parámetro usado no indica a qué periodo corresponde",
-        "Las operaciones están documentadas",
         "La fuente es oficial",
-        "El periodo está identificado"
+        "El periodo está identificado",
+        "El parámetro usado no indica a qué periodo corresponde",
+        "Las operaciones están documentadas"
       ]
     },
     {
       "id": "4.dp6",
       "ce": "4.d",
       "kind": "choice",
-      "prompt": "En Conceptos y estructura de nómina, ¿qué práctica reduce errores?",
+      "prompt": "En Conceptos y estructura de nómina, ¿qué práctica reduce errores? Revisa todas las alternativas antes de responder.",
       "options": [
+        "Ocultar las bases intermedias",
         "Separar datos, reglas, operaciones y resultado",
         "Sobrescribir cifras sin registro",
-        "Copiar la nómina anterior",
-        "Ocultar las bases intermedias"
+        "Copiar la nómina anterior"
       ]
     },
     {
       "id": "4.ep1",
       "ce": "4.e",
       "kind": "choice",
-      "prompt": "Para resolver un supuesto sobre Devengos y deducciones, ¿qué debe fijarse antes del cálculo?",
+      "prompt": "Para resolver un supuesto sobre Devengos y deducciones, ¿qué debe fijarse antes del cálculo? Revisa todas las alternativas antes de responder.",
       "options": [
-        "Periodo, datos de origen y parámetros vigentes",
         "Un porcentaje recordado",
         "El líquido deseado",
-        "Una nómina antigua"
+        "Una nómina antigua",
+        "Periodo, datos de origen y parámetros vigentes"
       ]
     },
     {
@@ -290,36 +290,36 @@
       "id": "4.ep5",
       "ce": "4.e",
       "kind": "choice",
-      "prompt": "¿Qué señal obliga a revisar el cálculo?",
+      "prompt": "¿Qué señal obliga a revisar el cálculo? Revisa todas las alternativas antes de responder.",
       "options": [
-        "El parámetro usado no indica a qué periodo corresponde",
-        "Las operaciones están documentadas",
         "La fuente es oficial",
-        "El periodo está identificado"
+        "El periodo está identificado",
+        "El parámetro usado no indica a qué periodo corresponde",
+        "Las operaciones están documentadas"
       ]
     },
     {
       "id": "4.ep6",
       "ce": "4.e",
       "kind": "choice",
-      "prompt": "En Devengos y deducciones, ¿qué práctica reduce errores?",
+      "prompt": "En Devengos y deducciones, ¿qué práctica reduce errores? Revisa todas las alternativas antes de responder.",
       "options": [
+        "Ocultar las bases intermedias",
         "Separar datos, reglas, operaciones y resultado",
         "Sobrescribir cifras sin registro",
-        "Copiar la nómina anterior",
-        "Ocultar las bases intermedias"
+        "Copiar la nómina anterior"
       ]
     },
     {
       "id": "4.fp1",
       "ce": "4.f",
       "kind": "choice",
-      "prompt": "Para resolver un supuesto sobre Bases, cuotas e IRPF, ¿qué debe fijarse antes del cálculo?",
+      "prompt": "Para resolver un supuesto sobre Bases, cuotas e IRPF, ¿qué debe fijarse antes del cálculo? Revisa todas las alternativas antes de responder.",
       "options": [
-        "Periodo, datos de origen y parámetros vigentes",
         "Un porcentaje recordado",
         "El líquido deseado",
-        "Una nómina antigua"
+        "Una nómina antigua",
+        "Periodo, datos de origen y parámetros vigentes"
       ]
     },
     {
@@ -352,36 +352,36 @@
       "id": "4.fp5",
       "ce": "4.f",
       "kind": "choice",
-      "prompt": "¿Qué señal obliga a revisar el cálculo?",
+      "prompt": "¿Qué señal obliga a revisar el cálculo? Revisa todas las alternativas antes de responder.",
       "options": [
-        "El parámetro usado no indica a qué periodo corresponde",
-        "Las operaciones están documentadas",
         "La fuente es oficial",
-        "El periodo está identificado"
+        "El periodo está identificado",
+        "El parámetro usado no indica a qué periodo corresponde",
+        "Las operaciones están documentadas"
       ]
     },
     {
       "id": "4.fp6",
       "ce": "4.f",
       "kind": "choice",
-      "prompt": "En Bases, cuotas e IRPF, ¿qué práctica reduce errores?",
+      "prompt": "En Bases, cuotas e IRPF, ¿qué práctica reduce errores? Revisa todas las alternativas antes de responder.",
       "options": [
+        "Ocultar las bases intermedias",
         "Separar datos, reglas, operaciones y resultado",
         "Sobrescribir cifras sin registro",
-        "Copiar la nómina anterior",
-        "Ocultar las bases intermedias"
+        "Copiar la nómina anterior"
       ]
     },
     {
       "id": "4.gp1",
       "ce": "4.g",
       "kind": "choice",
-      "prompt": "Para resolver un supuesto sobre Recibo salarial y documentos de cotización, ¿qué debe fijarse antes del cálculo?",
+      "prompt": "Para resolver un supuesto sobre Recibo salarial y documentos de cotización, ¿qué debe fijarse antes del cálculo? Revisa todas las alternativas antes de responder.",
       "options": [
-        "Periodo, datos de origen y parámetros vigentes",
         "Un porcentaje recordado",
         "El líquido deseado",
-        "Una nómina antigua"
+        "Una nómina antigua",
+        "Periodo, datos de origen y parámetros vigentes"
       ]
     },
     {
@@ -414,36 +414,36 @@
       "id": "4.gp5",
       "ce": "4.g",
       "kind": "choice",
-      "prompt": "¿Qué señal obliga a revisar el cálculo?",
+      "prompt": "¿Qué señal obliga a revisar el cálculo? Revisa todas las alternativas antes de responder.",
       "options": [
-        "El parámetro usado no indica a qué periodo corresponde",
-        "Las operaciones están documentadas",
         "La fuente es oficial",
-        "El periodo está identificado"
+        "El periodo está identificado",
+        "El parámetro usado no indica a qué periodo corresponde",
+        "Las operaciones están documentadas"
       ]
     },
     {
       "id": "4.gp6",
       "ce": "4.g",
       "kind": "choice",
-      "prompt": "En Recibo salarial y documentos de cotización, ¿qué práctica reduce errores?",
+      "prompt": "En Recibo salarial y documentos de cotización, ¿qué práctica reduce errores? Revisa todas las alternativas antes de responder.",
       "options": [
+        "Ocultar las bases intermedias",
         "Separar datos, reglas, operaciones y resultado",
         "Sobrescribir cifras sin registro",
-        "Copiar la nómina anterior",
-        "Ocultar las bases intermedias"
+        "Copiar la nómina anterior"
       ]
     },
     {
       "id": "4.hp1",
       "ce": "4.h",
       "kind": "choice",
-      "prompt": "Para resolver un supuesto sobre Plazos de pago y presentación, ¿qué debe fijarse antes del cálculo?",
+      "prompt": "Para resolver un supuesto sobre Plazos de pago y presentación, ¿qué debe fijarse antes del cálculo? Revisa todas las alternativas antes de responder.",
       "options": [
-        "Periodo, datos de origen y parámetros vigentes",
         "Un porcentaje recordado",
         "El líquido deseado",
-        "Una nómina antigua"
+        "Una nómina antigua",
+        "Periodo, datos de origen y parámetros vigentes"
       ]
     },
     {
@@ -476,36 +476,36 @@
       "id": "4.hp5",
       "ce": "4.h",
       "kind": "choice",
-      "prompt": "¿Qué señal obliga a revisar el cálculo?",
+      "prompt": "¿Qué señal obliga a revisar el cálculo? Revisa todas las alternativas antes de responder.",
       "options": [
-        "El parámetro usado no indica a qué periodo corresponde",
-        "Las operaciones están documentadas",
         "La fuente es oficial",
-        "El periodo está identificado"
+        "El periodo está identificado",
+        "El parámetro usado no indica a qué periodo corresponde",
+        "Las operaciones están documentadas"
       ]
     },
     {
       "id": "4.hp6",
       "ce": "4.h",
       "kind": "choice",
-      "prompt": "En Plazos de pago y presentación, ¿qué práctica reduce errores?",
+      "prompt": "En Plazos de pago y presentación, ¿qué práctica reduce errores? Revisa todas las alternativas antes de responder.",
       "options": [
+        "Ocultar las bases intermedias",
         "Separar datos, reglas, operaciones y resultado",
         "Sobrescribir cifras sin registro",
-        "Copiar la nómina anterior",
-        "Ocultar las bases intermedias"
+        "Copiar la nómina anterior"
       ]
     },
     {
       "id": "4.ip1",
       "ce": "4.i",
       "kind": "choice",
-      "prompt": "Para resolver un supuesto sobre Vías de comunicación, ¿qué debe fijarse antes del cálculo?",
+      "prompt": "Para resolver un supuesto sobre Vías de comunicación, ¿qué debe fijarse antes del cálculo? Revisa todas las alternativas antes de responder.",
       "options": [
-        "Periodo, datos de origen y parámetros vigentes",
         "Un porcentaje recordado",
         "El líquido deseado",
-        "Una nómina antigua"
+        "Una nómina antigua",
+        "Periodo, datos de origen y parámetros vigentes"
       ]
     },
     {
@@ -538,36 +538,36 @@
       "id": "4.ip5",
       "ce": "4.i",
       "kind": "choice",
-      "prompt": "¿Qué señal obliga a revisar el cálculo?",
+      "prompt": "¿Qué señal obliga a revisar el cálculo? Revisa todas las alternativas antes de responder.",
       "options": [
-        "El parámetro usado no indica a qué periodo corresponde",
-        "Las operaciones están documentadas",
         "La fuente es oficial",
-        "El periodo está identificado"
+        "El periodo está identificado",
+        "El parámetro usado no indica a qué periodo corresponde",
+        "Las operaciones están documentadas"
       ]
     },
     {
       "id": "4.ip6",
       "ce": "4.i",
       "kind": "choice",
-      "prompt": "En Vías de comunicación, ¿qué práctica reduce errores?",
+      "prompt": "En Vías de comunicación, ¿qué práctica reduce errores? Revisa todas las alternativas antes de responder.",
       "options": [
+        "Ocultar las bases intermedias",
         "Separar datos, reglas, operaciones y resultado",
         "Sobrescribir cifras sin registro",
-        "Copiar la nómina anterior",
-        "Ocultar las bases intermedias"
+        "Copiar la nómina anterior"
       ]
     },
     {
       "id": "4.jp1",
       "ce": "4.j",
       "kind": "choice",
-      "prompt": "Para resolver un supuesto sobre Aplicaciones informáticas y archivo, ¿qué debe fijarse antes del cálculo?",
+      "prompt": "Para resolver un supuesto sobre Aplicaciones informáticas y archivo, ¿qué debe fijarse antes del cálculo? Revisa todas las alternativas antes de responder.",
       "options": [
-        "Periodo, datos de origen y parámetros vigentes",
         "Un porcentaje recordado",
         "El líquido deseado",
-        "Una nómina antigua"
+        "Una nómina antigua",
+        "Periodo, datos de origen y parámetros vigentes"
       ]
     },
     {
@@ -600,24 +600,24 @@
       "id": "4.jp5",
       "ce": "4.j",
       "kind": "choice",
-      "prompt": "¿Qué señal obliga a revisar el cálculo?",
+      "prompt": "¿Qué señal obliga a revisar el cálculo? Revisa todas las alternativas antes de responder.",
       "options": [
-        "El parámetro usado no indica a qué periodo corresponde",
-        "Las operaciones están documentadas",
         "La fuente es oficial",
-        "El periodo está identificado"
+        "El periodo está identificado",
+        "El parámetro usado no indica a qué periodo corresponde",
+        "Las operaciones están documentadas"
       ]
     },
     {
       "id": "4.jp6",
       "ce": "4.j",
       "kind": "choice",
-      "prompt": "En Aplicaciones informáticas y archivo, ¿qué práctica reduce errores?",
+      "prompt": "En Aplicaciones informáticas y archivo, ¿qué práctica reduce errores? Revisa todas las alternativas antes de responder.",
       "options": [
+        "Ocultar las bases intermedias",
         "Separar datos, reglas, operaciones y resultado",
         "Sobrescribir cifras sin registro",
-        "Copiar la nómina anterior",
-        "Ocultar las bases intermedias"
+        "Copiar la nómina anterior"
       ]
     }
   ]
