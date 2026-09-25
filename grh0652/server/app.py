@@ -57,6 +57,8 @@ class BankQuestion(BaseModel): id:str;ce:str;q:str;options:list[str]=[];answer:o
 class BankIn(BaseModel): questions:list[BankQuestion]
 class RecoveryItem(BaseModel): id:str;ce:str;kind:str='choice';prompt:str;options:list[str]=[];answer:object|None=None;feedback:str=''
 class RecoveryBankIn(BaseModel): items:list[RecoveryItem]
+class PortfolioKey(BaseModel): id:str;ce:str;kind:str;answer:object
+class PortfolioKeysIn(BaseModel): items:list[PortfolioKey]
 def auth(token):
  if not secrets.compare_digest(token or "",TEACHER_TOKEN): raise HTTPException(401,"Teacher token required")
 def student_auth(token,c=None):
@@ -192,6 +194,31 @@ def get_portfolio(course_id:str,x_student_token:str|None=Header(None)):
    for q in json.loads(p.read_text(encoding="utf-8")).get("items",[]):
     items.append(q)
  return {"course_id":course_id,"items":items}
+
+@app.put("/api/teacher/portfolio-keys/{course_id}")
+def put_portfolio_keys(course_id:str,x:PortfolioKeysIn,x_teacher_token:str|None=Header(None)):
+ auth(x_teacher_token);bank_dir=Path(__file__).resolve().parent/"banks";public={}
+ for unit in ("ut1","ut2","ut3","ut4"):
+  p=bank_dir/f"{unit}_portfolio.json"
+  if p.exists():
+   for q in json.loads(p.read_text(encoding="utf-8")).get("items",[]):public[q["id"]]=q
+ if course_id=="GRH0652":
+  supplied={q.id for q in x.items}
+  expected=set(public)
+  if supplied!=expected:raise HTTPException(400,f"El banco privado debe contener exactamente {len(expected)} claves")
+ c=con();c.execute("BEGIN IMMEDIATE")
+ try:
+  c.execute("DELETE FROM portfolio_banks WHERE course_id=?",(course_id,))
+  for q in x.items:
+   if q.kind not in ("choice","tf","multi","free","order","match"):raise HTTPException(400,"Tipo de actividad no válido")
+   if course_id=="GRH0652":
+    pub=public.get(q.id)
+    if not pub or pub.get("ce")!=q.ce or pub.get("kind")!=q.kind:raise HTTPException(400,f"Metadatos no coinciden para {q.id}")
+   c.execute("INSERT INTO portfolio_banks(course_id,item_id,ce,kind,answer) VALUES(?,?,?,?,?)",(course_id,q.id,q.ce,q.kind,json.dumps(q.answer,ensure_ascii=False)))
+  c.commit()
+ except:
+  c.rollback();c.close();raise
+ c.close();return {"ok":True,"items":len(x.items)}
 
 @app.put("/api/teacher/portfolio-bank/{course_id}")
 def put_portfolio_bank(course_id:str,x:RecoveryBankIn,x_teacher_token:str|None=Header(None)):
