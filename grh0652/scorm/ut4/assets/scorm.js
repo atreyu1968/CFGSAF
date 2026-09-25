@@ -42,7 +42,7 @@ function finish(){
  sync();if(connected&&api){try{api.LMSSetValue('cmi.core.exit','suspend');api.LMSCommit('');api.LMSFinish('')}catch(e){}}
 }
 function showScreen(id,mark=true){
- if(examActive&&id!=='autoevaluacion')return;
+ if(examActive&&id!=='examen-evaluable')return;
  const el=document.getElementById(id)||document.getElementById('inicio');
  $$('.screen').forEach(x=>x.classList.remove('active'));el.classList.add('active');
  $$('.nav-btn').forEach(x=>x.classList.toggle('active',x.dataset.target===el.id));
@@ -143,7 +143,7 @@ async function submitExam(auto){
  if(!examActive)return;
  const answers=EXAM.map(examAnswer),answered=answers.filter(x=>x!==null).length;
  if(!auto&&answered<EXAM.length&&!confirm('Has respondido '+answered+' de '+EXAM.length+'. ¿Quieres entregar igualmente?'))return;
- let good=0,by={},score=0;const ev=evidence();if(!(ev&&ev.api&&state.serverExamAttemptId)){alert('El examen evaluable requiere conexión con el servidor. Tus respuestas no se han entregado.');return}if(ev&&ev.api&&state.serverExamAttemptId){const amap={};EXAM.forEach((q,i)=>amap[q.id]=answers[i]);const graded=await ev.submitExam(state.serverExamAttemptId,amap);if(!graded||graded.error){alert('No se pudo entregar el examen: '+(graded?.error||'error de servidor'));return}score=graded.score;by=graded.by_ce||{};good=Object.values(by).reduce((a,v)=>a+(v.ok||0),0);EXAM.forEach((q,i)=>recordInteraction(q,answers[i],false,i));}state.examTaken=true;state.examScore=score;state.best=score;state.last='autoevaluacion';examActive=false;document.body.classList.remove('exam-mode');$('#examBox')?.classList.add('hidden');
+ let good=0,by={},score=0;const ev=evidence();if(!(ev&&ev.api&&state.serverExamAttemptId)){alert('El examen evaluable requiere conexión con el servidor. Tus respuestas no se han entregado.');return}if(ev&&ev.api&&state.serverExamAttemptId){const amap={};EXAM.forEach((q,i)=>amap[q.id]=answers[i]);const graded=await ev.submitExam(state.serverExamAttemptId,amap);if(!graded||graded.error){alert('No se pudo entregar el examen: '+(graded?.error||'error de servidor'));return}score=graded.score;by=graded.by_ce||{};good=Object.values(by).reduce((a,v)=>a+(v.ok||0),0);EXAM.forEach((q,i)=>recordInteraction(q,answers[i],false,i));}state.examTaken=true;state.examScore=score;state.best=score;state.last='examen-evaluable';examActive=false;document.body.classList.remove('exam-mode');$('#examBox')?.classList.add('hidden');
  const evaluation=calculateEvaluation(by);
  if(connected&&api){try{api.LMSSetValue('cmi.core.score.raw',String(Math.round(evaluation.final)));api.LMSSetValue('cmi.core.lesson_status',evaluation.ra?'passed':'failed')}catch(e){}}
  try{if(evidence())evidence().event({kind:'exam',attempt:1,score:score,payload:{by_ce:by,incidents:state.incidents,variant:EXAM.map(q=>q.id)}})}catch(e){}
@@ -151,6 +151,12 @@ async function submitExam(auto){
  $('#examResult').innerHTML=`<div class="exam-result"><div class="score-big">${score}%</div><h2>${evaluation.ra?'RA superado':'RA no superado'}</h2><p>${good} respuestas correctas de ${EXAM.length}. Mejor nota registrada: <b>${state.best}%</b>.${auto?' El intento se entregó automáticamente al alcanzar tres incidencias de foco.':''}</p><div class="result-grid">${breakdown}</div><p><b>Estado RA:</b> ${evaluation.ra?'SUPERADO':'NO SUPERADO'} · CE superados: ${evaluation.passed}/${evaluation.total}. ${evaluation.recovery.length?'Programa de recuperación: '+evaluation.recovery.join(', '):'Sin recuperación pendiente.'}</p></div>`;
  sync();try{if(document.fullscreenElement)document.exitFullscreen()}catch(e){}
 }
+function renderSelfAssessment(){
+ const box=$('#selfBox');if(!box)return;const pool=shuffle(EXAM).slice(0,Math.min(30,EXAM.length));box.innerHTML=pool.map((q,i)=>{let opts='';if(q.type==='choice')opts=q.options.map((o,j)=>`<label class="option"><input type="radio" name="self-${q.id}" value="${j}"> ${safe(o)}</label>`).join('');else if(q.type==='tf')opts=`<label class="option"><input type="radio" name="self-${q.id}" value="true"> Verdadero</label><label class="option"><input type="radio" name="self-${q.id}" value="false"> Falso</label>`;return `<article class="question"><div class="qnum">Pregunta ${i+1} · CE ${safe(q.ce)}</div><h3>${safe(q.q)}</h3>${opts}</article>`}).join('')+'<button class="btn primary big" id="submitSelf" type="button">Corregir autoevaluación</button>';
+ $('#submitSelf').onclick=()=>{let good=0;pool.forEach(q=>{let a=null;if(q.type==='choice'){const x=$(`input[name="self-${q.id}"]:checked`);a=x?Number(x.value):null}else if(q.type==='tf'){const x=$(`input[name="self-${q.id}"]:checked`);a=x?(x.value==='true'):null}if(isCorrect(q,a))good++});const pct=Math.round(good/pool.length*100);$('#selfResult').innerHTML=`<div class="exam-result"><div class="score-big">${pct}%</div><h2>Autoevaluación de preparación</h2><p>${good} respuestas correctas de ${pool.length}. Esta puntuación no forma parte de la nota.</p></div>`;try{if(evidence())evidence().event({kind:'self_assessment',score:pct,payload:{questions:pool.map(q=>q.id)}})}catch(e){}};
+}
+function bindSelfAssessment(){const b=$('#startSelf');if(b)b.onclick=renderSelfAssessment;renderSelfAssessment()}
+
 function bindExam(){
  const b=$('#startExam');if(b)b.onclick=startExam;
  document.addEventListener('visibilitychange',()=>{if(examActive){if(document.hidden)registerIncident('visibility');else if(autoSubmitPending&&state.incidents>=3)submitExam(true)}});
@@ -228,7 +234,7 @@ window.addEventListener('message',e=>{if(e.origin===location.origin&&e.data&&e.d
 window.addEventListener('beforeunload',finish);
 window.addEventListener('pagehide',sync);
 
-initSCORM();bindNav();renderPractice();installFormativePractice();installPortfolioRules();randomizeExam();bindExam();loadEvaluationConfig();updateProgress();
+initSCORM();bindNav();renderPractice();installFormativePractice();installPortfolioRules();randomizeExam();bindSelfAssessment();bindExam();loadEvaluationConfig();updateProgress();
 const start=state.last&&document.getElementById(state.last)?state.last:'inicio';$$('.screen').forEach(x=>x.classList.remove('active'));document.getElementById(start)?.classList.add('active');$$('.nav-btn').forEach(x=>x.classList.toggle('active',x.dataset.target===start));
 setInterval(sync,15000);
 })();
