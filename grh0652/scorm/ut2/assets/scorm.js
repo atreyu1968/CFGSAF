@@ -118,6 +118,12 @@ let examQuestions=[];\nlet examDeadline=null,examTimer=null;\nfunction renderExa
  }).join('')+`<button class="btn primary big" id="submitExam" type="button">Entregar examen</button>`;
  $('#submitExam').onclick=()=>submitExam(false);
 }
+function updateExamCountdown(){
+ const el=$('#examCountdown');if(!el||!examDeadline)return;
+ const left=Math.max(0,new Date(examDeadline).getTime()-Date.now()),sec=Math.ceil(left/1000),m=Math.floor(sec/60),s=sec%60;el.textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+ if(left<=0&&examActive&&!autoSubmitPending){autoSubmitPending=true;clearInterval(examTimer);examTimer=null;submitExam(true)}
+}
+function startExamTimer(){clearInterval(examTimer);examTimer=null;updateExamCountdown();if(examDeadline)examTimer=setInterval(updateExamCountdown,1000);}
 async function startExam(){
  if(state.examTaken){alert('El examen solo permite un intento.');return}if(!state.evaluationConfig||!state.evaluationConfig.exam_enabled){alert('El profesor todavía no ha activado el examen.');return}
  const ev=evidence();if(ev&&ev.api){const gate=await ev.startExam({unit:UNIT_ID});if(!gate||gate.error){alert('No se puede iniciar el examen: '+(gate?.error||'servidor no disponible'));return}state.serverExamAttempt=gate.attempt;state.serverExamAttemptId=gate.attempt_id;state.examVersion=gate.version||state.examVersion;examDeadline=gate.deadline_at||null;examQuestions=(gate.questions||[]).map(q=>({...q,type:q.type||'choice'}));}
