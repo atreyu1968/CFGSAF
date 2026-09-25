@@ -36,7 +36,8 @@ def test_close_generates_only_failed_recovery():
  cfg={"portfolio_weight":40,"exam_weight":60,"pass_score":50,"ce_pass_percent":80,"ce_pass_score":50,"exam_enabled":True,"exam_questions_per_ce":1,"exam_minutes":45,"require_both_instruments":False}
  assert client.put("/api/config/CLOSE",headers=H,json=cfg).status_code==200
  bank={"questions":[{"id":"cq1","ce":"3.c","q":"C","options":[],"answer":True,"type":"tf"},{"id":"fq1","ce":"3.f","q":"F","options":[],"answer":True,"type":"tf"}]}
- assert client.put("/api/teacher/exam-bank/CLOSE",headers=H,json=bank).status_code==200\n assert client.put("/api/teacher/portfolio-bank/CLOSE",headers=H,json={"items":[{"id":"pc","ce":"3.c","kind":"choice","prompt":"P","options":[],"answer":"x"},{"id":"pf","ce":"3.f","kind":"choice","prompt":"P","options":[],"answer":"x"}]}).status_code==200
+ assert client.put("/api/teacher/exam-bank/CLOSE",headers=H,json=bank).status_code==200
+ assert client.put("/api/teacher/portfolio-bank/CLOSE",headers=H,json={"items":[{"id":"pc","ce":"3.c","kind":"choice","prompt":"P","options":[],"answer":"x"},{"id":"pf","ce":"3.f","kind":"choice","prompt":"P","options":[],"answer":"x"}]}).status_code==200
  for student,score in (("fail",0),("pass",100)):
   for ce,item in (("3.c","pc"),("3.f","pf")):
    assert client.post("/api/evidence",json={"student_id":student,"course_id":"CLOSE","kind":"portfolio","ce":ce,"item_id":item,"attempt":1,"response":"x","correct":score==100,"score":score,"payload":{}}).status_code==200
@@ -110,7 +111,8 @@ def test_result_ignores_client_claims_and_recomputes_from_server_evidence():
  cfg={"portfolio_weight":40,"exam_weight":60,"pass_score":50,"ce_pass_percent":80,"ce_pass_score":50,"exam_enabled":True,"exam_questions_per_ce":1,"exam_minutes":45,"require_both_instruments":False}
  assert client.put("/api/config/AUTH",headers=H,json=cfg).status_code==200
  bank={"questions":[{"id":"q1","ce":"c1","q":"Q1","options":[],"answer":True,"type":"tf"},{"id":"q2","ce":"c2","q":"Q2","options":[],"answer":True,"type":"tf"}]}
- assert client.put("/api/teacher/exam-bank/AUTH",headers=H,json=bank).status_code==200\n assert client.put("/api/teacher/portfolio-bank/AUTH",headers=H,json={"items":[{"id":"p1","ce":"c1","kind":"choice","prompt":"P","options":[],"answer":"x"},{"id":"p2","ce":"c2","kind":"choice","prompt":"P","options":[],"answer":"wrong"}]}).status_code==200
+ assert client.put("/api/teacher/exam-bank/AUTH",headers=H,json=bank).status_code==200
+ assert client.put("/api/teacher/portfolio-bank/AUTH",headers=H,json={"items":[{"id":"p1","ce":"c1","kind":"choice","prompt":"P","options":[],"answer":"x"},{"id":"p2","ce":"c2","kind":"choice","prompt":"P","options":[],"answer":"wrong"}]}).status_code==200
  for ce,item,score in [("c1","p1",100),("c2","p2",0)]:
   assert client.post("/api/evidence",json={"student_id":"auth","course_id":"AUTH","kind":"portfolio","ce":ce,"item_id":item,"attempt":1,"response":"x","correct":score==100,"score":score,"payload":{}}).status_code==200
  start=client.post("/api/exam/start",json={"student_id":"auth","course_id":"AUTH","kind":"exam","item_id":"final"});assert start.status_code==200,start.text
@@ -125,7 +127,8 @@ def test_missing_ce_cannot_disappear_from_authoritative_denominator():
  cfg={"portfolio_weight":40,"exam_weight":60,"pass_score":50,"ce_pass_percent":80,"ce_pass_score":50,"exam_enabled":True,"exam_questions_per_ce":1,"exam_minutes":45,"require_both_instruments":False}
  assert client.put("/api/config/UNIVERSE",headers=H,json=cfg).status_code==200
  bank={"questions":[{"id":"u1","ce":"c1","q":"Q1","options":[],"answer":True,"type":"tf"},{"id":"u2","ce":"c2","q":"Q2","options":[],"answer":True,"type":"tf"}]}
- assert client.put("/api/teacher/exam-bank/UNIVERSE",headers=H,json=bank).status_code==200\n assert client.put("/api/teacher/portfolio-bank/UNIVERSE",headers=H,json={"items":[{"id":"p1","ce":"c1","kind":"choice","prompt":"P","options":[],"answer":"x"}]}).status_code==200
+ assert client.put("/api/teacher/exam-bank/UNIVERSE",headers=H,json=bank).status_code==200
+ assert client.put("/api/teacher/portfolio-bank/UNIVERSE",headers=H,json={"items":[{"id":"p1","ce":"c1","kind":"choice","prompt":"P","options":[],"answer":"x"}]}).status_code==200
  assert client.post("/api/evidence",json={"student_id":"u","course_id":"UNIVERSE","kind":"portfolio","ce":"c1","item_id":"p1","attempt":1,"response":"x","correct":True,"score":100,"payload":{}}).status_code==200
  st=client.post("/api/exam/start",json={"student_id":"u","course_id":"UNIVERSE","kind":"exam","item_id":"final"});assert st.status_code==200
  answers={q["id"]:(True if q["ce"]=="c1" else False) for q in st.json()["questions"]}
