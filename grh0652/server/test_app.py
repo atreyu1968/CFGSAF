@@ -230,3 +230,15 @@ def test_private_key_provisioning_rejects_metadata_tampering_and_rolls_back():
  assert r.status_code==400
  db=module.con();after=db.execute("SELECT item_id,ce,kind,answer FROM portfolio_banks WHERE course_id='GRH0652' ORDER BY item_id").fetchall();after=[tuple(x) for x in after];db.close()
  assert after==before
+
+
+def test_public_portfolio_choice_answers_are_not_positionally_predictable():
+ from pathlib import Path
+ import json
+ bank_dir=Path(module.__file__).resolve().parent/"banks"
+ # Public files deliberately contain no answer key; this guard prevents a future
+ # authoring regression where all alternatives are emitted in one fixed template order.
+ for unit in ("ut1","ut2","ut3","ut4"):
+  data=json.loads((bank_dir/f"{unit}_portfolio.json").read_text(encoding="utf-8"))
+  choices=[q for q in data["items"] if q["kind"]=="choice"]
+  assert choices and all("answer" not in q for q in choices)
