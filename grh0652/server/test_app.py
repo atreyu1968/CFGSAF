@@ -53,3 +53,14 @@ def test_exam_snapshot_and_deadline_are_persisted():
     assert again.status_code==200
     assert again.json()["version"]==data["version"]
     assert again.json()["deadline_at"]==data["deadline_at"]
+
+def test_exam_supports_tf_and_multi_without_exposing_keys():
+ cfg={"portfolio_weight":40,"exam_weight":60,"pass_score":50,"ce_pass_percent":80,"ce_pass_score":50,"exam_enabled":True,"exam_questions_per_ce":3,"exam_minutes":45,"require_both_instruments":False}
+ assert client.put("/api/config/TYPES",headers=H,json=cfg).status_code==200
+ bank={"questions":[
+  {"id":"c","ce":"x","q":"Choice","options":["A","B"],"answer":0,"type":"choice"},
+  {"id":"t","ce":"x","q":"TF","options":[],"answer":True,"type":"tf"},
+  {"id":"m","ce":"x","q":"Multi","options":["A","B","C"],"answer":[0,2],"type":"multi"}]}
+ assert client.put("/api/teacher/exam-bank/TYPES",headers=H,json=bank).status_code==200
+ r=client.post("/api/exam/start",json={"student_id":"typed","course_id":"TYPES","kind":"exam","item_id":"final"});assert r.status_code==200
+ qs=r.json()["questions"];assert {q["type"] for q in qs}=={"choice","tf","multi"};assert all("answer" not in q for q in qs)

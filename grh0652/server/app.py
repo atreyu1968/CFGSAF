@@ -21,13 +21,15 @@ CREATE TABLE IF NOT EXISTS configs(course_id TEXT PRIMARY KEY,config TEXT,versio
 CREATE TABLE IF NOT EXISTS attempts(id INTEGER PRIMARY KEY AUTOINCREMENT,student_id TEXT NOT NULL,course_id TEXT NOT NULL,kind TEXT NOT NULL,item_id TEXT NOT NULL,attempt_no INTEGER NOT NULL,status TEXT NOT NULL,started_at TEXT NOT NULL,submitted_at TEXT,payload TEXT,UNIQUE(student_id,course_id,kind,item_id,attempt_no));
 CREATE TABLE IF NOT EXISTS evaluation_closures(course_id TEXT PRIMARY KEY,closed_at TEXT,config_version INTEGER);
 CREATE TABLE IF NOT EXISTS recovery_plans(student_id TEXT,course_id TEXT,criteria TEXT,status TEXT,created_at TEXT,PRIMARY KEY(student_id,course_id));
-CREATE TABLE IF NOT EXISTS exam_banks(course_id TEXT,question_id TEXT,ce TEXT,question TEXT,options TEXT,answer TEXT,PRIMARY KEY(course_id,question_id));
+CREATE TABLE IF NOT EXISTS exam_banks(course_id TEXT,question_id TEXT,ce TEXT,question TEXT,options TEXT,answer TEXT,type TEXT NOT NULL DEFAULT 'choice',PRIMARY KEY(course_id,question_id));
 CREATE TABLE IF NOT EXISTS exam_versions(attempt_id INTEGER PRIMARY KEY,student_id TEXT,course_id TEXT,version TEXT,questions TEXT,answers TEXT,created_at TEXT,config TEXT,deadline_at TEXT);
 CREATE TABLE IF NOT EXISTS recovery_banks(course_id TEXT,item_id TEXT,ce TEXT,kind TEXT,prompt TEXT,options TEXT,answer TEXT,feedback TEXT,PRIMARY KEY(course_id,item_id));
 CREATE TABLE IF NOT EXISTS recovery_results(student_id TEXT,course_id TEXT,score REAL,criteria_passed TEXT,status TEXT,updated_at TEXT,PRIMARY KEY(student_id,course_id));""")
  cols={r["name"] for r in c.execute("PRAGMA table_info(exam_versions)")}
  if "config" not in cols:c.execute("ALTER TABLE exam_versions ADD COLUMN config TEXT")
  if "deadline_at" not in cols:c.execute("ALTER TABLE exam_versions ADD COLUMN deadline_at TEXT")
+ bcols={r["name"] for r in c.execute("PRAGMA table_info(exam_banks)")}
+ if "type" not in bcols:c.execute("ALTER TABLE exam_banks ADD COLUMN type TEXT NOT NULL DEFAULT 'choice'")
  c.commit();return c
 
 DEFAULT={"portfolio_weight":40,"exam_weight":60,"pass_score":50,"ce_pass_percent":80,"ce_pass_score":50,"exam_enabled":False,"exam_questions_per_ce":3,"exam_minutes":45,"require_both_instruments":False}
@@ -41,7 +43,7 @@ class ConfigIn(BaseModel):
 class AttemptIn(BaseModel): student_id:str;course_id:str;kind:str;item_id:str;payload:dict|None=None
 class SubmitAttempt(BaseModel): payload:dict|None=None
 class AnswerIn(BaseModel): response:object|None=None;ce:str|None=None
-class BankQuestion(BaseModel): id:str;ce:str;q:str;options:list[str];answer:object
+class BankQuestion(BaseModel): id:str;ce:str;q:str;options:list[str]=[];answer:object;type:str='choice'
 class BankIn(BaseModel): questions:list[BankQuestion]
 class RecoveryItem(BaseModel): id:str;ce:str;kind:str='choice';prompt:str;options:list[str]=[];answer:object|None=None;feedback:str=''
 class RecoveryBankIn(BaseModel): items:list[RecoveryItem]
@@ -133,7 +135,12 @@ def recovery_submit(attempt_id:int,x:SubmitAttempt):
 @app.put("/api/teacher/exam-bank/{course_id}")
 def put_exam_bank(course_id:str,x:BankIn,x_teacher_token:str|None=Header(None)):
  auth(x_teacher_token);c=con();c.execute("DELETE FROM exam_banks WHERE course_id=?",(course_id,))
- for q in x.questions:c.execute("INSERT INTO exam_banks VALUES(?,?,?,?,?,?)",(course_id,q.id,q.ce,q.q,json.dumps(q.options,ensure_ascii=False),json.dumps(q.answer,ensure_ascii=False)))
+ for q in x.questions:
+  if q.type not in ("choice","tf","multi"):c.close();raise HTTPException(400,"Tipo de pregunta no válido")
+  if q.type=="choice" and (not isinstance(q.answer,int) or isinstance(q.answer,bool) or q.answer<0 or q.answer>=len(q.options)):c.close();raise HTTPException(400,"Respuesta choice no válida")
+  if q.type=="tf" and not isinstance(q.answer,bool):c.close();raise HTTPException(400,"Respuesta tf no válida")
+  if q.type=="multi" and (not isinstance(q.answer,list) or not q.answer or any(not isinstance(i,int) or isinstance(i,bool) or i<0 or i>=len(q.options) for i in q.answer)):c.close();raise HTTPException(400,"Respuesta multi no válida")
+  c.execute("INSERT INTO exam_banks(course_id,question_id,ce,question,options,answer,type) VALUES(?,?,?,?,?,?,?)",(course_id,q.id,q.ce,q.q,json.dumps(q.options,ensure_ascii=False),json.dumps(q.answer,ensure_ascii=False),q.type))
  c.commit();c.close();return {"questions":len(x.questions)}
 
 @app.post("/api/exam/start")
@@ -150,7 +157,13 @@ def exam_start(x:AttemptIn):
  for ce,a in by.items():rnd.shuffle(a);chosen+=a[:max(1,int(cfg.get("exam_questions_per_ce",3)))]
  rnd.shuffle(chosen);public=[];keys={}
  for r in chosen:
-  opts=json.loads(r["options"]);correct=json.loads(r["answer"]);pairs=list(enumerate(opts));rnd.shuffle(pairs);public.append({"id":r["question_id"],"ce":r["ce"],"q":r["question"],"options":[p[1] for p in pairs]});keys[r["question_id"]]=pairs.index(next(p for p in pairs if p[0]==correct))
+  kind=r["type"] or "choice";opts=json.loads(r["options"]);correct=json.loads(r["answer"])
+  if kind=="tf":
+   public.append({"id":r["question_id"],"ce":r["ce"],"q":r["question"],"options":[],"type":"tf"});keys[r["question_id"]]=correct
+  else:
+   pairs=list(enumerate(opts));rnd.shuffle(pairs);public.append({"id":r["question_id"],"ce":r["ce"],"q":r["question"],"options":[p[1] for p in pairs],"type":kind})
+   if kind=="multi":keys[r["question_id"]]=sorted(pairs.index(next(p for p in pairs if p[0]==i)) for i in correct)
+   else:keys[r["question_id"]]=pairs.index(next(p for p in pairs if p[0]==correct))
  version=secrets.token_hex(8)
  created=now()
  deadline=(datetime.datetime.fromisoformat(created)+datetime.timedelta(minutes=max(1,int(cfg.get("exam_minutes",45))))).isoformat()
@@ -167,7 +180,7 @@ def exam_submit(attempt_id:int,x:SubmitAttempt):
   c.execute("UPDATE attempts SET status='expired',submitted_at=? WHERE id=?",(now(),attempt_id));c.commit();c.close();raise HTTPException(410,"Tiempo de examen agotado")
  answers=(x.payload or {}).get("answers",{});keys=json.loads(v["answers"]);questions=json.loads(v["questions"]);by={};good=0
  for q in questions:
-  ok=answers.get(q["id"])==keys.get(q["id"]);good+=int(ok);d=by.setdefault(q["ce"],{"ok":0,"n":0});d["n"]+=1;d["ok"]+=int(ok)
+  given=answers.get(q["id"]);expected=keys.get(q["id"]);ok=(sorted(given)==expected if q.get("type")=="multi" and isinstance(given,list) else given==expected);good+=int(ok);d=by.setdefault(q["ce"],{"ok":0,"n":0});d["n"]+=1;d["ok"]+=int(ok)
  score=round(good/max(1,len(questions))*100,2);c.execute("UPDATE attempts SET status='submitted',submitted_at=?,payload=? WHERE id=?",(now(),json.dumps({"answers":answers,"score":score,"by_ce":by},ensure_ascii=False),attempt_id));c.commit();c.close();return {"score":score,"by_ce":by,"answered":len(answers),"total":len(questions)}
 
 @app.put("/api/state/{student_id}")
