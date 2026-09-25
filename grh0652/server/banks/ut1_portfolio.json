@@ -36,14 +36,24 @@
       "ce": "1.a",
       "kind": "order",
       "prompt": "Ordena una secuencia profesional para determinar la regulación aplicable antes de contratar. Revisa la secuencia completa.",
-      "options": []
+      "options": [
+        "Definir el supuesto concreto",
+        "Localizar la normativa laboral vigente",
+        "Comprobar el convenio colectivo aplicable",
+        "Formalizar el contrato conforme a las fuentes"
+      ]
     },
     {
       "id": "1a5",
       "ce": "1.a",
       "kind": "match",
       "prompt": "Relaciona cada fuente con su función principal. Revisa todas las correspondencias.",
-      "options": []
+      "options": [
+        "Estatuto de los Trabajadores → marco legal básico",
+        "Convenio colectivo → condiciones sectoriales o empresariales",
+        "Contrato de trabajo → condiciones individuales",
+        "Jurisprudencia → interpretación judicial"
+      ]
     },
     {
       "id": "1a6",
@@ -62,7 +72,13 @@
       "ce": "1.b",
       "kind": "order",
       "prompt": "Ordena las fases generales de una contratación desde la necesidad hasta el archivo. Revisa la secuencia completa.",
-      "options": []
+      "options": [
+        "Detectar la necesidad de contratación",
+        "Analizar puesto y modalidad contractual",
+        "Formalizar el contrato y anexos",
+        "Realizar alta y comunicaciones obligatorias",
+        "Archivar contrato y justificantes"
+      ]
     },
     {
       "id": "1b2",
@@ -81,7 +97,12 @@
       "ce": "1.b",
       "kind": "match",
       "prompt": "Relaciona cada fase con la actuación que mejor la representa. Revisa todas las correspondencias.",
-      "options": []
+      "options": [
+        "Necesidad → definir puesto y cobertura",
+        "Análisis → seleccionar modalidad y condiciones",
+        "Formalización → cumplimentar y firmar documentación",
+        "Cierre → comunicar, dar de alta y archivar"
+      ]
     },
     {
       "id": "1b4",
@@ -119,7 +140,12 @@
       "ce": "1.c",
       "kind": "match",
       "prompt": "Relaciona organismo y función habitual. Revisa todas las correspondencias.",
-      "options": []
+      "options": [
+        "TGSS → afiliación, altas y bajas",
+        "SEPE → comunicación de contratos",
+        "INSS → prestaciones de su competencia",
+        "SCE → orientación, empleo e incentivos autonómicos"
+      ]
     },
     {
       "id": "1c2",
@@ -224,7 +250,12 @@
       "ce": "1.d",
       "kind": "match",
       "prompt": "Relaciona modalidad y rasgo principal. Revisa todas las correspondencias.",
-      "options": []
+      "options": [
+        "Indefinido → necesidad estable",
+        "Fijo-discontinuo → actividad intermitente recurrente",
+        "Sustitución → cobertura temporal con causa",
+        "Formativo → trabajo vinculado a finalidad formativa"
+      ]
     },
     {
       "id": "1d6",
@@ -346,7 +377,12 @@
       "ce": "1.f",
       "kind": "match",
       "prompt": "Relaciona ámbito del convenio y pregunta de comprobación. Revisa todas las correspondencias.",
-      "options": []
+      "options": [
+        "Funcional → qué actividades incluye",
+        "Territorial → dónde se aplica",
+        "Personal → a qué personas alcanza",
+        "Temporal → durante qué periodo está vigente"
+      ]
     },
     {
       "id": "1f5",
@@ -377,7 +413,12 @@
       "ce": "1.g",
       "kind": "match",
       "prompt": "Relaciona documento y finalidad. Revisa todas las correspondencias.",
-      "options": []
+      "options": [
+        "Contrato → documentar la relación laboral",
+        "Anexo → incorporar condiciones complementarias",
+        "Justificante → acreditar una comunicación o trámite",
+        "Expediente → reunir y conservar evidencias"
+      ]
     },
     {
       "id": "1g2",
@@ -415,7 +456,13 @@
       "ce": "1.g",
       "kind": "order",
       "prompt": "Ordena una secuencia de control documental. Revisa la secuencia completa.",
-      "options": []
+      "options": [
+        "Comprobar datos y coherencia documental",
+        "Formalizar y obtener firmas necesarias",
+        "Realizar comunicaciones y trámites",
+        "Guardar justificantes",
+        "Archivar el expediente completo"
+      ]
     },
     {
       "id": "1g6",
@@ -477,7 +524,12 @@
       "ce": "1.h",
       "kind": "match",
       "prompt": "Relaciona comunicación y canal habitual. Revisa todas las correspondencias.",
-      "options": []
+      "options": [
+        "Alta o baja → Sistema RED/TGSS",
+        "Comunicación contractual → Contrat@/SEPE",
+        "Programa autonómico de empleo → SCE",
+        "Consulta normativa estatal → sede o fuente oficial competente"
+      ]
     },
     {
       "id": "1h6",
@@ -527,14 +579,25 @@
       "ce": "1.i",
       "kind": "match",
       "prompt": "Relaciona función digital y objetivo. Revisa todas las correspondencias.",
-      "options": []
+      "options": [
+        "Control de acceso → limitar consulta a personal autorizado",
+        "Nomenclatura → identificar documentos de forma consistente",
+        "Copia de seguridad → facilitar recuperación",
+        "Registro de cambios → mantener trazabilidad"
+      ]
     },
     {
       "id": "1i5",
       "ce": "1.i",
       "kind": "order",
       "prompt": "Ordena un flujo digital seguro. Revisa la secuencia completa.",
-      "options": []
+      "options": [
+        "Identificar el expediente",
+        "Validar datos y permisos",
+        "Generar o incorporar documentos",
+        "Registrar comunicaciones y justificantes",
+        "Archivar con acceso controlado"
+      ]
     },
     {
       "id": "1i6",
