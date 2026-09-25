@@ -169,17 +169,24 @@ def test_portfolio_match_normalizes_browser_string_indices():
  assert r.json()["correct"] is False and r.json()["score"]==0
 
 
-def test_bundled_portfolio_resyncs_existing_sqlite_without_touching_other_courses():
- db=module.con()
- db.execute("INSERT OR REPLACE INTO portfolio_banks(course_id,item_id,ce,kind,answer) VALUES(?,?,?,?,?)",("GRH0652","1a1","1.a","choice","999"))
- db.execute("INSERT OR REPLACE INTO portfolio_banks(course_id,item_id,ce,kind,answer) VALUES(?,?,?,?,?)",("GRH0652","obsolete","1.a","choice","0"))
- db.execute("INSERT OR REPLACE INTO portfolio_banks(course_id,item_id,ce,kind,answer) VALUES(?,?,?,?,?)",("CUSTOM","keep","x","choice","7"))
- db.execute("DELETE FROM bank_versions WHERE course_id='GRH0652'")
- db.commit();db.close()
- db=module.con()
- fixed=db.execute("SELECT answer FROM portfolio_banks WHERE course_id='GRH0652' AND item_id='1a1'").fetchone()
- obsolete=db.execute("SELECT 1 FROM portfolio_banks WHERE course_id='GRH0652' AND item_id='obsolete'").fetchone()
- custom=db.execute("SELECT answer FROM portfolio_banks WHERE course_id='CUSTOM' AND item_id='keep'").fetchone();db.close()
- assert fixed is not None and fixed["answer"]!="999"
- assert obsolete is None
- assert custom is not None and custom["answer"]=="7"
+def test_public_portfolio_files_contain_no_evaluable_keys():
+ from pathlib import Path
+ import json
+ bank_dir=Path(module.__file__).resolve().parent/"banks"
+ total=0
+ for unit in ("ut1","ut2","ut3","ut4"):
+  data=json.loads((bank_dir/f"{unit}_portfolio.json").read_text(encoding="utf-8"))
+  for item in data["items"]:
+   total+=1
+   assert "answer" not in item
+   assert "feedback" not in item
+ assert total==198
+
+
+def test_private_portfolio_keys_are_provisioned_only_through_teacher_api():
+ db=module.con();db.execute("DELETE FROM portfolio_banks WHERE course_id='PRIVATE'");db.commit();db.close()
+ bank={"items":[{"id":"secret1","ce":"1.a","kind":"choice","prompt":"P","options":["A","B"],"answer":1}]}
+ assert client.put("/api/teacher/portfolio-bank/PRIVATE",json=bank).status_code==401
+ assert client.put("/api/teacher/portfolio-bank/PRIVATE",headers=H,json=bank).status_code==200
+ db=module.con();row=db.execute("SELECT answer FROM portfolio_banks WHERE course_id='PRIVATE' AND item_id='secret1'").fetchone();db.close()
+ assert row is not None and row["answer"]=="1"

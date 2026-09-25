@@ -10,18 +10,14 @@
         "Copiar un trámite anterior",
         "Enviar sin comprobar fechas",
         "Archivar sin justificante"
-      ],
-      "answer": 0,
-      "feedback": "La gestión parte de hechos, datos y norma vigente."
+      ]
     },
     {
       "id": "3.ap2",
       "ce": "3.a",
       "kind": "tf",
       "prompt": "En Normativa y trámites empresariales, el justificante de una comunicación telemática forma parte del expediente.",
-      "options": [],
-      "answer": true,
-      "feedback": "La trazabilidad exige conservar la evidencia."
+      "options": []
     },
     {
       "id": "3.ap3",
@@ -33,28 +29,14 @@
         "Fechas/periodo",
         "Fuente oficial vigente",
         "Una captura antigua sin verificar"
-      ],
-      "answer": [
-        0,
-        1,
-        2
-      ],
-      "feedback": "Los tres primeros controles son necesarios."
+      ]
     },
     {
       "id": "3.ap4",
       "ce": "3.a",
       "kind": "order",
       "prompt": "Ordena una gestión segura.",
-      "options": [],
-      "answer": [
-        0,
-        1,
-        2,
-        3,
-        4
-      ],
-      "feedback": "El justificante cierra un proceso previamente comprobado."
+      "options": []
     },
     {
       "id": "3.ap5",
@@ -66,9 +48,7 @@
         "Existencia de justificante",
         "Uso de fuente oficial",
         "Registro del responsable"
-      ],
-      "answer": 0,
-      "feedback": "Las fechas deben corresponder con el hecho que se comunica."
+      ]
     },
     {
       "id": "3.ap6",
@@ -80,9 +60,7 @@
         "Solo una nota informal",
         "Solo el resultado final",
         "Ninguna si el sistema aceptó"
-      ],
-      "answer": 0,
-      "feedback": "Debe poder reconstruirse el procedimiento."
+      ]
     },
     {
       "id": "3.bp1",
@@ -94,18 +72,14 @@
         "Copiar un trámite anterior",
         "Enviar sin comprobar fechas",
         "Archivar sin justificante"
-      ],
-      "answer": 0,
-      "feedback": "La gestión parte de hechos, datos y norma vigente."
+      ]
     },
     {
       "id": "3.bp2",
       "ce": "3.b",
       "kind": "tf",
       "prompt": "En Bases y aportaciones, el justificante de una comunicación telemática forma parte del expediente.",
-      "options": [],
-      "answer": true,
-      "feedback": "La trazabilidad exige conservar la evidencia."
+      "options": []
     },
     {
       "id": "3.bp3",
@@ -117,28 +91,14 @@
         "Fechas/periodo",
         "Fuente oficial vigente",
         "Una captura antigua sin verificar"
-      ],
-      "answer": [
-        0,
-        1,
-        2
-      ],
-      "feedback": "Los tres primeros controles son necesarios."
+      ]
     },
     {
       "id": "3.bp4",
       "ce": "3.b",
       "kind": "order",
       "prompt": "Ordena una gestión segura.",
-      "options": [],
-      "answer": [
-        0,
-        1,
-        2,
-        3,
-        4
-      ],
-      "feedback": "El justificante cierra un proceso previamente comprobado."
+      "options": []
     },
     {
       "id": "3.bp5",
@@ -150,9 +110,7 @@
         "Existencia de justificante",
         "Uso de fuente oficial",
         "Registro del responsable"
-      ],
-      "answer": 0,
-      "feedback": "Las fechas deben corresponder con el hecho que se comunica."
+      ]
     },
     {
       "id": "3.bp6",
@@ -164,9 +122,7 @@
         "Solo una nota informal",
         "Solo el resultado final",
         "Ninguna si el sistema aceptó"
-      ],
-      "answer": 0,
-      "feedback": "Debe poder reconstruirse el procedimiento."
+      ]
     },
     {
       "id": "3.cp1",
@@ -178,18 +134,14 @@
         "Copiar un trámite anterior",
         "Enviar sin comprobar fechas",
         "Archivar sin justificante"
-      ],
-      "answer": 0,
-      "feedback": "La gestión parte de hechos, datos y norma vigente."
+      ]
     },
     {
       "id": "3.cp2",
       "ce": "3.c",
       "kind": "tf",
       "prompt": "En Prestaciones económicas, el justificante de una comunicación telemática forma parte del expediente.",
-      "options": [],
-      "answer": true,
-      "feedback": "La trazabilidad exige conservar la evidencia."
+      "options": []
     },
     {
       "id": "3.cp3",
@@ -201,28 +153,14 @@
         "Fechas/periodo",
         "Fuente oficial vigente",
         "Una captura antigua sin verificar"
-      ],
-      "answer": [
-        0,
-        1,
-        2
-      ],
-      "feedback": "Los tres primeros controles son necesarios."
+      ]
     },
     {
       "id": "3.cp4",
       "ce": "3.c",
       "kind": "order",
       "prompt": "Ordena una gestión segura.",
-      "options": [],
-      "answer": [
-        0,
-        1,
-        2,
-        3,
-        4
-      ],
-      "feedback": "El justificante cierra un proceso previamente comprobado."
+      "options": []
     },
     {
       "id": "3.cp5",
@@ -234,9 +172,7 @@
         "Existencia de justificante",
         "Uso de fuente oficial",
         "Registro del responsable"
-      ],
-      "answer": 0,
-      "feedback": "Las fechas deben corresponder con el hecho que se comunica."
+      ]
     },
     {
       "id": "3.cp6",
@@ -248,9 +184,7 @@
         "Solo una nota informal",
         "Solo el resultado final",
         "Ninguna si el sistema aceptó"
-      ],
-      "answer": 0,
-      "feedback": "Debe poder reconstruirse el procedimiento."
+      ]
     },
     {
       "id": "3.dp1",
@@ -262,18 +196,14 @@
         "Copiar un trámite anterior",
         "Enviar sin comprobar fechas",
         "Archivar sin justificante"
-      ],
-      "answer": 0,
-      "feedback": "La gestión parte de hechos, datos y norma vigente."
+      ]
     },
     {
       "id": "3.dp2",
       "ce": "3.d",
       "kind": "tf",
       "prompt": "En Afiliación, altas, bajas y variaciones, el justificante de una comunicación telemática forma parte del expediente.",
-      "options": [],
-      "answer": true,
-      "feedback": "La trazabilidad exige conservar la evidencia."
+      "options": []
     },
     {
       "id": "3.dp3",
@@ -285,28 +215,14 @@
         "Fechas/periodo",
         "Fuente oficial vigente",
         "Una captura antigua sin verificar"
-      ],
-      "answer": [
-        0,
-        1,
-        2
-      ],
-      "feedback": "Los tres primeros controles son necesarios."
+      ]
     },
     {
       "id": "3.dp4",
       "ce": "3.d",
       "kind": "order",
       "prompt": "Ordena una gestión segura.",
-      "options": [],
-      "answer": [
-        0,
-        1,
-        2,
-        3,
-        4
-      ],
-      "feedback": "El justificante cierra un proceso previamente comprobado."
+      "options": []
     },
     {
       "id": "3.dp5",
@@ -318,9 +234,7 @@
         "Existencia de justificante",
         "Uso de fuente oficial",
         "Registro del responsable"
-      ],
-      "answer": 0,
-      "feedback": "Las fechas deben corresponder con el hecho que se comunica."
+      ]
     },
     {
       "id": "3.dp6",
@@ -332,9 +246,7 @@
         "Solo una nota informal",
         "Solo el resultado final",
         "Ninguna si el sistema aceptó"
-      ],
-      "answer": 0,
-      "feedback": "Debe poder reconstruirse el procedimiento."
+      ]
     },
     {
       "id": "3.ep1",
@@ -346,18 +258,14 @@
         "Copiar un trámite anterior",
         "Enviar sin comprobar fechas",
         "Archivar sin justificante"
-      ],
-      "answer": 0,
-      "feedback": "La gestión parte de hechos, datos y norma vigente."
+      ]
     },
     {
       "id": "3.ep2",
       "ce": "3.e",
       "kind": "tf",
       "prompt": "En Vías de comunicación, el justificante de una comunicación telemática forma parte del expediente.",
-      "options": [],
-      "answer": true,
-      "feedback": "La trazabilidad exige conservar la evidencia."
+      "options": []
     },
     {
       "id": "3.ep3",
@@ -369,28 +277,14 @@
         "Fechas/periodo",
         "Fuente oficial vigente",
         "Una captura antigua sin verificar"
-      ],
-      "answer": [
-        0,
-        1,
-        2
-      ],
-      "feedback": "Los tres primeros controles son necesarios."
+      ]
     },
     {
       "id": "3.ep4",
       "ce": "3.e",
       "kind": "order",
       "prompt": "Ordena una gestión segura.",
-      "options": [],
-      "answer": [
-        0,
-        1,
-        2,
-        3,
-        4
-      ],
-      "feedback": "El justificante cierra un proceso previamente comprobado."
+      "options": []
     },
     {
       "id": "3.ep5",
@@ -402,9 +296,7 @@
         "Existencia de justificante",
         "Uso de fuente oficial",
         "Registro del responsable"
-      ],
-      "answer": 0,
-      "feedback": "Las fechas deben corresponder con el hecho que se comunica."
+      ]
     },
     {
       "id": "3.ep6",
@@ -416,9 +308,7 @@
         "Solo una nota informal",
         "Solo el resultado final",
         "Ninguna si el sistema aceptó"
-      ],
-      "answer": 0,
-      "feedback": "Debe poder reconstruirse el procedimiento."
+      ]
     },
     {
       "id": "3.fp1",
@@ -430,18 +320,14 @@
         "Copiar un trámite anterior",
         "Enviar sin comprobar fechas",
         "Archivar sin justificante"
-      ],
-      "answer": 0,
-      "feedback": "La gestión parte de hechos, datos y norma vigente."
+      ]
     },
     {
       "id": "3.fp2",
       "ce": "3.f",
       "kind": "tf",
       "prompt": "En Órganos inspectores y fiscalizadores, el justificante de una comunicación telemática forma parte del expediente.",
-      "options": [],
-      "answer": true,
-      "feedback": "La trazabilidad exige conservar la evidencia."
+      "options": []
     },
     {
       "id": "3.fp3",
@@ -453,28 +339,14 @@
         "Fechas/periodo",
         "Fuente oficial vigente",
         "Una captura antigua sin verificar"
-      ],
-      "answer": [
-        0,
-        1,
-        2
-      ],
-      "feedback": "Los tres primeros controles son necesarios."
+      ]
     },
     {
       "id": "3.fp4",
       "ce": "3.f",
       "kind": "order",
       "prompt": "Ordena una gestión segura.",
-      "options": [],
-      "answer": [
-        0,
-        1,
-        2,
-        3,
-        4
-      ],
-      "feedback": "El justificante cierra un proceso previamente comprobado."
+      "options": []
     },
     {
       "id": "3.fp5",
@@ -486,9 +358,7 @@
         "Existencia de justificante",
         "Uso de fuente oficial",
         "Registro del responsable"
-      ],
-      "answer": 0,
-      "feedback": "Las fechas deben corresponder con el hecho que se comunica."
+      ]
     },
     {
       "id": "3.fp6",
@@ -500,9 +370,7 @@
         "Solo una nota informal",
         "Solo el resultado final",
         "Ninguna si el sistema aceptó"
-      ],
-      "answer": 0,
-      "feedback": "Debe poder reconstruirse el procedimiento."
+      ]
     },
     {
       "id": "3.gp1",
@@ -514,18 +382,14 @@
         "Copiar un trámite anterior",
         "Enviar sin comprobar fechas",
         "Archivar sin justificante"
-      ],
-      "answer": 0,
-      "feedback": "La gestión parte de hechos, datos y norma vigente."
+      ]
     },
     {
       "id": "3.gp2",
       "ce": "3.g",
       "kind": "tf",
       "prompt": "En Previsión social complementaria, el justificante de una comunicación telemática forma parte del expediente.",
-      "options": [],
-      "answer": true,
-      "feedback": "La trazabilidad exige conservar la evidencia."
+      "options": []
     },
     {
       "id": "3.gp3",
@@ -537,28 +401,14 @@
         "Fechas/periodo",
         "Fuente oficial vigente",
         "Una captura antigua sin verificar"
-      ],
-      "answer": [
-        0,
-        1,
-        2
-      ],
-      "feedback": "Los tres primeros controles son necesarios."
+      ]
     },
     {
       "id": "3.gp4",
       "ce": "3.g",
       "kind": "order",
       "prompt": "Ordena una gestión segura.",
-      "options": [],
-      "answer": [
-        0,
-        1,
-        2,
-        3,
-        4
-      ],
-      "feedback": "El justificante cierra un proceso previamente comprobado."
+      "options": []
     },
     {
       "id": "3.gp5",
@@ -570,9 +420,7 @@
         "Existencia de justificante",
         "Uso de fuente oficial",
         "Registro del responsable"
-      ],
-      "answer": 0,
-      "feedback": "Las fechas deben corresponder con el hecho que se comunica."
+      ]
     },
     {
       "id": "3.gp6",
@@ -584,9 +432,7 @@
         "Solo una nota informal",
         "Solo el resultado final",
         "Ninguna si el sistema aceptó"
-      ],
-      "answer": 0,
-      "feedback": "Debe poder reconstruirse el procedimiento."
+      ]
     },
     {
       "id": "3.hp1",
@@ -598,18 +444,14 @@
         "Copiar un trámite anterior",
         "Enviar sin comprobar fechas",
         "Archivar sin justificante"
-      ],
-      "answer": 0,
-      "feedback": "La gestión parte de hechos, datos y norma vigente."
+      ]
     },
     {
       "id": "3.hp2",
       "ce": "3.h",
       "kind": "tf",
       "prompt": "En Aplicaciones informáticas, el justificante de una comunicación telemática forma parte del expediente.",
-      "options": [],
-      "answer": true,
-      "feedback": "La trazabilidad exige conservar la evidencia."
+      "options": []
     },
     {
       "id": "3.hp3",
@@ -621,28 +463,14 @@
         "Fechas/periodo",
         "Fuente oficial vigente",
         "Una captura antigua sin verificar"
-      ],
-      "answer": [
-        0,
-        1,
-        2
-      ],
-      "feedback": "Los tres primeros controles son necesarios."
+      ]
     },
     {
       "id": "3.hp4",
       "ce": "3.h",
       "kind": "order",
       "prompt": "Ordena una gestión segura.",
-      "options": [],
-      "answer": [
-        0,
-        1,
-        2,
-        3,
-        4
-      ],
-      "feedback": "El justificante cierra un proceso previamente comprobado."
+      "options": []
     },
     {
       "id": "3.hp5",
@@ -654,9 +482,7 @@
         "Existencia de justificante",
         "Uso de fuente oficial",
         "Registro del responsable"
-      ],
-      "answer": 0,
-      "feedback": "Las fechas deben corresponder con el hecho que se comunica."
+      ]
     },
     {
       "id": "3.hp6",
@@ -668,9 +494,7 @@
         "Solo una nota informal",
         "Solo el resultado final",
         "Ninguna si el sistema aceptó"
-      ],
-      "answer": 0,
-      "feedback": "Debe poder reconstruirse el procedimiento."
+      ]
     }
   ]
 }
