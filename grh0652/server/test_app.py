@@ -41,7 +41,7 @@ def test_close_generates_only_failed_recovery():
   for ce,item in (("3.c","pc"),("3.f","pf")):
    assert client.post("/api/evidence",json={"student_id":student,"course_id":"CLOSE","kind":"portfolio","ce":ce,"item_id":item,"attempt":1,"response":"x","correct":score==100,"score":score,"payload":{}}).status_code==200
   st=client.post("/api/exam/start",json={"student_id":student,"course_id":"CLOSE","kind":"exam","item_id":"final"});assert st.status_code==200
-  ans={q["id"]:(0 if score==100 else 1) for q in st.json()["questions"]}
+  ans={q["id"]:(q["options"].index("Sí") if score==100 else q["options"].index("No")) for q in st.json()["questions"]}
   assert client.post(f"/api/exam/{st.json()['attempt_id']}/submit",json={"payload":{"answers":ans}}).status_code==200
   forged={"student_id":student,"course_id":"CLOSE","portfolio":100,"exam":100,"final":100,"ce_passed":2,"ce_total":2,"ra_passed":True,"recovery":[]}
   assert client.post("/api/result",json=forged).status_code==200
