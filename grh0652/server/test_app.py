@@ -100,6 +100,10 @@ def test_recovery_uses_configured_ce_threshold_and_closes_passed_plan():
  answers={"r1":0,"r2":True,"r3":[2,0],"r4":" respuesta "}
  done=client.post(f"/api/recovery/{s.json()['id']}/submit",json={"payload":{"answers":answers}});assert done.status_code==200, done.text
  assert done.json()["status"]=="passed"
+ assert done.json()["result"]=={"ce_passed":1,"ce_total":1,"ra_passed":False,"recovery":[]}
+ c=module.con();rr=c.execute("SELECT ce_passed,ce_total,ra_passed,recovery FROM results WHERE student_id=? AND course_id=?",("rec","REC")).fetchone();rp=c.execute("SELECT criteria,status FROM recovery_plans WHERE student_id=? AND course_id=?",("rec","REC")).fetchone();c.close()
+ assert rr["ce_passed"]==1 and rr["ce_total"]==1 and rr["recovery"]=="[]"
+ assert rp["criteria"]=="[]" and rp["status"]=="passed"
  assert client.post("/api/recovery/start",json={"student_id":"rec","course_id":"REC","kind":"recovery","item_id":"ignored","payload":{}}).status_code==409
 
 def test_result_ignores_client_claims_and_recomputes_from_server_evidence():

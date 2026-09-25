@@ -139,7 +139,15 @@ def recovery_submit(attempt_id:int,x:SubmitAttempt):
   else:ok=given==expected
   if ok:d["ok"]+=1
  passed=[ce for ce,v in by.items() if v["n"] and v["ok"]/v["n"]>=threshold];score=round(sum(v["ok"] for v in by.values())/max(1,sum(v["n"] for v in by.values()))*100,2);status="passed" if len(passed)==len(ces) else "pending"
- c.execute("UPDATE attempts SET status='submitted',submitted_at=?,payload=? WHERE id=?",(now(),json.dumps({"answers":answers,"score":score,"by_ce":by},ensure_ascii=False),attempt_id));c.execute("INSERT OR REPLACE INTO recovery_results VALUES(?,?,?,?,?,?)",(a["student_id"],a["course_id"],score,json.dumps(passed),status,now()));c.execute("UPDATE recovery_plans SET status=? WHERE student_id=? AND course_id=?",(status,a["student_id"],a["course_id"]));c.commit();c.close();return {"score":score,"by_ce":by,"criteria_passed":passed,"status":status}
+ c.execute("UPDATE attempts SET status='submitted',submitted_at=?,payload=? WHERE id=?",(now(),json.dumps({"answers":answers,"score":score,"by_ce":by},ensure_ascii=False),attempt_id));c.execute("INSERT OR REPLACE INTO recovery_results VALUES(?,?,?,?,?,?)",(a["student_id"],a["course_id"],score,json.dumps(passed),status,now()))
+ rr=c.execute("SELECT * FROM results WHERE student_id=? AND course_id=?",(a["student_id"],a["course_id"])).fetchone()
+ authoritative=None
+ if rr:
+  old_pending=json.loads(rr["recovery"] or "[]");remaining=[ce for ce in old_pending if ce not in passed];new_passed=int(rr["ce_passed"])+sum(1 for ce in passed if ce in old_pending);total=int(rr["ce_total"]);needed=(total*int(cfg["ce_pass_percent"])+99)//100
+  ra=bool(float(rr["final"])>=float(cfg["pass_score"]) and new_passed>=needed)
+  c.execute("UPDATE results SET ce_passed=?,ra_passed=?,recovery=?,updated_at=? WHERE student_id=? AND course_id=?",(new_passed,int(ra),json.dumps(remaining),now(),a["student_id"],a["course_id"]))
+  status="passed" if not remaining else "pending";authoritative={"ce_passed":new_passed,"ce_total":total,"ra_passed":ra,"recovery":remaining}
+ c.execute("UPDATE recovery_plans SET criteria=?,status=? WHERE student_id=? AND course_id=?",(json.dumps(authoritative["recovery"] if authoritative else [ce for ce in ces if ce not in passed]),status,a["student_id"],a["course_id"]));c.commit();c.close();return {"score":score,"by_ce":by,"criteria_passed":passed,"status":status,"result":authoritative}
 
 @app.put("/api/teacher/exam-bank/{course_id}")
 def put_exam_bank(course_id:str,x:BankIn,x_teacher_token:str|None=Header(None)):
