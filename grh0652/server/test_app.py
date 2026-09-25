@@ -154,3 +154,16 @@ def test_portfolio_score_is_server_authoritative():
  forged["response"]=1;forged["correct"]=False;forged["score"]=0;forged["attempt"]=2
  r=client.post("/api/evidence",headers=SH(forged["student_id"]),json=forged);assert r.status_code==200
  assert r.json()["correct"] is True and r.json()["score"]==100
+
+
+def test_portfolio_match_normalizes_browser_string_indices():
+ bank={"items":[{"id":"m1","ce":"c1","kind":"match","prompt":"Relaciona","options":[],"answer":[0,1,2]}]}
+ assert client.put("/api/teacher/portfolio-bank/MATCH",headers=H,json=bank).status_code==200
+ body={"student_id":"match-student","course_id":"MATCH","kind":"portfolio","ce":"c1","item_id":"m1","attempt":1,"response":["0","1","2"],"correct":False,"score":0,"payload":{}}
+ r=client.post("/api/evidence",headers=SH("match-student"),json=body)
+ assert r.status_code==200,r.text
+ assert r.json()["correct"] is True and r.json()["score"]==100
+ body["attempt"]=2;body["response"]=["0","2","1"]
+ r=client.post("/api/evidence",headers=SH("match-student"),json=body)
+ assert r.status_code==200,r.text
+ assert r.json()["correct"] is False and r.json()["score"]==0
