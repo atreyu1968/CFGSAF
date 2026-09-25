@@ -40,7 +40,7 @@ def test_close_generates_only_failed_recovery():
  for student,score in (("fail",0),("pass",100)):
   for ce,item in (("3.c","pc"),("3.f","pf")):
    assert client.post("/api/evidence",json={"student_id":student,"course_id":"CLOSE","kind":"portfolio","ce":ce,"item_id":item,"attempt":1,"response":"x","correct":score==100,"score":score,"payload":{}}).status_code==200
-  st=client.post("/api/exam/start",json={"student_id":student,"course_id":"CLOSE","kind":"exam","item_id":"final"});assert st.status_code==200
+  st=client.post("/api/exam/start",json={"student_id":student,"course_id":"CLOSE","kind":"exam","item_id":"final"});assert st.status_code==200,st.text
   ans={q["id"]:(True if score==100 else False) for q in st.json()["questions"]}
   assert client.post(f"/api/exam/{st.json()['attempt_id']}/submit",json={"payload":{"answers":ans}}).status_code==200
   forged={"student_id":student,"course_id":"CLOSE","portfolio":100,"exam":100,"final":100,"ce_passed":2,"ce_total":2,"ra_passed":True,"recovery":[]}
@@ -109,7 +109,7 @@ def test_result_ignores_client_claims_and_recomputes_from_server_evidence():
  assert client.put("/api/teacher/exam-bank/AUTH",headers=H,json=bank).status_code==200
  for ce,item,score in [("c1","p1",100),("c2","p2",0)]:
   assert client.post("/api/evidence",json={"student_id":"auth","course_id":"AUTH","kind":"portfolio","ce":ce,"item_id":item,"attempt":1,"response":"x","correct":score==100,"score":score,"payload":{}}).status_code==200
- start=client.post("/api/exam/start",json={"student_id":"auth","course_id":"AUTH","kind":"exam","item_id":"final"});assert start.status_code==200
+ start=client.post("/api/exam/start",json={"student_id":"auth","course_id":"AUTH","kind":"exam","item_id":"final"});assert start.status_code==200,start.text
  qs=start.json()["questions"];answers={}
  for q in qs: answers[q["id"]]=True if q["ce"]=="c1" else False
  assert client.post(f"/api/exam/{start.json()['attempt_id']}/submit",json={"payload":{"answers":answers}}).status_code==200
