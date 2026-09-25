@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS evaluation_closures(course_id TEXT PRIMARY KEY,closed
 CREATE TABLE IF NOT EXISTS recovery_plans(student_id TEXT,course_id TEXT,criteria TEXT,status TEXT,created_at TEXT,PRIMARY KEY(student_id,course_id));
 CREATE TABLE IF NOT EXISTS exam_banks(course_id TEXT,question_id TEXT,ce TEXT,question TEXT,options TEXT,answer TEXT,type TEXT NOT NULL DEFAULT 'choice',PRIMARY KEY(course_id,question_id));
 CREATE TABLE IF NOT EXISTS exam_versions(attempt_id INTEGER PRIMARY KEY,student_id TEXT,course_id TEXT,version TEXT,questions TEXT,answers TEXT,created_at TEXT,config TEXT,deadline_at TEXT);
-CREATE TABLE IF NOT EXISTS recovery_banks(course_id TEXT,item_id TEXT,ce TEXT,kind TEXT,prompt TEXT,options TEXT,answer TEXT,feedback TEXT,PRIMARY KEY(course_id,item_id));
+CREATE TABLE IF NOT EXISTS recovery_banks(course_id TEXT,item_id TEXT,ce TEXT,kind TEXT,prompt TEXT,options TEXT,answer TEXT,feedback TEXT,PRIMARY KEY(course_id,item_id));\nCREATE TABLE IF NOT EXISTS portfolio_banks(course_id TEXT,item_id TEXT,ce TEXT,kind TEXT,answer TEXT,PRIMARY KEY(course_id,item_id));
 CREATE TABLE IF NOT EXISTS recovery_results(student_id TEXT,course_id TEXT,score REAL,criteria_passed TEXT,status TEXT,updated_at TEXT,PRIMARY KEY(student_id,course_id));""")
  cols={r["name"] for r in c.execute("PRAGMA table_info(exam_versions)")}
  if "config" not in cols:c.execute("ALTER TABLE exam_versions ADD COLUMN config TEXT")
@@ -149,6 +149,14 @@ def recovery_submit(attempt_id:int,x:SubmitAttempt):
   status="passed" if not remaining else "pending";authoritative={"ce_passed":new_passed,"ce_total":total,"ra_passed":ra,"recovery":remaining}
  c.execute("UPDATE recovery_plans SET criteria=?,status=? WHERE student_id=? AND course_id=?",(json.dumps(authoritative["recovery"] if authoritative else [ce for ce in ces if ce not in passed]),status,a["student_id"],a["course_id"]));c.commit();c.close();return {"score":score,"by_ce":by,"criteria_passed":passed,"status":status,"result":authoritative}
 
+@app.put("/api/teacher/portfolio-bank/{course_id}")
+def put_portfolio_bank(course_id:str,x:RecoveryBankIn,x_teacher_token:str|None=Header(None)):
+ auth(x_teacher_token);c=con();c.execute("DELETE FROM portfolio_banks WHERE course_id=?",(course_id,))
+ for q in x.items:
+  if q.kind not in ("choice","tf","multi","free","order","match"):c.close();raise HTTPException(400,"Tipo de actividad no válido")
+  c.execute("INSERT INTO portfolio_banks VALUES(?,?,?,?,?)",(course_id,q.id,q.ce,q.kind,json.dumps(q.answer,ensure_ascii=False)))
+ c.commit();c.close();return {"ok":True,"items":len(x.items)}
+
 @app.put("/api/teacher/exam-bank/{course_id}")
 def put_exam_bank(course_id:str,x:BankIn,x_teacher_token:str|None=Header(None)):
  auth(x_teacher_token);c=con();c.execute("DELETE FROM exam_banks WHERE course_id=?",(course_id,))
@@ -214,7 +222,19 @@ def get_state(student_id:str,course_id:str):
  c=con();r=c.execute("SELECT state FROM states WHERE student_id=? AND course_id=?",(student_id,course_id)).fetchone();c.close();return {"state":json.loads(r["state"])} if r else {"state":None}
 @app.post("/api/evidence")
 def evidence(x:EventIn):
- c=con();c.execute("INSERT INTO evidence(student_id,course_id,kind,ce,item_id,attempt,response,correct,score,payload,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)",(x.student_id,x.course_id,x.kind,x.ce,x.item_id,x.attempt,json.dumps(x.response,ensure_ascii=False),None if x.correct is None else int(x.correct),x.score,json.dumps(x.payload or {},ensure_ascii=False),now()));c.commit();c.close();return {"ok":True}
+ c=con();correct=x.correct;score=x.score
+ if x.kind=="portfolio":
+  key=c.execute("SELECT ce,kind,answer FROM portfolio_banks WHERE course_id=? AND item_id=?",(x.course_id,x.item_id)).fetchone()
+  if not key:c.close();raise HTTPException(409,"Actividad de portafolio no definida en el banco autoritativo")
+  if x.ce!=key["ce"]:c.close();raise HTTPException(409,"CE de portafolio no coincide con la definición autoritativa")
+  expected=json.loads(key["answer"]);given=x.response;kind=key["kind"] or "choice"
+  if kind=="multi" and isinstance(given,list) and isinstance(expected,list):ok=sorted(given)==sorted(expected)
+  elif kind=="free":ok=str(given or "").strip().casefold()==str(expected or "").strip().casefold()
+  elif kind=="order":ok=given==expected
+  elif kind=="match":ok=given==expected
+  else:ok=given==expected
+  correct=ok;score=100 if ok else 0
+ c.execute("INSERT INTO evidence(student_id,course_id,kind,ce,item_id,attempt,response,correct,score,payload,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)",(x.student_id,x.course_id,x.kind,x.ce,x.item_id,x.attempt,json.dumps(x.response,ensure_ascii=False),None if correct is None else int(correct),score,json.dumps(x.payload or {},ensure_ascii=False),now()));c.commit();c.close();return {"ok":True,"correct":correct,"score":score}
 @app.post("/api/result")
 def result(x:ResultIn):
  c=con();cfg,_=config_row(c,x.course_id)
