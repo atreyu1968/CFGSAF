@@ -53,14 +53,9 @@
     {
       "id": "4.ap6",
       "ce": "4.a",
-      "kind": "choice",
-      "prompt": "En Procesos retributivos y modalidades salariales, ¿qué práctica reduce errores? Revisa todas las alternativas antes de responder.",
-      "options": [
-        "Ocultar las bases intermedias",
-        "Separar datos, reglas, operaciones y resultado",
-        "Sobrescribir cifras sin registro",
-        "Copiar la nómina anterior"
-      ]
+      "kind": "free",
+      "prompt": "ELABORACIÓN DE NÓMINA · Caso 1. Resuelve y confecciona una nómina mensual ordinaria con salario base y complemento salarial. Debes presentar el recibo salarial completo siguiendo la estructura del modelo oficial: identificación, periodo y días, devengos salariales y no salariales, total devengado, bases de cotización que correspondan, aportaciones de la persona trabajadora, retención de IRPF cuando proceda, demás deducciones, líquido a percibir y aportación empresarial. Expón los cálculos intermedios y la fuente/periodo de los parámetros utilizados.",
+      "options": []
     },
     {
       "id": "4.bp1",
@@ -115,14 +110,9 @@
     {
       "id": "4.bp6",
       "ce": "4.b",
-      "kind": "choice",
-      "prompt": "En SMI, IPREM e índices de referencia, ¿qué práctica reduce errores? Revisa todas las alternativas antes de responder.",
-      "options": [
-        "Ocultar las bases intermedias",
-        "Separar datos, reglas, operaciones y resultado",
-        "Sobrescribir cifras sin registro",
-        "Copiar la nómina anterior"
-      ]
+      "kind": "free",
+      "prompt": "ELABORACIÓN DE NÓMINA · Caso 2. Resuelve y confecciona una nómina con pagas extraordinarias prorrateadas. Debes presentar el recibo salarial completo siguiendo la estructura del modelo oficial: identificación, periodo y días, devengos salariales y no salariales, total devengado, bases de cotización que correspondan, aportaciones de la persona trabajadora, retención de IRPF cuando proceda, demás deducciones, líquido a percibir y aportación empresarial. Expón los cálculos intermedios y la fuente/periodo de los parámetros utilizados.",
+      "options": []
     },
     {
       "id": "4.cp1",
@@ -177,14 +167,9 @@
     {
       "id": "4.cp6",
       "ce": "4.c",
-      "kind": "choice",
-      "prompt": "En Incentivos y retribución variable, ¿qué práctica reduce errores? Revisa todas las alternativas antes de responder.",
-      "options": [
-        "Ocultar las bases intermedias",
-        "Separar datos, reglas, operaciones y resultado",
-        "Sobrescribir cifras sin registro",
-        "Copiar la nómina anterior"
-      ]
+      "kind": "free",
+      "prompt": "ELABORACIÓN DE NÓMINA · Caso 3. Resuelve y confecciona una nómina con horas extraordinarias y complemento de puesto. Debes presentar el recibo salarial completo siguiendo la estructura del modelo oficial: identificación, periodo y días, devengos salariales y no salariales, total devengado, bases de cotización que correspondan, aportaciones de la persona trabajadora, retención de IRPF cuando proceda, demás deducciones, líquido a percibir y aportación empresarial. Expón los cálculos intermedios y la fuente/periodo de los parámetros utilizados.",
+      "options": []
     },
     {
       "id": "4.dp1",
@@ -239,14 +224,9 @@
     {
       "id": "4.dp6",
       "ce": "4.d",
-      "kind": "choice",
-      "prompt": "En Conceptos y estructura de nómina, ¿qué práctica reduce errores? Revisa todas las alternativas antes de responder.",
-      "options": [
-        "Ocultar las bases intermedias",
-        "Separar datos, reglas, operaciones y resultado",
-        "Sobrescribir cifras sin registro",
-        "Copiar la nómina anterior"
-      ]
+      "kind": "free",
+      "prompt": "ELABORACIÓN DE NÓMINA · Caso 4. Resuelve y confecciona una nómina con percepción no salarial debidamente justificada. Debes presentar el recibo salarial completo siguiendo la estructura del modelo oficial: identificación, periodo y días, devengos salariales y no salariales, total devengado, bases de cotización que correspondan, aportaciones de la persona trabajadora, retención de IRPF cuando proceda, demás deducciones, líquido a percibir y aportación empresarial. Expón los cálculos intermedios y la fuente/periodo de los parámetros utilizados.",
+      "options": []
     },
     {
       "id": "4.ep1",
@@ -301,14 +281,9 @@
     {
       "id": "4.ep6",
       "ce": "4.e",
-      "kind": "choice",
-      "prompt": "En Devengos y deducciones, ¿qué práctica reduce errores? Revisa todas las alternativas antes de responder.",
-      "options": [
-        "Ocultar las bases intermedias",
-        "Separar datos, reglas, operaciones y resultado",
-        "Sobrescribir cifras sin registro",
-        "Copiar la nómina anterior"
-      ]
+      "kind": "free",
+      "prompt": "ELABORACIÓN DE NÓMINA · Caso 5. Resuelve y confecciona una nómina con retribución en especie y su tratamiento correspondiente. Debes presentar el recibo salarial completo siguiendo la estructura del modelo oficial: identificación, periodo y días, devengos salariales y no salariales, total devengado, bases de cotización que correspondan, aportaciones de la persona trabajadora, retención de IRPF cuando proceda, demás deducciones, líquido a percibir y aportación empresarial. Expón los cálculos intermedios y la fuente/periodo de los parámetros utilizados.",
+      "options": []
     },
     {
       "id": "4.fp1",
@@ -363,14 +338,9 @@
     {
       "id": "4.fp6",
       "ce": "4.f",
-      "kind": "choice",
-      "prompt": "En Bases, cuotas e IRPF, ¿qué práctica reduce errores? Revisa todas las alternativas antes de responder.",
-      "options": [
-        "Ocultar las bases intermedias",
-        "Separar datos, reglas, operaciones y resultado",
-        "Sobrescribir cifras sin registro",
-        "Copiar la nómina anterior"
-      ]
+      "kind": "free",
+      "prompt": "ELABORACIÓN DE NÓMINA · Caso 6. Resuelve y confecciona una nómina de un mes con incapacidad temporal derivada de enfermedad común. Debes presentar el recibo salarial completo siguiendo la estructura del modelo oficial: identificación, periodo y días, devengos salariales y no salariales, total devengado, bases de cotización que correspondan, aportaciones de la persona trabajadora, retención de IRPF cuando proceda, demás deducciones, líquido a percibir y aportación empresarial. Expón los cálculos intermedios y la fuente/periodo de los parámetros utilizados.",
+      "options": []
     },
     {
       "id": "4.gp1",
@@ -425,14 +395,9 @@
     {
       "id": "4.gp6",
       "ce": "4.g",
-      "kind": "choice",
-      "prompt": "En Recibo salarial y documentos de cotización, ¿qué práctica reduce errores? Revisa todas las alternativas antes de responder.",
-      "options": [
-        "Ocultar las bases intermedias",
-        "Separar datos, reglas, operaciones y resultado",
-        "Sobrescribir cifras sin registro",
-        "Copiar la nómina anterior"
-      ]
+      "kind": "free",
+      "prompt": "ELABORACIÓN DE NÓMINA · Caso 7. Resuelve y confecciona una nómina con incapacidad temporal derivada de accidente de trabajo. Debes presentar el recibo salarial completo siguiendo la estructura del modelo oficial: identificación, periodo y días, devengos salariales y no salariales, total devengado, bases de cotización que correspondan, aportaciones de la persona trabajadora, retención de IRPF cuando proceda, demás deducciones, líquido a percibir y aportación empresarial. Expón los cálculos intermedios y la fuente/periodo de los parámetros utilizados.",
+      "options": []
     },
     {
       "id": "4.hp1",
@@ -487,14 +452,9 @@
     {
       "id": "4.hp6",
       "ce": "4.h",
-      "kind": "choice",
-      "prompt": "En Plazos de pago y presentación, ¿qué práctica reduce errores? Revisa todas las alternativas antes de responder.",
-      "options": [
-        "Ocultar las bases intermedias",
-        "Separar datos, reglas, operaciones y resultado",
-        "Sobrescribir cifras sin registro",
-        "Copiar la nómina anterior"
-      ]
+      "kind": "free",
+      "prompt": "ELABORACIÓN DE NÓMINA · Caso 8. Resuelve y confecciona una nómina de un mes afectado por días de huelga. Debes presentar el recibo salarial completo siguiendo la estructura del modelo oficial: identificación, periodo y días, devengos salariales y no salariales, total devengado, bases de cotización que correspondan, aportaciones de la persona trabajadora, retención de IRPF cuando proceda, demás deducciones, líquido a percibir y aportación empresarial. Expón los cálculos intermedios y la fuente/periodo de los parámetros utilizados.",
+      "options": []
     },
     {
       "id": "4.ip1",
@@ -549,14 +509,9 @@
     {
       "id": "4.ip6",
       "ce": "4.i",
-      "kind": "choice",
-      "prompt": "En Vías de comunicación, ¿qué práctica reduce errores? Revisa todas las alternativas antes de responder.",
-      "options": [
-        "Ocultar las bases intermedias",
-        "Separar datos, reglas, operaciones y resultado",
-        "Sobrescribir cifras sin registro",
-        "Copiar la nómina anterior"
-      ]
+      "kind": "free",
+      "prompt": "ELABORACIÓN DE NÓMINA · Caso 9. Resuelve y confecciona una nómina de una persona que causa alta o baja durante el mes. Debes presentar el recibo salarial completo siguiendo la estructura del modelo oficial: identificación, periodo y días, devengos salariales y no salariales, total devengado, bases de cotización que correspondan, aportaciones de la persona trabajadora, retención de IRPF cuando proceda, demás deducciones, líquido a percibir y aportación empresarial. Expón los cálculos intermedios y la fuente/periodo de los parámetros utilizados.",
+      "options": []
     },
     {
       "id": "4.jp1",
@@ -611,14 +566,9 @@
     {
       "id": "4.jp6",
       "ce": "4.j",
-      "kind": "choice",
-      "prompt": "En Aplicaciones informáticas y archivo, ¿qué práctica reduce errores? Revisa todas las alternativas antes de responder.",
-      "options": [
-        "Ocultar las bases intermedias",
-        "Separar datos, reglas, operaciones y resultado",
-        "Sobrescribir cifras sin registro",
-        "Copiar la nómina anterior"
-      ]
+      "kind": "free",
+      "prompt": "ELABORACIÓN DE NÓMINA · Caso 10. Resuelve y confecciona una nómina final con liquidación de cantidades pendientes y finiquito. Debes presentar el recibo salarial completo siguiendo la estructura del modelo oficial: identificación, periodo y días, devengos salariales y no salariales, total devengado, bases de cotización que correspondan, aportaciones de la persona trabajadora, retención de IRPF cuando proceda, demás deducciones, líquido a percibir y aportación empresarial. Expón los cálculos intermedios y la fuente/periodo de los parámetros utilizados.",
+      "options": []
     }
   ]
 }
