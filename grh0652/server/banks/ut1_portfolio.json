@@ -272,74 +272,44 @@
     {
       "id": "1e1",
       "ce": "1.e",
-      "kind": "choice",
-      "prompt": "Una asesoría incorpora de forma permanente a una administrativa para tareas estructurales. ¿Qué propuesta es la más coherente? Revisa todas las alternativas antes de responder.",
-      "options": [
-        "Sustitución",
-        "Formación en alternancia sin formación",
-        "Indefinido ordinario, salvo particularidad legal",
-        "Temporal de seis meses para probar"
-      ]
+      "kind": "free",
+      "prompt": "CONFECCIÓN DE CONTRATO · Caso 1. Una asesoría incorpora de forma estable a una administrativa a jornada completa para tareas estructurales. Cumplimenta un contrato indefinido siguiendo la estructura del modelo oficial SEPE: identifica empresa y persona trabajadora, puesto/grupo, centro, jornada, salario, convenio, periodo de prueba si procede, fecha de inicio, cláusulas y firmas. Justifica cualquier dato que debas completar a partir del supuesto.",
+      "options": []
     },
     {
       "id": "1e2",
       "ce": "1.e",
-      "kind": "choice",
-      "prompt": "Una trabajadora está de baja con derecho a reserva de puesto y la empresa necesita cubrir sus funciones. ¿Qué modalidad debe analizarse? Revisa todas las alternativas antes de responder.",
-      "options": [
-        "Prácticas no laborales",
-        "Contrato de sustitución",
-        "Indefinido fijo-discontinuo",
-        "Temporal sin causa"
-      ]
+      "kind": "free",
+      "prompt": "CONFECCIÓN DE CONTRATO · Caso 2. Una empresa necesita cubrir a una trabajadora con derecho a reserva de puesto. Elabora el contrato temporal de sustitución conforme al modelo oficial SEPE, identificando expresamente a la persona sustituida, causa, duración, jornada, puesto, convenio, retribución y comunicaciones necesarias.",
+      "options": []
     },
     {
       "id": "1e3",
       "ce": "1.e",
-      "kind": "choice",
-      "prompt": "Un hotel tiene cada año una campaña estacional recurrente con periodos de actividad e inactividad. ¿Qué figura encaja mejor? Revisa todas las alternativas antes de responder.",
-      "options": [
-        "Temporal por costumbre cada año",
-        "Contrato mercantil",
-        "Indefinido a tiempo completo necesariamente todo el año",
-        "Fijo-discontinuo"
-      ]
+      "kind": "free",
+      "prompt": "CONFECCIÓN DE CONTRATO · Caso 3. Un hotel de Tenerife necesita cada año personal de recepción durante temporadas recurrentes de actividad. Elabora un contrato indefinido fijo-discontinuo: determina jornada, periodo estimado de actividad, sistema/orden de llamamiento conforme al convenio aplicable, puesto, salario, centro y restantes datos exigibles.",
+      "options": []
     },
     {
       "id": "1e4",
       "ce": "1.e",
-      "kind": "choice",
-      "prompt": "Una empresa sufre un incremento ocasional e imprevisible de pedidos durante unas semanas, bien documentado y no estructural. ¿Qué modalidad podría proceder si se cumplen los requisitos legales? Revisa todas las alternativas antes de responder.",
-      "options": [
-        "Sustitución",
-        "Contrato sin alta",
-        "Temporal por circunstancias de la producción",
-        "Fijo-discontinuo automáticamente"
-      ]
+      "kind": "free",
+      "prompt": "CONFECCIÓN DE CONTRATO · Caso 4. Una empresa acredita un incremento ocasional e imprevisible de pedidos durante un periodo limitado. Elabora un contrato temporal por circunstancias de la producción. Redacta con precisión la causa concreta y su conexión con la duración prevista, además de jornada, puesto, salario, convenio y fechas.",
+      "options": []
     },
     {
       "id": "1e5",
       "ce": "1.e",
-      "kind": "choice",
-      "prompt": "Una persona estudia FP y la empresa quiere compatibilizar trabajo retribuido con su proceso formativo coordinado. ¿Qué contrato debe valorarse? Revisa todas las alternativas antes de responder.",
-      "options": [
-        "Indefinido fijo-discontinuo por definición",
-        "Formación en alternancia",
-        "Sustitución",
-        "Temporal sin causa"
-      ]
+      "kind": "free",
+      "prompt": "CONFECCIÓN DE CONTRATO · Caso 5. Una persona cursa Formación Profesional y va a compatibilizar actividad laboral retribuida y formación coordinada. Elabora un contrato de formación en alternancia basado en el modelo oficial SEPE, incorporando los datos laborales y los elementos formativos esenciales, tutoría, jornada/tiempos y plan formativo que correspondan.",
+      "options": []
     },
     {
       "id": "1e6",
       "ce": "1.e",
-      "kind": "choice",
-      "prompt": "Una persona acaba de obtener una titulación y se pretende que adquiera práctica profesional adecuada a ese nivel de estudios. ¿Qué modalidad formativa debe analizarse? Revisa todas las alternativas antes de responder.",
-      "options": [
-        "Sustitución",
-        "Temporal por vacaciones siempre",
-        "Fijo-discontinuo",
-        "Contrato formativo para la obtención de práctica profesional"
-      ]
+      "kind": "free",
+      "prompt": "CONFECCIÓN DE CONTRATO · Caso 6. Una persona titulada recientemente va a adquirir práctica profesional adecuada a sus estudios. Elabora el contrato formativo para la obtención de práctica profesional siguiendo el modelo oficial SEPE: titulación, puesto, duración, jornada, retribución, tutor/a y plan formativo individual, además de los restantes datos contractuales.",
+      "options": []
     },
     {
       "id": "1f1",
