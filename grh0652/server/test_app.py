@@ -167,3 +167,18 @@ def test_portfolio_match_normalizes_browser_string_indices():
  r=client.post("/api/evidence",headers=SH("match-student"),json=body)
  assert r.status_code==200,r.text
  assert r.json()["correct"] is False and r.json()["score"]==0
+
+
+def test_bundled_portfolio_resyncs_existing_sqlite_without_touching_other_courses():
+ db=module.con()
+ db.execute("INSERT OR REPLACE INTO portfolio_banks(course_id,item_id,ce,kind,answer) VALUES(?,?,?,?,?)",("GRH0652","1a1","1.a","choice","999"))
+ db.execute("INSERT OR REPLACE INTO portfolio_banks(course_id,item_id,ce,kind,answer) VALUES(?,?,?,?,?)",("GRH0652","obsolete","1.a","choice","0"))
+ db.execute("INSERT OR REPLACE INTO portfolio_banks(course_id,item_id,ce,kind,answer) VALUES(?,?,?,?,?)",("CUSTOM","keep","x","choice","7"))
+ db.commit();db.close()
+ db=module.con()
+ fixed=db.execute("SELECT answer FROM portfolio_banks WHERE course_id='GRH0652' AND item_id='1a1'").fetchone()
+ obsolete=db.execute("SELECT 1 FROM portfolio_banks WHERE course_id='GRH0652' AND item_id='obsolete'").fetchone()
+ custom=db.execute("SELECT answer FROM portfolio_banks WHERE course_id='CUSTOM' AND item_id='keep'").fetchone();db.close()
+ assert fixed is not None and fixed["answer"]!="999"
+ assert obsolete is None
+ assert custom is not None and custom["answer"]=="7"
