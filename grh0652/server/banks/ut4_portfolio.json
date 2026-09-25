@@ -10,18 +10,14 @@
         "Un porcentaje recordado",
         "El líquido deseado",
         "Una nómina antigua"
-      ],
-      "answer": 0,
-      "feedback": "Todo cálculo debe quedar vinculado a su periodo y datos."
+      ]
     },
     {
       "id": "4.ap2",
       "ce": "4.a",
       "kind": "tf",
       "prompt": "Los parámetros legales variables usados en Procesos retributivos y modalidades salariales deben conservar su periodo y fuente.",
-      "options": [],
-      "answer": true,
-      "feedback": "Así se evita aplicar cifras de otro ejercicio."
+      "options": []
     },
     {
       "id": "4.ap3",
@@ -33,28 +29,14 @@
         "Operaciones realizadas",
         "Fuente/versión de parámetros",
         "Solo el resultado final"
-      ],
-      "answer": [
-        0,
-        1,
-        2
-      ],
-      "feedback": "Resultado sin datos, operaciones y parámetros no es auditable."
+      ]
     },
     {
       "id": "4.ap4",
       "ce": "4.a",
       "kind": "order",
       "prompt": "Ordena el control de una nómina.",
-      "options": [],
-      "answer": [
-        0,
-        1,
-        2,
-        3,
-        4
-      ],
-      "feedback": "La comprobación final depende de datos y parámetros previos."
+      "options": []
     },
     {
       "id": "4.ap5",
@@ -66,9 +48,7 @@
         "Las operaciones están documentadas",
         "La fuente es oficial",
         "El periodo está identificado"
-      ],
-      "answer": 0,
-      "feedback": "Un parámetro sin periodo puede estar obsoleto."
+      ]
     },
     {
       "id": "4.ap6",
@@ -80,9 +60,7 @@
         "Sobrescribir cifras sin registro",
         "Copiar la nómina anterior",
         "Ocultar las bases intermedias"
-      ],
-      "answer": 0,
-      "feedback": "Separar capas facilita revisión y actualización."
+      ]
     },
     {
       "id": "4.bp1",
@@ -94,18 +72,14 @@
         "Un porcentaje recordado",
         "El líquido deseado",
         "Una nómina antigua"
-      ],
-      "answer": 0,
-      "feedback": "Todo cálculo debe quedar vinculado a su periodo y datos."
+      ]
     },
     {
       "id": "4.bp2",
       "ce": "4.b",
       "kind": "tf",
       "prompt": "Los parámetros legales variables usados en SMI, IPREM e índices de referencia deben conservar su periodo y fuente.",
-      "options": [],
-      "answer": true,
-      "feedback": "Así se evita aplicar cifras de otro ejercicio."
+      "options": []
     },
     {
       "id": "4.bp3",
@@ -117,28 +91,14 @@
         "Operaciones realizadas",
         "Fuente/versión de parámetros",
         "Solo el resultado final"
-      ],
-      "answer": [
-        0,
-        1,
-        2
-      ],
-      "feedback": "Resultado sin datos, operaciones y parámetros no es auditable."
+      ]
     },
     {
       "id": "4.bp4",
       "ce": "4.b",
       "kind": "order",
       "prompt": "Ordena el control de una nómina.",
-      "options": [],
-      "answer": [
-        0,
-        1,
-        2,
-        3,
-        4
-      ],
-      "feedback": "La comprobación final depende de datos y parámetros previos."
+      "options": []
     },
     {
       "id": "4.bp5",
@@ -150,9 +110,7 @@
         "Las operaciones están documentadas",
         "La fuente es oficial",
         "El periodo está identificado"
-      ],
-      "answer": 0,
-      "feedback": "Un parámetro sin periodo puede estar obsoleto."
+      ]
     },
     {
       "id": "4.bp6",
@@ -164,9 +122,7 @@
         "Sobrescribir cifras sin registro",
         "Copiar la nómina anterior",
         "Ocultar las bases intermedias"
-      ],
-      "answer": 0,
-      "feedback": "Separar capas facilita revisión y actualización."
+      ]
     },
     {
       "id": "4.cp1",
@@ -178,18 +134,14 @@
         "Un porcentaje recordado",
         "El líquido deseado",
         "Una nómina antigua"
-      ],
-      "answer": 0,
-      "feedback": "Todo cálculo debe quedar vinculado a su periodo y datos."
+      ]
     },
     {
       "id": "4.cp2",
       "ce": "4.c",
       "kind": "tf",
       "prompt": "Los parámetros legales variables usados en Incentivos y retribución variable deben conservar su periodo y fuente.",
-      "options": [],
-      "answer": true,
-      "feedback": "Así se evita aplicar cifras de otro ejercicio."
+      "options": []
     },
     {
       "id": "4.cp3",
@@ -201,28 +153,14 @@
         "Operaciones realizadas",
         "Fuente/versión de parámetros",
         "Solo el resultado final"
-      ],
-      "answer": [
-        0,
-        1,
-        2
-      ],
-      "feedback": "Resultado sin datos, operaciones y parámetros no es auditable."
+      ]
     },
     {
       "id": "4.cp4",
       "ce": "4.c",
       "kind": "order",
       "prompt": "Ordena el control de una nómina.",
-      "options": [],
-      "answer": [
-        0,
-        1,
-        2,
-        3,
-        4
-      ],
-      "feedback": "La comprobación final depende de datos y parámetros previos."
+      "options": []
     },
     {
       "id": "4.cp5",
@@ -234,9 +172,7 @@
         "Las operaciones están documentadas",
         "La fuente es oficial",
         "El periodo está identificado"
-      ],
-      "answer": 0,
-      "feedback": "Un parámetro sin periodo puede estar obsoleto."
+      ]
     },
     {
       "id": "4.cp6",
@@ -248,9 +184,7 @@
         "Sobrescribir cifras sin registro",
         "Copiar la nómina anterior",
         "Ocultar las bases intermedias"
-      ],
-      "answer": 0,
-      "feedback": "Separar capas facilita revisión y actualización."
+      ]
     },
     {
       "id": "4.dp1",
@@ -262,18 +196,14 @@
         "Un porcentaje recordado",
         "El líquido deseado",
         "Una nómina antigua"
-      ],
-      "answer": 0,
-      "feedback": "Todo cálculo debe quedar vinculado a su periodo y datos."
+      ]
     },
     {
       "id": "4.dp2",
       "ce": "4.d",
       "kind": "tf",
       "prompt": "Los parámetros legales variables usados en Conceptos y estructura de nómina deben conservar su periodo y fuente.",
-      "options": [],
-      "answer": true,
-      "feedback": "Así se evita aplicar cifras de otro ejercicio."
+      "options": []
     },
     {
       "id": "4.dp3",
@@ -285,28 +215,14 @@
         "Operaciones realizadas",
         "Fuente/versión de parámetros",
         "Solo el resultado final"
-      ],
-      "answer": [
-        0,
-        1,
-        2
-      ],
-      "feedback": "Resultado sin datos, operaciones y parámetros no es auditable."
+      ]
     },
     {
       "id": "4.dp4",
       "ce": "4.d",
       "kind": "order",
       "prompt": "Ordena el control de una nómina.",
-      "options": [],
-      "answer": [
-        0,
-        1,
-        2,
-        3,
-        4
-      ],
-      "feedback": "La comprobación final depende de datos y parámetros previos."
+      "options": []
     },
     {
       "id": "4.dp5",
@@ -318,9 +234,7 @@
         "Las operaciones están documentadas",
         "La fuente es oficial",
         "El periodo está identificado"
-      ],
-      "answer": 0,
-      "feedback": "Un parámetro sin periodo puede estar obsoleto."
+      ]
     },
     {
       "id": "4.dp6",
@@ -332,9 +246,7 @@
         "Sobrescribir cifras sin registro",
         "Copiar la nómina anterior",
         "Ocultar las bases intermedias"
-      ],
-      "answer": 0,
-      "feedback": "Separar capas facilita revisión y actualización."
+      ]
     },
     {
       "id": "4.ep1",
@@ -346,18 +258,14 @@
         "Un porcentaje recordado",
         "El líquido deseado",
         "Una nómina antigua"
-      ],
-      "answer": 0,
-      "feedback": "Todo cálculo debe quedar vinculado a su periodo y datos."
+      ]
     },
     {
       "id": "4.ep2",
       "ce": "4.e",
       "kind": "tf",
       "prompt": "Los parámetros legales variables usados en Devengos y deducciones deben conservar su periodo y fuente.",
-      "options": [],
-      "answer": true,
-      "feedback": "Así se evita aplicar cifras de otro ejercicio."
+      "options": []
     },
     {
       "id": "4.ep3",
@@ -369,28 +277,14 @@
         "Operaciones realizadas",
         "Fuente/versión de parámetros",
         "Solo el resultado final"
-      ],
-      "answer": [
-        0,
-        1,
-        2
-      ],
-      "feedback": "Resultado sin datos, operaciones y parámetros no es auditable."
+      ]
     },
     {
       "id": "4.ep4",
       "ce": "4.e",
       "kind": "order",
       "prompt": "Ordena el control de una nómina.",
-      "options": [],
-      "answer": [
-        0,
-        1,
-        2,
-        3,
-        4
-      ],
-      "feedback": "La comprobación final depende de datos y parámetros previos."
+      "options": []
     },
     {
       "id": "4.ep5",
@@ -402,9 +296,7 @@
         "Las operaciones están documentadas",
         "La fuente es oficial",
         "El periodo está identificado"
-      ],
-      "answer": 0,
-      "feedback": "Un parámetro sin periodo puede estar obsoleto."
+      ]
     },
     {
       "id": "4.ep6",
@@ -416,9 +308,7 @@
         "Sobrescribir cifras sin registro",
         "Copiar la nómina anterior",
         "Ocultar las bases intermedias"
-      ],
-      "answer": 0,
-      "feedback": "Separar capas facilita revisión y actualización."
+      ]
     },
     {
       "id": "4.fp1",
@@ -430,18 +320,14 @@
         "Un porcentaje recordado",
         "El líquido deseado",
         "Una nómina antigua"
-      ],
-      "answer": 0,
-      "feedback": "Todo cálculo debe quedar vinculado a su periodo y datos."
+      ]
     },
     {
       "id": "4.fp2",
       "ce": "4.f",
       "kind": "tf",
       "prompt": "Los parámetros legales variables usados en Bases, cuotas e IRPF deben conservar su periodo y fuente.",
-      "options": [],
-      "answer": true,
-      "feedback": "Así se evita aplicar cifras de otro ejercicio."
+      "options": []
     },
     {
       "id": "4.fp3",
@@ -453,28 +339,14 @@
         "Operaciones realizadas",
         "Fuente/versión de parámetros",
         "Solo el resultado final"
-      ],
-      "answer": [
-        0,
-        1,
-        2
-      ],
-      "feedback": "Resultado sin datos, operaciones y parámetros no es auditable."
+      ]
     },
     {
       "id": "4.fp4",
       "ce": "4.f",
       "kind": "order",
       "prompt": "Ordena el control de una nómina.",
-      "options": [],
-      "answer": [
-        0,
-        1,
-        2,
-        3,
-        4
-      ],
-      "feedback": "La comprobación final depende de datos y parámetros previos."
+      "options": []
     },
     {
       "id": "4.fp5",
@@ -486,9 +358,7 @@
         "Las operaciones están documentadas",
         "La fuente es oficial",
         "El periodo está identificado"
-      ],
-      "answer": 0,
-      "feedback": "Un parámetro sin periodo puede estar obsoleto."
+      ]
     },
     {
       "id": "4.fp6",
@@ -500,9 +370,7 @@
         "Sobrescribir cifras sin registro",
         "Copiar la nómina anterior",
         "Ocultar las bases intermedias"
-      ],
-      "answer": 0,
-      "feedback": "Separar capas facilita revisión y actualización."
+      ]
     },
     {
       "id": "4.gp1",
@@ -514,18 +382,14 @@
         "Un porcentaje recordado",
         "El líquido deseado",
         "Una nómina antigua"
-      ],
-      "answer": 0,
-      "feedback": "Todo cálculo debe quedar vinculado a su periodo y datos."
+      ]
     },
     {
       "id": "4.gp2",
       "ce": "4.g",
       "kind": "tf",
       "prompt": "Los parámetros legales variables usados en Recibo salarial y documentos de cotización deben conservar su periodo y fuente.",
-      "options": [],
-      "answer": true,
-      "feedback": "Así se evita aplicar cifras de otro ejercicio."
+      "options": []
     },
     {
       "id": "4.gp3",
@@ -537,28 +401,14 @@
         "Operaciones realizadas",
         "Fuente/versión de parámetros",
         "Solo el resultado final"
-      ],
-      "answer": [
-        0,
-        1,
-        2
-      ],
-      "feedback": "Resultado sin datos, operaciones y parámetros no es auditable."
+      ]
     },
     {
       "id": "4.gp4",
       "ce": "4.g",
       "kind": "order",
       "prompt": "Ordena el control de una nómina.",
-      "options": [],
-      "answer": [
-        0,
-        1,
-        2,
-        3,
-        4
-      ],
-      "feedback": "La comprobación final depende de datos y parámetros previos."
+      "options": []
     },
     {
       "id": "4.gp5",
@@ -570,9 +420,7 @@
         "Las operaciones están documentadas",
         "La fuente es oficial",
         "El periodo está identificado"
-      ],
-      "answer": 0,
-      "feedback": "Un parámetro sin periodo puede estar obsoleto."
+      ]
     },
     {
       "id": "4.gp6",
@@ -584,9 +432,7 @@
         "Sobrescribir cifras sin registro",
         "Copiar la nómina anterior",
         "Ocultar las bases intermedias"
-      ],
-      "answer": 0,
-      "feedback": "Separar capas facilita revisión y actualización."
+      ]
     },
     {
       "id": "4.hp1",
@@ -598,18 +444,14 @@
         "Un porcentaje recordado",
         "El líquido deseado",
         "Una nómina antigua"
-      ],
-      "answer": 0,
-      "feedback": "Todo cálculo debe quedar vinculado a su periodo y datos."
+      ]
     },
     {
       "id": "4.hp2",
       "ce": "4.h",
       "kind": "tf",
       "prompt": "Los parámetros legales variables usados en Plazos de pago y presentación deben conservar su periodo y fuente.",
-      "options": [],
-      "answer": true,
-      "feedback": "Así se evita aplicar cifras de otro ejercicio."
+      "options": []
     },
     {
       "id": "4.hp3",
@@ -621,28 +463,14 @@
         "Operaciones realizadas",
         "Fuente/versión de parámetros",
         "Solo el resultado final"
-      ],
-      "answer": [
-        0,
-        1,
-        2
-      ],
-      "feedback": "Resultado sin datos, operaciones y parámetros no es auditable."
+      ]
     },
     {
       "id": "4.hp4",
       "ce": "4.h",
       "kind": "order",
       "prompt": "Ordena el control de una nómina.",
-      "options": [],
-      "answer": [
-        0,
-        1,
-        2,
-        3,
-        4
-      ],
-      "feedback": "La comprobación final depende de datos y parámetros previos."
+      "options": []
     },
     {
       "id": "4.hp5",
@@ -654,9 +482,7 @@
         "Las operaciones están documentadas",
         "La fuente es oficial",
         "El periodo está identificado"
-      ],
-      "answer": 0,
-      "feedback": "Un parámetro sin periodo puede estar obsoleto."
+      ]
     },
     {
       "id": "4.hp6",
@@ -668,9 +494,7 @@
         "Sobrescribir cifras sin registro",
         "Copiar la nómina anterior",
         "Ocultar las bases intermedias"
-      ],
-      "answer": 0,
-      "feedback": "Separar capas facilita revisión y actualización."
+      ]
     },
     {
       "id": "4.ip1",
@@ -682,18 +506,14 @@
         "Un porcentaje recordado",
         "El líquido deseado",
         "Una nómina antigua"
-      ],
-      "answer": 0,
-      "feedback": "Todo cálculo debe quedar vinculado a su periodo y datos."
+      ]
     },
     {
       "id": "4.ip2",
       "ce": "4.i",
       "kind": "tf",
       "prompt": "Los parámetros legales variables usados en Vías de comunicación deben conservar su periodo y fuente.",
-      "options": [],
-      "answer": true,
-      "feedback": "Así se evita aplicar cifras de otro ejercicio."
+      "options": []
     },
     {
       "id": "4.ip3",
@@ -705,28 +525,14 @@
         "Operaciones realizadas",
         "Fuente/versión de parámetros",
         "Solo el resultado final"
-      ],
-      "answer": [
-        0,
-        1,
-        2
-      ],
-      "feedback": "Resultado sin datos, operaciones y parámetros no es auditable."
+      ]
     },
     {
       "id": "4.ip4",
       "ce": "4.i",
       "kind": "order",
       "prompt": "Ordena el control de una nómina.",
-      "options": [],
-      "answer": [
-        0,
-        1,
-        2,
-        3,
-        4
-      ],
-      "feedback": "La comprobación final depende de datos y parámetros previos."
+      "options": []
     },
     {
       "id": "4.ip5",
@@ -738,9 +544,7 @@
         "Las operaciones están documentadas",
         "La fuente es oficial",
         "El periodo está identificado"
-      ],
-      "answer": 0,
-      "feedback": "Un parámetro sin periodo puede estar obsoleto."
+      ]
     },
     {
       "id": "4.ip6",
@@ -752,9 +556,7 @@
         "Sobrescribir cifras sin registro",
         "Copiar la nómina anterior",
         "Ocultar las bases intermedias"
-      ],
-      "answer": 0,
-      "feedback": "Separar capas facilita revisión y actualización."
+      ]
     },
     {
       "id": "4.jp1",
@@ -766,18 +568,14 @@
         "Un porcentaje recordado",
         "El líquido deseado",
         "Una nómina antigua"
-      ],
-      "answer": 0,
-      "feedback": "Todo cálculo debe quedar vinculado a su periodo y datos."
+      ]
     },
     {
       "id": "4.jp2",
       "ce": "4.j",
       "kind": "tf",
       "prompt": "Los parámetros legales variables usados en Aplicaciones informáticas y archivo deben conservar su periodo y fuente.",
-      "options": [],
-      "answer": true,
-      "feedback": "Así se evita aplicar cifras de otro ejercicio."
+      "options": []
     },
     {
       "id": "4.jp3",
@@ -789,28 +587,14 @@
         "Operaciones realizadas",
         "Fuente/versión de parámetros",
         "Solo el resultado final"
-      ],
-      "answer": [
-        0,
-        1,
-        2
-      ],
-      "feedback": "Resultado sin datos, operaciones y parámetros no es auditable."
+      ]
     },
     {
       "id": "4.jp4",
       "ce": "4.j",
       "kind": "order",
       "prompt": "Ordena el control de una nómina.",
-      "options": [],
-      "answer": [
-        0,
-        1,
-        2,
-        3,
-        4
-      ],
-      "feedback": "La comprobación final depende de datos y parámetros previos."
+      "options": []
     },
     {
       "id": "4.jp5",
@@ -822,9 +606,7 @@
         "Las operaciones están documentadas",
         "La fuente es oficial",
         "El periodo está identificado"
-      ],
-      "answer": 0,
-      "feedback": "Un parámetro sin periodo puede estar obsoleto."
+      ]
     },
     {
       "id": "4.jp6",
@@ -836,9 +618,7 @@
         "Sobrescribir cifras sin registro",
         "Copiar la nómina anterior",
         "Ocultar las bases intermedias"
-      ],
-      "answer": 0,
-      "feedback": "Separar capas facilita revisión y actualización."
+      ]
     }
   ]
 }
