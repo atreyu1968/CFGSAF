@@ -107,21 +107,21 @@ function updateProgress(){
  CRITERIA.forEach(c=>{const ex=PRACTICE[c.id]||[],n=ex.filter(e=>state.mastered.includes(e.id)).length,k=c.id.replace('.','');const tx=document.getElementById('prog-'+k),hb=document.getElementById('homeprog-'+k),bar=document.getElementById('bar-'+k),hbar=document.getElementById('homebar-'+k);if(tx)tx.textContent=n+'/6 dominadas';if(hb)hb.textContent=n+'/6';if(bar)bar.style.width=(n/6*100)+'%';if(hbar)hbar.style.width=(n/6*100)+'%'});
 }
 
-function renderExam(){
+let examQuestions=[];\nfunction renderExam(){
  const box=$('#examBox');if(!box)return;
- box.innerHTML=`<div class="notice" id="incidentNotice"><strong>Modo evaluación.</strong> Incidencias de foco: <span id="incidentCount">0</span>/3.</div>`+EXAM.map((q,i)=>{
+ box.innerHTML=`<div class="notice" id="incidentNotice"><strong>Modo evaluación.</strong> Incidencias de foco: <span id="incidentCount">0</span>/3.</div>`+examQuestions.map((q,i)=>{
  let opts='';
  if(q.type==='choice')opts=q.options.map((o,j)=>`<label class="option"><input type="radio" name="q-${q.id}" value="${j}"> ${safe(o)}</label>`).join('');
  else if(q.type==='tf')opts=`<label class="option"><input type="radio" name="q-${q.id}" value="true"> Verdadero</label><label class="option"><input type="radio" name="q-${q.id}" value="false"> Falso</label>`;
  else if(q.type==='multi')opts=q.options.map((o,j)=>`<label class="option"><input type="checkbox" name="q-${q.id}" value="${j}"> ${safe(o)}</label>`).join('');
- return `<article class="question" id="qcard-${q.id}"><div class="qnum">Pregunta ${i+1} de ${EXAM.length} · CE ${safe(q.ce)}</div><h3>${safe(q.q)}</h3>${opts}<div class="feedback hidden" id="qfb-${q.id}"></div></article>`
- }).join('')+`<button class="btn primary big" id="submitExam" type="button">Entregar autoevaluación</button>`;
+ return `<article class="question" id="qcard-${q.id}"><div class="qnum">Pregunta ${i+1} de ${examQuestions.length} · CE ${safe(q.ce)}</div><h3>${safe(q.q)}</h3>${opts}<div class="feedback hidden" id="qfb-${q.id}"></div></article>`
+ }).join('')+`<button class="btn primary big" id="submitExam" type="button">Entregar examen</button>`;
  $('#submitExam').onclick=()=>submitExam(false);
 }
 async function startExam(){
  if(state.examTaken){alert('El examen solo permite un intento.');return}if(!state.evaluationConfig||!state.evaluationConfig.exam_enabled){alert('El profesor todavía no ha activado el examen.');return}
- const ev=evidence();if(ev&&ev.api){const gate=await ev.startExam({unit:UNIT_ID});if(!gate||gate.error){alert('No se puede iniciar el examen: '+(gate?.error||'servidor no disponible'));return}state.serverExamAttempt=gate.attempt;state.serverExamAttemptId=gate.attempt_id;state.examVersion=gate.version||state.examVersion;EXAM.splice(0,EXAM.length,...gate.questions);}
- examActive=true;autoSubmitPending=false;state.incidents=0;state.attempts=(state.attempts||0)+1;document.body.classList.add('exam-mode');$('#examIntro')?.classList.add('hidden');$('#examResult').innerHTML='';$('#examBox')?.classList.remove('hidden');renderExam();requestFull();sync();
+ const ev=evidence();if(ev&&ev.api){const gate=await ev.startExam({unit:UNIT_ID});if(!gate||gate.error){alert('No se puede iniciar el examen: '+(gate?.error||'servidor no disponible'));return}state.serverExamAttempt=gate.attempt;state.serverExamAttemptId=gate.attempt_id;state.examVersion=gate.version||state.examVersion;examQuestions=(gate.questions||[]).map(q=>({...q,type:q.type||'choice'}));}
+ if(!examQuestions.length){alert('El servidor no ha proporcionado preguntas para el examen.');return}\n examActive=true;autoSubmitPending=false;state.incidents=0;state.attempts=(state.attempts||0)+1;document.body.classList.add('exam-mode');$('#examIntro')?.classList.add('hidden');$('#examResult').innerHTML='';$('#examBox')?.classList.remove('hidden');renderExam();requestFull();sync();
 }
 function registerIncident(reason){
  if(!examActive)return;const now=Date.now();if(now-lastIncident<1400)return;lastIncident=now;state.incidents=(state.incidents||0)+1;const c=$('#incidentCount');if(c)c.textContent=state.incidents;sync();
@@ -152,8 +152,8 @@ async function submitExam(auto){
  sync();try{if(document.fullscreenElement)document.exitFullscreen()}catch(e){}
 }
 function renderSelfAssessment(){
- const box=$('#selfBox');if(!box)return;const pool=shuffle(EXAM).slice(0,Math.min(30,EXAM.length));box.innerHTML=pool.map((q,i)=>{let opts='';if(q.type==='choice')opts=q.options.map((o,j)=>`<label class="option"><input type="radio" name="self-${q.id}" value="${j}"> ${safe(o)}</label>`).join('');else if(q.type==='tf')opts=`<label class="option"><input type="radio" name="self-${q.id}" value="true"> Verdadero</label><label class="option"><input type="radio" name="self-${q.id}" value="false"> Falso</label>`;return `<article class="question"><div class="qnum">Pregunta ${i+1} · CE ${safe(q.ce)}</div><h3>${safe(q.q)}</h3>${opts}</article>`}).join('')+'<button class="btn primary big" id="submitSelf" type="button">Corregir autoevaluación</button>';
- $('#submitSelf').onclick=()=>{let good=0;pool.forEach(q=>{let a=null;if(q.type==='choice'){const x=$(`input[name="self-${q.id}"]:checked`);a=x?Number(x.value):null}else if(q.type==='tf'){const x=$(`input[name="self-${q.id}"]:checked`);a=x?(x.value==='true'):null}if(isCorrect(q,a))good++});const pct=Math.round(good/pool.length*100);$('#selfResult').innerHTML=`<div class="exam-result"><div class="score-big">${pct}%</div><h2>Autoevaluación de preparación</h2><p>${good} respuestas correctas de ${pool.length}. Esta puntuación no forma parte de la nota.</p></div>`;try{if(evidence())evidence().event({kind:'self_assessment',score:pct,payload:{questions:pool.map(q=>q.id)}})}catch(e){}};
+ const box=$('#selfBox');if(!box)return;const pool=shuffle([...EXAM]).slice(0,Math.min(30,EXAM.length));box.innerHTML=pool.map((q,i)=>{let opts='';if(q.type==='choice')opts=q.options.map((o,j)=>`<label class="option"><input type="radio" name="self-${q.id}" value="${j}"> ${safe(o)}</label>`).join('');else if(q.type==='tf')opts=`<label class="option"><input type="radio" name="self-${q.id}" value="true"> Verdadero</label><label class="option"><input type="radio" name="self-${q.id}" value="false"> Falso</label>`;else if(q.type==='multi')opts=q.options.map((o,j)=>`<label class="option"><input type="checkbox" name="self-${q.id}" value="${j}"> ${safe(o)}</label>`).join('');return `<article class="question"><div class="qnum">Pregunta ${i+1} · CE ${safe(q.ce)}</div><h3>${safe(q.q)}</h3>${opts}</article>`}).join('')+'<button class="btn primary big" id="submitSelf" type="button">Corregir autoevaluación</button>';
+ $('#submitSelf').onclick=()=>{let good=0;pool.forEach(q=>{let a=null;if(q.type==='choice'){const x=$(`input[name="self-${q.id}"]:checked`);a=x?Number(x.value):null}else if(q.type==='tf'){const x=$(`input[name="self-${q.id}"]:checked`);a=x?(x.value==='true'):null}else if(q.type==='multi'){const x=$(`input[name="self-${q.id}"]:checked`).map(v=>Number(v.value)).sort((a,b)=>a-b);a=x.length?x:null}if(isCorrect(q,a))good++});const pct=Math.round(good/pool.length*100);$('#selfResult').innerHTML=`<div class="exam-result"><div class="score-big">${pct}%</div><h2>Autoevaluación de preparación</h2><p>${good} respuestas correctas de ${pool.length}. Esta puntuación no forma parte de la nota.</p></div>`;try{if(evidence())evidence().event({kind:'self_assessment',score:pct,payload:{questions:pool.map(q=>q.id)}})}catch(e){}};
 }
 function bindSelfAssessment(){const b=$('#startSelf');if(b)b.onclick=renderSelfAssessment;renderSelfAssessment()}
 
