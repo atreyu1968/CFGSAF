@@ -55,14 +55,14 @@ def start_attempt(x:AttemptIn):
  if x.kind not in LIMITS: raise HTTPException(400,"Tipo de intento no válido")
  c=con();c.execute("BEGIN IMMEDIATE")
  active=c.execute("SELECT * FROM attempts WHERE student_id=? AND course_id=? AND kind=? AND item_id=? AND status='started' ORDER BY attempt_no DESC LIMIT 1",(x.student_id,x.course_id,x.kind,x.item_id)).fetchone()
- if active: c.commit();c.close();return {"attempt":active["attempt_no"],"status":"started","resumed":True}
+ if active: c.commit();c.close();return {"id":active["id"],"attempt":active["attempt_no"],"status":"started","resumed":True}
  n=c.execute("SELECT COUNT(*) n FROM attempts WHERE student_id=? AND course_id=? AND kind=? AND item_id=?",(x.student_id,x.course_id,x.kind,x.item_id)).fetchone()["n"]
  if n>=LIMITS[x.kind]: c.rollback();c.close();raise HTTPException(409,"Límite de intentos alcanzado")
  if x.kind=="exam":
   cfg,_=config_row(c,x.course_id)
   if not cfg.get("exam_enabled"): c.rollback();c.close();raise HTTPException(403,"Examen no activado")
   if c.execute("SELECT 1 FROM evaluation_closures WHERE course_id=?",(x.course_id,)).fetchone(): c.rollback();c.close();raise HTTPException(409,"Evaluación cerrada")
- n+=1;c.execute("INSERT INTO attempts(student_id,course_id,kind,item_id,attempt_no,status,started_at,payload) VALUES(?,?,?,?,?,'started',?,?)",(x.student_id,x.course_id,x.kind,x.item_id,n,now(),json.dumps(x.payload or {},ensure_ascii=False)));c.commit();c.close();return {"attempt":n,"status":"started","resumed":False}
+ n+=1;c.execute("INSERT INTO attempts(student_id,course_id,kind,item_id,attempt_no,status,started_at,payload) VALUES(?,?,?,?,?,'started',?,?)",(x.student_id,x.course_id,x.kind,x.item_id,n,now(),json.dumps(x.payload or {},ensure_ascii=False)));aid=c.execute("SELECT last_insert_rowid() id").fetchone()["id"];c.commit();c.close();return {"id":aid,"attempt":n,"status":"started","resumed":False}
 @app.post("/api/attempts/{attempt_id}/submit")
 def submit_attempt(attempt_id:int,x:SubmitAttempt):
  c=con();r=c.execute("SELECT status FROM attempts WHERE id=?",(attempt_id,)).fetchone()
