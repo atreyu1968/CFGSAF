@@ -10,18 +10,14 @@
         "Usar una plantilla antigua",
         "Comunicar sin revisar el expediente",
         "Archivar antes de decidir"
-      ],
-      "answer": 0,
-      "feedback": "Primero se identifica el supuesto y su marco aplicable."
+      ]
     },
     {
       "id": "2.ap2",
       "ce": "2.a",
       "kind": "tf",
       "prompt": "En procedimiento, la trazabilidad documental forma parte de una gestión correcta.",
-      "options": [],
-      "answer": true,
-      "feedback": "La evidencia permite reconstruir el procedimiento."
+      "options": []
     },
     {
       "id": "2.ap3",
@@ -33,28 +29,14 @@
         "Fecha y hechos del expediente",
         "Evidencia de comunicación",
         "Una plantilla sin verificar"
-      ],
-      "answer": [
-        0,
-        1,
-        2
-      ],
-      "feedback": "Norma, hechos y evidencias deben poder justificarse."
+      ]
     },
     {
       "id": "2.ap4",
       "ce": "2.a",
       "kind": "order",
       "prompt": "Ordena el procedimiento profesional.",
-      "options": [],
-      "answer": [
-        0,
-        1,
-        2,
-        3,
-        4
-      ],
-      "feedback": "El orden evita ejecutar trámites antes de conocer su fundamento."
+      "options": []
     },
     {
       "id": "2.ap5",
@@ -66,9 +48,7 @@
         "Registrar responsable",
         "Conservar justificante",
         "Comprobar el convenio"
-      ],
-      "answer": 0,
-      "feedback": "La ausencia de evidencia puede impedir acreditar el procedimiento."
+      ]
     },
     {
       "id": "2.ap6",
@@ -80,9 +60,7 @@
         "Solo el resultado final",
         "Solo la plantilla utilizada",
         "Únicamente un correo informal"
-      ],
-      "answer": 0,
-      "feedback": "El expediente debe ser reconstruible y auditable."
+      ]
     },
     {
       "id": "2.bp1",
@@ -94,18 +72,14 @@
         "Usar una plantilla antigua",
         "Comunicar sin revisar el expediente",
         "Archivar antes de decidir"
-      ],
-      "answer": 0,
-      "feedback": "Primero se identifica el supuesto y su marco aplicable."
+      ]
     },
     {
       "id": "2.bp2",
       "ce": "2.b",
       "kind": "tf",
       "prompt": "En vacaciones pendientes, la trazabilidad documental forma parte de una gestión correcta.",
-      "options": [],
-      "answer": true,
-      "feedback": "La evidencia permite reconstruir el procedimiento."
+      "options": []
     },
     {
       "id": "2.bp3",
@@ -117,28 +91,14 @@
         "Fecha y hechos del expediente",
         "Evidencia de comunicación",
         "Una plantilla sin verificar"
-      ],
-      "answer": [
-        0,
-        1,
-        2
-      ],
-      "feedback": "Norma, hechos y evidencias deben poder justificarse."
+      ]
     },
     {
       "id": "2.bp4",
       "ce": "2.b",
       "kind": "order",
       "prompt": "Ordena el procedimiento profesional.",
-      "options": [],
-      "answer": [
-        0,
-        1,
-        2,
-        3,
-        4
-      ],
-      "feedback": "El orden evita ejecutar trámites antes de conocer su fundamento."
+      "options": []
     },
     {
       "id": "2.bp5",
@@ -150,9 +110,7 @@
         "Registrar responsable",
         "Conservar justificante",
         "Comprobar el convenio"
-      ],
-      "answer": 0,
-      "feedback": "La ausencia de evidencia puede impedir acreditar el procedimiento."
+      ]
     },
     {
       "id": "2.bp6",
@@ -164,9 +122,7 @@
         "Solo el resultado final",
         "Solo la plantilla utilizada",
         "Únicamente un correo informal"
-      ],
-      "answer": 0,
-      "feedback": "El expediente debe ser reconstruible y auditable."
+      ]
     },
     {
       "id": "2.cp1",
@@ -178,18 +134,14 @@
         "Usar una plantilla antigua",
         "Comunicar sin revisar el expediente",
         "Archivar antes de decidir"
-      ],
-      "answer": 0,
-      "feedback": "Primero se identifica el supuesto y su marco aplicable."
+      ]
     },
     {
       "id": "2.cp2",
       "ce": "2.c",
       "kind": "tf",
       "prompt": "En expediente, la trazabilidad documental forma parte de una gestión correcta.",
-      "options": [],
-      "answer": true,
-      "feedback": "La evidencia permite reconstruir el procedimiento."
+      "options": []
     },
     {
       "id": "2.cp3",
@@ -201,28 +153,14 @@
         "Fecha y hechos del expediente",
         "Evidencia de comunicación",
         "Una plantilla sin verificar"
-      ],
-      "answer": [
-        0,
-        1,
-        2
-      ],
-      "feedback": "Norma, hechos y evidencias deben poder justificarse."
+      ]
     },
     {
       "id": "2.cp4",
       "ce": "2.c",
       "kind": "order",
       "prompt": "Ordena el procedimiento profesional.",
-      "options": [],
-      "answer": [
-        0,
-        1,
-        2,
-        3,
-        4
-      ],
-      "feedback": "El orden evita ejecutar trámites antes de conocer su fundamento."
+      "options": []
     },
     {
       "id": "2.cp5",
@@ -234,9 +172,7 @@
         "Registrar responsable",
         "Conservar justificante",
         "Comprobar el convenio"
-      ],
-      "answer": 0,
-      "feedback": "La ausencia de evidencia puede impedir acreditar el procedimiento."
+      ]
     },
     {
       "id": "2.cp6",
@@ -248,9 +184,7 @@
         "Solo el resultado final",
         "Solo la plantilla utilizada",
         "Únicamente un correo informal"
-      ],
-      "answer": 0,
-      "feedback": "El expediente debe ser reconstruible y auditable."
+      ]
     },
     {
       "id": "2.dp1",
@@ -262,18 +196,14 @@
         "Usar una plantilla antigua",
         "Comunicar sin revisar el expediente",
         "Archivar antes de decidir"
-      ],
-      "answer": 0,
-      "feedback": "Primero se identifica el supuesto y su marco aplicable."
+      ]
     },
     {
       "id": "2.dp2",
       "ce": "2.d",
       "kind": "tf",
       "prompt": "En acuse, la trazabilidad documental forma parte de una gestión correcta.",
-      "options": [],
-      "answer": true,
-      "feedback": "La evidencia permite reconstruir el procedimiento."
+      "options": []
     },
     {
       "id": "2.dp3",
@@ -285,28 +215,14 @@
         "Fecha y hechos del expediente",
         "Evidencia de comunicación",
         "Una plantilla sin verificar"
-      ],
-      "answer": [
-        0,
-        1,
-        2
-      ],
-      "feedback": "Norma, hechos y evidencias deben poder justificarse."
+      ]
     },
     {
       "id": "2.dp4",
       "ce": "2.d",
       "kind": "order",
       "prompt": "Ordena el procedimiento profesional.",
-      "options": [],
-      "answer": [
-        0,
-        1,
-        2,
-        3,
-        4
-      ],
-      "feedback": "El orden evita ejecutar trámites antes de conocer su fundamento."
+      "options": []
     },
     {
       "id": "2.dp5",
@@ -318,9 +234,7 @@
         "Registrar responsable",
         "Conservar justificante",
         "Comprobar el convenio"
-      ],
-      "answer": 0,
-      "feedback": "La ausencia de evidencia puede impedir acreditar el procedimiento."
+      ]
     },
     {
       "id": "2.dp6",
@@ -332,9 +246,7 @@
         "Solo el resultado final",
         "Solo la plantilla utilizada",
         "Únicamente un correo informal"
-      ],
-      "answer": 0,
-      "feedback": "El expediente debe ser reconstruible y auditable."
+      ]
     },
     {
       "id": "2.ep1",
@@ -346,18 +258,14 @@
         "Usar una plantilla antigua",
         "Comunicar sin revisar el expediente",
         "Archivar antes de decidir"
-      ],
-      "answer": 0,
-      "feedback": "Primero se identifica el supuesto y su marco aplicable."
+      ]
     },
     {
       "id": "2.ep2",
       "ce": "2.e",
       "kind": "tf",
       "prompt": "En fecha de efectos, la trazabilidad documental forma parte de una gestión correcta.",
-      "options": [],
-      "answer": true,
-      "feedback": "La evidencia permite reconstruir el procedimiento."
+      "options": []
     },
     {
       "id": "2.ep3",
@@ -369,28 +277,14 @@
         "Fecha y hechos del expediente",
         "Evidencia de comunicación",
         "Una plantilla sin verificar"
-      ],
-      "answer": [
-        0,
-        1,
-        2
-      ],
-      "feedback": "Norma, hechos y evidencias deben poder justificarse."
+      ]
     },
     {
       "id": "2.ep4",
       "ce": "2.e",
       "kind": "order",
       "prompt": "Ordena el procedimiento profesional.",
-      "options": [],
-      "answer": [
-        0,
-        1,
-        2,
-        3,
-        4
-      ],
-      "feedback": "El orden evita ejecutar trámites antes de conocer su fundamento."
+      "options": []
     },
     {
       "id": "2.ep5",
@@ -402,9 +296,7 @@
         "Registrar responsable",
         "Conservar justificante",
         "Comprobar el convenio"
-      ],
-      "answer": 0,
-      "feedback": "La ausencia de evidencia puede impedir acreditar el procedimiento."
+      ]
     },
     {
       "id": "2.ep6",
@@ -416,9 +308,7 @@
         "Solo el resultado final",
         "Solo la plantilla utilizada",
         "Únicamente un correo informal"
-      ],
-      "answer": 0,
-      "feedback": "El expediente debe ser reconstruible y auditable."
+      ]
     },
     {
       "id": "2.fp1",
@@ -430,18 +320,14 @@
         "Usar una plantilla antigua",
         "Comunicar sin revisar el expediente",
         "Archivar antes de decidir"
-      ],
-      "answer": 0,
-      "feedback": "Primero se identifica el supuesto y su marco aplicable."
+      ]
     },
     {
       "id": "2.fp2",
       "ce": "2.f",
       "kind": "tf",
       "prompt": "En archivo, la trazabilidad documental forma parte de una gestión correcta.",
-      "options": [],
-      "answer": true,
-      "feedback": "La evidencia permite reconstruir el procedimiento."
+      "options": []
     },
     {
       "id": "2.fp3",
@@ -453,28 +339,14 @@
         "Fecha y hechos del expediente",
         "Evidencia de comunicación",
         "Una plantilla sin verificar"
-      ],
-      "answer": [
-        0,
-        1,
-        2
-      ],
-      "feedback": "Norma, hechos y evidencias deben poder justificarse."
+      ]
     },
     {
       "id": "2.fp4",
       "ce": "2.f",
       "kind": "order",
       "prompt": "Ordena el procedimiento profesional.",
-      "options": [],
-      "answer": [
-        0,
-        1,
-        2,
-        3,
-        4
-      ],
-      "feedback": "El orden evita ejecutar trámites antes de conocer su fundamento."
+      "options": []
     },
     {
       "id": "2.fp5",
@@ -486,9 +358,7 @@
         "Registrar responsable",
         "Conservar justificante",
         "Comprobar el convenio"
-      ],
-      "answer": 0,
-      "feedback": "La ausencia de evidencia puede impedir acreditar el procedimiento."
+      ]
     },
     {
       "id": "2.fp6",
@@ -500,9 +370,7 @@
         "Solo el resultado final",
         "Solo la plantilla utilizada",
         "Únicamente un correo informal"
-      ],
-      "answer": 0,
-      "feedback": "El expediente debe ser reconstruible y auditable."
+      ]
     }
   ]
 }
