@@ -32,6 +32,7 @@ class ConfigIn(BaseModel):
  portfolio_weight:int=40;exam_weight:int=60;pass_score:float=50;ce_pass_percent:int=80;ce_pass_score:float=50;exam_enabled:bool=False;exam_questions_per_ce:int=3;exam_minutes:int=45;require_both_instruments:bool=False
 class AttemptIn(BaseModel): student_id:str;course_id:str;kind:str;item_id:str;payload:dict|None=None
 class SubmitAttempt(BaseModel): payload:dict|None=None
+class AnswerIn(BaseModel): response:object|None=None;ce:str|None=None
 def auth(token):
  if not secrets.compare_digest(token or "",TEACHER_TOKEN): raise HTTPException(401,"Teacher token required")
 def config_row(c,course):
@@ -69,6 +70,22 @@ def submit_attempt(attempt_id:int,x:SubmitAttempt):
  if not r:c.close();raise HTTPException(404,"Intento no encontrado")
  if r["status"]!="started":c.close();raise HTTPException(409,"Intento ya entregado")
  c.execute("UPDATE attempts SET status='submitted',submitted_at=?,payload=? WHERE id=?",(now(),json.dumps(x.payload or {},ensure_ascii=False),attempt_id));c.commit();c.close();return {"ok":True}
+@app.post("/api/attempts/{attempt_id}/answer")
+def answer_attempt(attempt_id:int,x:AnswerIn):
+ c=con();c.execute("BEGIN IMMEDIATE");r=c.execute("SELECT * FROM attempts WHERE id=?",(attempt_id,)).fetchone()
+ if not r: c.rollback();c.close();raise HTTPException(404,"Intento no encontrado")
+ if r["status"]!="started": c.rollback();c.close();raise HTTPException(409,"Intento cerrado")
+ p=json.loads(r["payload"] or "{}");p["response"]=x.response
+ c.execute("UPDATE attempts SET payload=? WHERE id=?",(json.dumps(p,ensure_ascii=False),attempt_id))
+ c.execute("INSERT INTO evidence(student_id,course_id,kind,ce,item_id,attempt,response,payload,created_at) VALUES(?,?,?,?,?,?,?,?,?)",(r["student_id"],r["course_id"],r["kind"],x.ce,r["item_id"],r["attempt_no"],json.dumps(x.response,ensure_ascii=False),json.dumps({"server_attempt_id":attempt_id}),now()))
+ c.commit();c.close();return {"ok":True,"attempt":r["attempt_no"]}
+
+@app.get("/api/recovery/{student_id}/{course_id}")
+def recovery(student_id:str,course_id:str):
+ c=con();r=c.execute("SELECT criteria,status,created_at FROM recovery_plans WHERE student_id=? AND course_id=?",(student_id,course_id)).fetchone();c.close()
+ if not r:return {"plan":None}
+ return {"plan":{"criteria":json.loads(r["criteria"] or "[]"),"status":r["status"],"created_at":r["created_at"]}}
+
 @app.put("/api/state/{student_id}")
 def put_state(student_id:str,x:StateIn):
  c=con();c.execute("INSERT OR REPLACE INTO states VALUES(?,?,?,?)",(student_id,x.course_id,json.dumps(x.state),now()));c.commit();c.close();return {"ok":True}
