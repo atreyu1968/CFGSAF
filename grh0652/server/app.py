@@ -227,8 +227,11 @@ def result(x:ResultIn):
   if not prev or int(r["attempt"] or 0)>=int(prev["attempt"] or 0):latest[k]=dict(r)
  portfolio_by={}
  for r in latest.values():portfolio_by.setdefault(r["ce"],[]).append(float(r["score"] or 0))
- ces=sorted(set(portfolio_by)|set(exam_by))
- if not ces:c.close();raise HTTPException(409,"No existen evidencias evaluables")
+ expected=[r["ce"] for r in c.execute("SELECT DISTINCT ce FROM exam_banks WHERE course_id=? AND ce IS NOT NULL AND ce<>'' ORDER BY ce",(x.course_id,)).fetchall()]
+ if not expected:c.close();raise HTTPException(409,"No existe definición autoritativa de criterios de evaluación")
+ observed=set(portfolio_by)|set(exam_by);unexpected=sorted(observed-set(expected))
+ if unexpected:c.close();raise HTTPException(409,"Evidencias con criterios no definidos en el banco autoritativo: "+", ".join(unexpected))
+ ces=expected
  ce={};pw=float(cfg["portfolio_weight"])/100;ew=float(cfg["exam_weight"])/100
  for ceid in ces:
   ps=portfolio_by.get(ceid,[]);p=sum(ps)/len(ps) if ps else 0;ex=exam_by.get(ceid,{});ev=(float(ex.get("ok",0))/max(1,int(ex.get("n",0)))*100) if ex.get("n",0) else 0;fv=p*pw+ev*ew;ce[ceid]={"portfolio":round(p,2),"exam":round(ev,2),"final":round(fv,2),"passed":fv>=float(cfg["ce_pass_score"])}

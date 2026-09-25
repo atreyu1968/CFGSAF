@@ -120,3 +120,16 @@ def test_result_ignores_client_claims_and_recomputes_from_server_evidence():
  forged={"student_id":"auth","course_id":"AUTH","portfolio":100,"exam":100,"final":100,"ce_passed":2,"ce_total":2,"ra_passed":True,"recovery":[]}
  r=client.post("/api/result",json=forged);assert r.status_code==200,r.text
  d=r.json();assert d["final"]==50.0;assert d["ce_passed"]==1;assert d["ra_passed"] is False;assert d["recovery"]==["c2"]
+
+def test_missing_ce_cannot_disappear_from_authoritative_denominator():
+ cfg={"portfolio_weight":40,"exam_weight":60,"pass_score":50,"ce_pass_percent":80,"ce_pass_score":50,"exam_enabled":True,"exam_questions_per_ce":1,"exam_minutes":45,"require_both_instruments":False}
+ assert client.put("/api/config/UNIVERSE",headers=H,json=cfg).status_code==200
+ bank={"questions":[{"id":"u1","ce":"c1","q":"Q1","options":[],"answer":True,"type":"tf"},{"id":"u2","ce":"c2","q":"Q2","options":[],"answer":True,"type":"tf"}]}
+ assert client.put("/api/teacher/exam-bank/UNIVERSE",headers=H,json=bank).status_code==200
+ assert client.post("/api/evidence",json={"student_id":"u","course_id":"UNIVERSE","kind":"portfolio","ce":"c1","item_id":"p1","attempt":1,"response":"x","correct":True,"score":100,"payload":{}}).status_code==200
+ st=client.post("/api/exam/start",json={"student_id":"u","course_id":"UNIVERSE","kind":"exam","item_id":"final"});assert st.status_code==200
+ answers={q["id"]:(True if q["ce"]=="c1" else False) for q in st.json()["questions"]}
+ assert client.post(f"/api/exam/{st.json()['attempt_id']}/submit",json={"payload":{"answers":answers}}).status_code==200
+ forged={"student_id":"u","course_id":"UNIVERSE","portfolio":100,"exam":100,"final":100,"ce_passed":2,"ce_total":2,"ra_passed":True,"recovery":[]}
+ r=client.post("/api/result",json=forged);assert r.status_code==200,r.text
+ d=r.json();assert d["ce_total"]==2;assert d["ce"]["c2"]["portfolio"]==0;assert d["ce"]["c2"]["passed"] is False;assert "c2" in d["recovery"]
