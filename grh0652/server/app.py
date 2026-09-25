@@ -157,7 +157,13 @@ def exam_start(x:AttemptIn):
  for ce,a in by.items():rnd.shuffle(a);chosen+=a[:max(1,int(cfg.get("exam_questions_per_ce",3)))]
  rnd.shuffle(chosen);public=[];keys={}
  for r in chosen:
-  opts=json.loads(r["options"]);correct=json.loads(r["answer"]);pairs=list(enumerate(opts));rnd.shuffle(pairs);public.append({"id":r["question_id"],"ce":r["ce"],"q":r["question"],"options":[p[1] for p in pairs]});keys[r["question_id"]]=pairs.index(next(p for p in pairs if p[0]==correct))
+  kind=r["type"] or "choice";opts=json.loads(r["options"]);correct=json.loads(r["answer"])
+  if kind=="tf":
+   public.append({"id":r["question_id"],"ce":r["ce"],"q":r["question"],"options":[],"type":"tf"});keys[r["question_id"]]=correct
+  else:
+   pairs=list(enumerate(opts));rnd.shuffle(pairs);public.append({"id":r["question_id"],"ce":r["ce"],"q":r["question"],"options":[p[1] for p in pairs],"type":kind})
+   if kind=="multi":keys[r["question_id"]]=sorted(pairs.index(next(p for p in pairs if p[0]==i)) for i in correct)
+   else:keys[r["question_id"]]=pairs.index(next(p for p in pairs if p[0]==correct))
  version=secrets.token_hex(8)
  created=now()
  deadline=(datetime.datetime.fromisoformat(created)+datetime.timedelta(minutes=max(1,int(cfg.get("exam_minutes",45))))).isoformat()
@@ -174,7 +180,7 @@ def exam_submit(attempt_id:int,x:SubmitAttempt):
   c.execute("UPDATE attempts SET status='expired',submitted_at=? WHERE id=?",(now(),attempt_id));c.commit();c.close();raise HTTPException(410,"Tiempo de examen agotado")
  answers=(x.payload or {}).get("answers",{});keys=json.loads(v["answers"]);questions=json.loads(v["questions"]);by={};good=0
  for q in questions:
-  ok=answers.get(q["id"])==keys.get(q["id"]);good+=int(ok);d=by.setdefault(q["ce"],{"ok":0,"n":0});d["n"]+=1;d["ok"]+=int(ok)
+  given=answers.get(q["id"]);expected=keys.get(q["id"]);ok=(sorted(given)==expected if q.get("type")=="multi" and isinstance(given,list) else given==expected);good+=int(ok);d=by.setdefault(q["ce"],{"ok":0,"n":0});d["n"]+=1;d["ok"]+=int(ok)
  score=round(good/max(1,len(questions))*100,2);c.execute("UPDATE attempts SET status='submitted',submitted_at=?,payload=? WHERE id=?",(now(),json.dumps({"answers":answers,"score":score,"by_ce":by},ensure_ascii=False),attempt_id));c.commit();c.close();return {"score":score,"by_ce":by,"answered":len(answers),"total":len(questions)}
 
 @app.put("/api/state/{student_id}")
