@@ -12,7 +12,9 @@ function findAPI(){
  try{if(window.opener&&window.opener.API)return window.opener.API}catch(e){}
  return null;
 }
-function evidence(){try{return window.EVIDENCE||(parent&&parent.EVIDENCE)||null}catch(e){return null}}\nfunction studentId(){try{return api&&api.LMSGetValue('cmi.core.student_id')||'alumno'}catch(e){return'alumno'}}\nfunction localKey(){return 'grh0652.sco.'+UNIT_ID+'_'+studentId()}
+function evidence(){try{return window.EVIDENCE||(parent&&parent.EVIDENCE)||null}catch(e){return null}}
+function studentId(){try{return api&&api.LMSGetValue('cmi.core.student_id')||'alumno'}catch(e){return'alumno'}}
+function localKey(){return 'grh0652.sco.'+UNIT_ID+'_'+studentId()}
 function loadLocal(){try{const x=JSON.parse(localStorage.getItem(localKey())||'{}');state=Object.assign(state,x)}catch(e){}}
 function saveLocal(){try{localStorage.setItem(localKey(),JSON.stringify(state))}catch(e){}}
 function initSCORM(){
