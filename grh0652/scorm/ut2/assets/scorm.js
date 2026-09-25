@@ -120,7 +120,7 @@ function renderExam(){
 }
 async function startExam(){
  if(state.examTaken){alert('El examen solo permite un intento.');return}if(!state.evaluationConfig||!state.evaluationConfig.exam_enabled){alert('El profesor todavía no ha activado el examen.');return}
- const ev=evidence();if(ev&&ev.api){const gate=await ev.startAttempt('exam','final',{unit:UNIT_ID});if(!gate||gate.error){alert('No se puede iniciar el examen: '+(gate?.error||'servidor no disponible'));return}state.serverExamAttempt=gate.attempt;state.serverExamAttemptId=gate.id||null;}
+ const ev=evidence();if(ev&&ev.api){const gate=await ev.startExam({unit:UNIT_ID});if(!gate||gate.error){alert('No se puede iniciar el examen: '+(gate?.error||'servidor no disponible'));return}state.serverExamAttempt=gate.attempt;state.serverExamAttemptId=gate.attempt_id;state.examVersion=gate.version||state.examVersion;EXAM.splice(0,EXAM.length,...gate.questions);}
  examActive=true;autoSubmitPending=false;state.incidents=0;state.attempts=(state.attempts||0)+1;document.body.classList.add('exam-mode');$('#examIntro')?.classList.add('hidden');$('#examResult').innerHTML='';$('#examBox')?.classList.remove('hidden');renderExam();requestFull();sync();
 }
 function registerIncident(reason){
