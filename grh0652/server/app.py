@@ -209,7 +209,24 @@ def evidence(x:EventIn):
  c=con();c.execute("INSERT INTO evidence(student_id,course_id,kind,ce,item_id,attempt,response,correct,score,payload,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)",(x.student_id,x.course_id,x.kind,x.ce,x.item_id,x.attempt,json.dumps(x.response,ensure_ascii=False),None if x.correct is None else int(x.correct),x.score,json.dumps(x.payload or {},ensure_ascii=False),now()));c.commit();c.close();return {"ok":True}
 @app.post("/api/result")
 def result(x:ResultIn):
- c=con();c.execute("INSERT OR REPLACE INTO results VALUES(?,?,?,?,?,?,?,?,?,?)",(x.student_id,x.course_id,x.portfolio,x.exam,x.final,x.ce_passed,x.ce_total,int(x.ra_passed),json.dumps(x.recovery),now()));c.commit();c.close();return {"ok":True}
+ c=con();cfg,_=config_row(c,x.course_id)
+ er=c.execute("SELECT payload FROM attempts WHERE student_id=? AND course_id=? AND kind='exam' AND status='submitted' ORDER BY attempt_no DESC LIMIT 1",(x.student_id,x.course_id)).fetchone()
+ if not er:c.close();raise HTTPException(409,"No existe examen evaluable entregado")
+ ep=json.loads(er["payload"] or "{}");exam_by=ep.get("by_ce",{})
+ rows=c.execute("SELECT ce,item_id,attempt,score FROM evidence WHERE student_id=? AND course_id=? AND kind='portfolio' AND ce IS NOT NULL AND score IS NOT NULL ORDER BY id",(x.student_id,x.course_id)).fetchall();latest={}
+ for r in rows:
+  k=(r["ce"],r["item_id"]);prev=latest.get(k)
+  if not prev or int(r["attempt"] or 0)>=int(prev["attempt"] or 0):latest[k]=dict(r)
+ portfolio_by={}
+ for r in latest.values():portfolio_by.setdefault(r["ce"],[]).append(float(r["score"] or 0))
+ ces=sorted(set(portfolio_by)|set(exam_by))
+ if not ces:c.close();raise HTTPException(409,"No existen evidencias evaluables")
+ ce={};pw=float(cfg["portfolio_weight"])/100;ew=float(cfg["exam_weight"])/100
+ for ceid in ces:
+  ps=portfolio_by.get(ceid,[]);p=sum(ps)/len(ps) if ps else 0;ex=exam_by.get(ceid,{});ev=(float(ex.get("ok",0))/max(1,int(ex.get("n",0)))*100) if ex.get("n",0) else 0;fv=p*pw+ev*ew;ce[ceid]={"portfolio":round(p,2),"exam":round(ev,2),"final":round(fv,2),"passed":fv>=float(cfg["ce_pass_score"])}
+ vals=list(ce.values());portfolio=sum(v["portfolio"] for v in vals)/len(vals);exam=sum(v["exam"] for v in vals)/len(vals);final=portfolio*pw+exam*ew;passed=sum(1 for v in vals if v["passed"]);needed=(len(vals)*int(cfg["ce_pass_percent"])+99)//100;both=(not cfg.get("require_both_instruments")) or (portfolio>=float(cfg["pass_score"]) and exam>=float(cfg["pass_score"]));ra=final>=float(cfg["pass_score"]) and passed>=needed and both;recovery=[k for k,v in ce.items() if not v["passed"]]
+ c.execute("INSERT OR REPLACE INTO results VALUES(?,?,?,?,?,?,?,?,?,?)",(x.student_id,x.course_id,portfolio,exam,final,passed,len(vals),int(ra),json.dumps(recovery),now()));c.commit();c.close();return {"ok":True,"portfolio":round(portfolio,2),"exam":round(exam,2),"final":round(final,2),"ce_passed":passed,"ce_total":len(vals),"ra_passed":ra,"recovery":recovery,"ce":ce}
+
 @app.post("/api/teacher/close/{course_id}")
 def close_eval(course_id:str,x_teacher_token:str|None=Header(None)):
  auth(x_teacher_token);c=con();_,v=config_row(c,course_id);c.execute("INSERT OR REPLACE INTO evaluation_closures VALUES(?,?,?)",(course_id,now(),v))
