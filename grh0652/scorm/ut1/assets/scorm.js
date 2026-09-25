@@ -209,6 +209,7 @@ function randomizeExam(){
 async function loadEvaluationConfig(){
  let c=null;try{if(evidence())c=await evidence().config()}catch(e){}
  state.evaluationConfig=c||state.evaluationConfig||{portfolio_weight:40,exam_weight:60,pass_score:50,ce_pass_percent:80,ce_pass_score:50,exam_enabled:false,exam_questions_per_ce:3,exam_minutes:45,require_both_instruments:false};
+ const n=Math.max(1,Number(state.evaluationConfig.exam_questions_per_ce||3));const selected=[];CRITERIA.forEach(cr=>selected.push(...EXAM.filter(q=>q.ce===cr.id).slice(0,n)));EXAM.splice(0,EXAM.length,...selected);
  const intro=$('#examIntro');if(intro)intro.insertAdjacentHTML('afterbegin','<div class="notice"><strong>Examen evaluable:</strong> un único intento. El profesor debe activar la convocatoria.</div>');
  const b=$('#startExam');if(b){b.textContent=state.examTaken?'Examen ya realizado':(state.evaluationConfig.exam_enabled?'Comenzar examen · 1 intento':'Examen no activado');b.disabled=state.examTaken||!state.evaluationConfig.exam_enabled}
 }
