@@ -4,12 +4,12 @@
       "id": "2.ap1",
       "ce": "2.a",
       "kind": "choice",
-      "prompt": "Caso: debes gestionar normativa. ¿Cuál es el primer paso profesional?",
+      "prompt": "Caso: debes gestionar normativa. ¿Cuál es el primer paso profesional? Revisa todas las alternativas antes de responder.",
       "options": [
-        "Identificar el supuesto y comprobar la fuente vigente",
         "Usar una plantilla antigua",
         "Comunicar sin revisar el expediente",
-        "Archivar antes de decidir"
+        "Archivar antes de decidir",
+        "Identificar el supuesto y comprobar la fuente vigente"
       ]
     },
     {
@@ -42,36 +42,36 @@
       "id": "2.ap5",
       "ce": "2.a",
       "kind": "choice",
-      "prompt": "¿Qué error compromete más el expediente?",
+      "prompt": "¿Qué error compromete más el expediente? Revisa todas las alternativas antes de responder.",
       "options": [
-        "No poder acreditar la fecha o el contenido comunicado",
-        "Registrar responsable",
         "Conservar justificante",
-        "Comprobar el convenio"
+        "Comprobar el convenio",
+        "No poder acreditar la fecha o el contenido comunicado",
+        "Registrar responsable"
       ]
     },
     {
       "id": "2.ap6",
       "ce": "2.a",
       "kind": "choice",
-      "prompt": "Al cerrar un caso de normativa, ¿qué debe quedar registrado?",
+      "prompt": "Al cerrar un caso de normativa, ¿qué debe quedar registrado? Revisa todas las alternativas antes de responder.",
       "options": [
+        "Únicamente un correo informal",
         "Hechos, fuente, cálculos, comunicaciones y documentos",
         "Solo el resultado final",
-        "Solo la plantilla utilizada",
-        "Únicamente un correo informal"
+        "Solo la plantilla utilizada"
       ]
     },
     {
       "id": "2.bp1",
       "ce": "2.b",
       "kind": "choice",
-      "prompt": "Caso: debes gestionar finiquito. ¿Cuál es el primer paso profesional?",
+      "prompt": "Caso: debes gestionar finiquito. ¿Cuál es el primer paso profesional? Revisa todas las alternativas antes de responder.",
       "options": [
-        "Identificar el supuesto y comprobar la fuente vigente",
         "Usar una plantilla antigua",
         "Comunicar sin revisar el expediente",
-        "Archivar antes de decidir"
+        "Archivar antes de decidir",
+        "Identificar el supuesto y comprobar la fuente vigente"
       ]
     },
     {
@@ -104,36 +104,36 @@
       "id": "2.bp5",
       "ce": "2.b",
       "kind": "choice",
-      "prompt": "¿Qué error compromete más el expediente?",
+      "prompt": "¿Qué error compromete más el expediente? Revisa todas las alternativas antes de responder.",
       "options": [
-        "No poder acreditar la fecha o el contenido comunicado",
-        "Registrar responsable",
         "Conservar justificante",
-        "Comprobar el convenio"
+        "Comprobar el convenio",
+        "No poder acreditar la fecha o el contenido comunicado",
+        "Registrar responsable"
       ]
     },
     {
       "id": "2.bp6",
       "ce": "2.b",
       "kind": "choice",
-      "prompt": "Al cerrar un caso de finiquito, ¿qué debe quedar registrado?",
+      "prompt": "Al cerrar un caso de finiquito, ¿qué debe quedar registrado? Revisa todas las alternativas antes de responder.",
       "options": [
+        "Únicamente un correo informal",
         "Hechos, fuente, cálculos, comunicaciones y documentos",
         "Solo el resultado final",
-        "Solo la plantilla utilizada",
-        "Únicamente un correo informal"
+        "Solo la plantilla utilizada"
       ]
     },
     {
       "id": "2.cp1",
       "ce": "2.c",
       "kind": "choice",
-      "prompt": "Caso: debes gestionar carta. ¿Cuál es el primer paso profesional?",
+      "prompt": "Caso: debes gestionar carta. ¿Cuál es el primer paso profesional? Revisa todas las alternativas antes de responder.",
       "options": [
-        "Identificar el supuesto y comprobar la fuente vigente",
         "Usar una plantilla antigua",
         "Comunicar sin revisar el expediente",
-        "Archivar antes de decidir"
+        "Archivar antes de decidir",
+        "Identificar el supuesto y comprobar la fuente vigente"
       ]
     },
     {
@@ -166,36 +166,36 @@
       "id": "2.cp5",
       "ce": "2.c",
       "kind": "choice",
-      "prompt": "¿Qué error compromete más el expediente?",
+      "prompt": "¿Qué error compromete más el expediente? Revisa todas las alternativas antes de responder.",
       "options": [
-        "No poder acreditar la fecha o el contenido comunicado",
-        "Registrar responsable",
         "Conservar justificante",
-        "Comprobar el convenio"
+        "Comprobar el convenio",
+        "No poder acreditar la fecha o el contenido comunicado",
+        "Registrar responsable"
       ]
     },
     {
       "id": "2.cp6",
       "ce": "2.c",
       "kind": "choice",
-      "prompt": "Al cerrar un caso de carta, ¿qué debe quedar registrado?",
+      "prompt": "Al cerrar un caso de carta, ¿qué debe quedar registrado? Revisa todas las alternativas antes de responder.",
       "options": [
+        "Únicamente un correo informal",
         "Hechos, fuente, cálculos, comunicaciones y documentos",
         "Solo el resultado final",
-        "Solo la plantilla utilizada",
-        "Únicamente un correo informal"
+        "Solo la plantilla utilizada"
       ]
     },
     {
       "id": "2.dp1",
       "ce": "2.d",
       "kind": "choice",
-      "prompt": "Caso: debes gestionar canal oficial. ¿Cuál es el primer paso profesional?",
+      "prompt": "Caso: debes gestionar canal oficial. ¿Cuál es el primer paso profesional? Revisa todas las alternativas antes de responder.",
       "options": [
-        "Identificar el supuesto y comprobar la fuente vigente",
         "Usar una plantilla antigua",
         "Comunicar sin revisar el expediente",
-        "Archivar antes de decidir"
+        "Archivar antes de decidir",
+        "Identificar el supuesto y comprobar la fuente vigente"
       ]
     },
     {
@@ -228,36 +228,36 @@
       "id": "2.dp5",
       "ce": "2.d",
       "kind": "choice",
-      "prompt": "¿Qué error compromete más el expediente?",
+      "prompt": "¿Qué error compromete más el expediente? Revisa todas las alternativas antes de responder.",
       "options": [
-        "No poder acreditar la fecha o el contenido comunicado",
-        "Registrar responsable",
         "Conservar justificante",
-        "Comprobar el convenio"
+        "Comprobar el convenio",
+        "No poder acreditar la fecha o el contenido comunicado",
+        "Registrar responsable"
       ]
     },
     {
       "id": "2.dp6",
       "ce": "2.d",
       "kind": "choice",
-      "prompt": "Al cerrar un caso de canal oficial, ¿qué debe quedar registrado?",
+      "prompt": "Al cerrar un caso de canal oficial, ¿qué debe quedar registrado? Revisa todas las alternativas antes de responder.",
       "options": [
+        "Únicamente un correo informal",
         "Hechos, fuente, cálculos, comunicaciones y documentos",
         "Solo el resultado final",
-        "Solo la plantilla utilizada",
-        "Únicamente un correo informal"
+        "Solo la plantilla utilizada"
       ]
     },
     {
       "id": "2.ep1",
       "ce": "2.e",
       "kind": "choice",
-      "prompt": "Caso: debes gestionar información a la persona trabajadora. ¿Cuál es el primer paso profesional?",
+      "prompt": "Caso: debes gestionar información a la persona trabajadora. ¿Cuál es el primer paso profesional? Revisa todas las alternativas antes de responder.",
       "options": [
-        "Identificar el supuesto y comprobar la fuente vigente",
         "Usar una plantilla antigua",
         "Comunicar sin revisar el expediente",
-        "Archivar antes de decidir"
+        "Archivar antes de decidir",
+        "Identificar el supuesto y comprobar la fuente vigente"
       ]
     },
     {
@@ -290,36 +290,36 @@
       "id": "2.ep5",
       "ce": "2.e",
       "kind": "choice",
-      "prompt": "¿Qué error compromete más el expediente?",
+      "prompt": "¿Qué error compromete más el expediente? Revisa todas las alternativas antes de responder.",
       "options": [
-        "No poder acreditar la fecha o el contenido comunicado",
-        "Registrar responsable",
         "Conservar justificante",
-        "Comprobar el convenio"
+        "Comprobar el convenio",
+        "No poder acreditar la fecha o el contenido comunicado",
+        "Registrar responsable"
       ]
     },
     {
       "id": "2.ep6",
       "ce": "2.e",
       "kind": "choice",
-      "prompt": "Al cerrar un caso de información a la persona trabajadora, ¿qué debe quedar registrado?",
+      "prompt": "Al cerrar un caso de información a la persona trabajadora, ¿qué debe quedar registrado? Revisa todas las alternativas antes de responder.",
       "options": [
+        "Únicamente un correo informal",
         "Hechos, fuente, cálculos, comunicaciones y documentos",
         "Solo el resultado final",
-        "Solo la plantilla utilizada",
-        "Únicamente un correo informal"
+        "Solo la plantilla utilizada"
       ]
     },
     {
       "id": "2.fp1",
       "ce": "2.f",
       "kind": "choice",
-      "prompt": "Caso: debes gestionar registro digital. ¿Cuál es el primer paso profesional?",
+      "prompt": "Caso: debes gestionar registro digital. ¿Cuál es el primer paso profesional? Revisa todas las alternativas antes de responder.",
       "options": [
-        "Identificar el supuesto y comprobar la fuente vigente",
         "Usar una plantilla antigua",
         "Comunicar sin revisar el expediente",
-        "Archivar antes de decidir"
+        "Archivar antes de decidir",
+        "Identificar el supuesto y comprobar la fuente vigente"
       ]
     },
     {
@@ -352,24 +352,24 @@
       "id": "2.fp5",
       "ce": "2.f",
       "kind": "choice",
-      "prompt": "¿Qué error compromete más el expediente?",
+      "prompt": "¿Qué error compromete más el expediente? Revisa todas las alternativas antes de responder.",
       "options": [
-        "No poder acreditar la fecha o el contenido comunicado",
-        "Registrar responsable",
         "Conservar justificante",
-        "Comprobar el convenio"
+        "Comprobar el convenio",
+        "No poder acreditar la fecha o el contenido comunicado",
+        "Registrar responsable"
       ]
     },
     {
       "id": "2.fp6",
       "ce": "2.f",
       "kind": "choice",
-      "prompt": "Al cerrar un caso de registro digital, ¿qué debe quedar registrado?",
+      "prompt": "Al cerrar un caso de registro digital, ¿qué debe quedar registrado? Revisa todas las alternativas antes de responder.",
       "options": [
+        "Únicamente un correo informal",
         "Hechos, fuente, cálculos, comunicaciones y documentos",
         "Solo el resultado final",
-        "Solo la plantilla utilizada",
-        "Únicamente un correo informal"
+        "Solo la plantilla utilizada"
       ]
     }
   ]
