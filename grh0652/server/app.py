@@ -129,7 +129,7 @@ def submit_attempt(attempt_id:int,x:SubmitAttempt,x_student_token:str|None=Heade
 def answer_attempt(attempt_id:int,x:AnswerIn,x_student_token:str|None=Header(None)):
  c=con();c.execute("BEGIN IMMEDIATE");r=c.execute("SELECT * FROM attempts WHERE id=?",(attempt_id,)).fetchone()
  if not r: c.rollback();c.close();raise HTTPException(404,"Intento no encontrado")
- require_student(r["student_id"],x_student_token)
+ require_student(r["student_id"],x_student_token,c)
  if r["status"]!="started": c.rollback();c.close();raise HTTPException(409,"Intento cerrado")
  p=json.loads(r["payload"] or "{}");p["response"]=x.response
  c.execute("UPDATE attempts SET payload=? WHERE id=?",(json.dumps(p,ensure_ascii=False),attempt_id))
