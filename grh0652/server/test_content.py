@@ -14,9 +14,13 @@ def test_practice_maps_only_to_own_ce_and_has_six_each():
 def test_exam_bank_maps_only_to_own_ce_and_has_depth():
  for unit,ces in EXPECTED.items():
   text=(ROOT/"scorm"/unit/"index.html").read_text(encoding="utf-8")
-  m=re.search(r"const EXAM=(.*?); const THEORY",text,re.S)
-  if not m:m=re.search(r"const EXAM=(.*?);\s*const THEORY",text,re.S)
-  assert m,f"EXAM no localizado {unit}";bank=json.loads(m.group(1));found={q["ce"] for q in bank}
+  start=text.find("const EXAM=");assert start>=0,f"EXAM no localizado {unit}"
+  raw=text[start+len("const EXAM="):]
+  end=raw.find(";</script>"); 
+  if end<0:
+   m=re.search(r";\s*const ",raw);end=m.start() if m else -1
+  assert end>=0,f"fin EXAM no localizado {unit}"
+  bank=json.loads(raw[:end]);found={q["ce"] for q in bank}
   assert found<=set(ces),f"{unit} contiene CE ajenos: {found-set(ces)}"
   for ce in ces:assert sum(q["ce"]==ce for q in bank)>=3,f"{unit} {ce} banco insuficiente"
 def test_no_ra1_practice_navigation_in_other_units():
