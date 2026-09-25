@@ -10,7 +10,7 @@
 <div class="modal" id="modal"><div class="box"><h2>¿Salir de la unidad?</h2><p>El reproductor solicitará al SCO que guarde su progreso antes de volver al aula.</p><div class="actions"><button class="btn" id="stay">Continuar</button><button class="btn danger" id="leave">Salir</button></div></div></div>
 <script>
 const qs=new URLSearchParams(location.search);const student=qs.get('student')||localStorage.getItem('grh0652.student')||'alumno';if(qs.get('api'))localStorage.setItem('grh0652.api',qs.get('api'));localStorage.setItem('grh0652.student',student);window.SCORM_STUDENT_ID=student;document.getElementById('studentLabel').textContent=student;
-SCORM_API.configure({studentId:student,courseId:'GRH0652_UT1'});\n(async()=>{try{if(window.EVIDENCE){const r=await EVIDENCE.load();if(r&&r.state)localStorage.setItem('grh0652.sco.GRH0652_UT1_'+student,JSON.stringify(r.state))}}catch(e){}document.getElementById('sco').src='scorm/ut1/index.html'})();
+SCORM_API.configure({studentId:student,courseId:'GRH0652_UT1'});\n(async()=>{try{if(window.EVIDENCE){const r=await EVIDENCE.load();if(r&&r.state)localStorage.setItem('grh0652.sco.UT1_COMPLETA_'+student,JSON.stringify(r.state))}}catch(e){}document.getElementById('sco').src='scorm/ut1/index.html'})();
 window.API=SCORM_API.api;
 const modal=document.getElementById('modal');document.getElementById('back').onclick=()=>modal.classList.add('show');document.getElementById('stay').onclick=()=>modal.classList.remove('show');
 document.getElementById('leave').onclick=()=>{try{document.getElementById('sco').contentWindow.postMessage({type:'scorm-save-exit'},location.origin)}catch(e){};SCORM_API.commit();location.href='index.html'};
