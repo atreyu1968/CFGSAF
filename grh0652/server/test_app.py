@@ -64,3 +64,13 @@ def test_exam_supports_tf_and_multi_without_exposing_keys():
  assert client.put("/api/teacher/exam-bank/TYPES",headers=H,json=bank).status_code==200
  r=client.post("/api/exam/start",json={"student_id":"typed","course_id":"TYPES","kind":"exam","item_id":"final"});assert r.status_code==200
  qs=r.json()["questions"];assert {q["type"] for q in qs}=={"choice","tf","multi"};assert all("answer" not in q for q in qs)
+
+def test_missing_exam_bank_does_not_consume_attempt():
+ cfg={"portfolio_weight":40,"exam_weight":60,"pass_score":50,"ce_pass_percent":80,"ce_pass_score":50,"exam_enabled":True,"exam_questions_per_ce":1,"exam_minutes":45,"require_both_instruments":False}
+ assert client.put("/api/config/ATOMIC",headers=H,json=cfg).status_code==200
+ body={"student_id":"atomic","course_id":"ATOMIC","kind":"exam","item_id":"final","payload":{}}
+ first=client.post("/api/exam/start",json=body);assert first.status_code==409
+ bank={"questions":[{"id":"a1","ce":"a","q":"A","options":["Sí","No"],"answer":0,"type":"choice"}]}
+ assert client.put("/api/teacher/exam-bank/ATOMIC",headers=H,json=bank).status_code==200
+ second=client.post("/api/exam/start",json=body);assert second.status_code==200
+ assert second.json()["attempt"]==1
