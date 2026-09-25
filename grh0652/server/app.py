@@ -58,11 +58,19 @@ class RecoveryItem(BaseModel): id:str;ce:str;kind:str='choice';prompt:str;option
 class RecoveryBankIn(BaseModel): items:list[RecoveryItem]
 def auth(token):
  if not secrets.compare_digest(token or "",TEACHER_TOKEN): raise HTTPException(401,"Teacher token required")
-def student_auth(token):\n if not token: raise HTTPException(401,"Student token required")\n c=con();r=c.execute("SELECT student_id FROM students WHERE token=?",(token,)).fetchone();c.close()\n if not r: raise HTTPException(401,"Invalid student token")\n return r["student_id"]\ndef require_student(claimed,token):\n student_id=student_auth(token)\n if claimed!=student_id: raise HTTPException(403,"Student identity mismatch")\n return student_id\ndef config_row(c,course):
+def student_auth(token):
+ if not token: raise HTTPException(401,"Student token required")
+ c=con();r=c.execute("SELECT student_id FROM students WHERE token=?",(token,)).fetchone();c.close()
+ if not r: raise HTTPException(401,"Invalid student token")
+ return r["student_id"]\ndef require_student(claimed,token):
+ student_id=student_auth(token)
+ if claimed!=student_id: raise HTTPException(403,"Student identity mismatch")
+ return student_id\ndef config_row(c,course):
  r=c.execute("SELECT config,version FROM configs WHERE course_id=?",(course,)).fetchone()
  return (json.loads(r["config"]),r["version"]) if r else (DEFAULT,0)
 
-@app.post("/api/teacher/students/{student_id}")\ndef create_student(student_id:str,x_teacher_token:str|None=Header(None)):\n auth(x_teacher_token);token=secrets.token_urlsafe(32);c=con();c.execute("INSERT OR REPLACE INTO students(student_id,token,created_at) VALUES(?,?,?)",(student_id,token,now()));c.commit();c.close();return {"student_id":student_id,"token":token}\n\n@app.get("/health")
+@app.post("/api/teacher/students/{student_id}")\ndef create_student(student_id:str,x_teacher_token:str|None=Header(None)):
+ auth(x_teacher_token);token=secrets.token_urlsafe(32);c=con();c.execute("INSERT OR REPLACE INTO students(student_id,token,created_at) VALUES(?,?,?)",(student_id,token,now()));c.commit();c.close();return {"student_id":student_id,"token":token}\n\n@app.get("/health")
 def health(): return {"ok":True}
 @app.get("/api/config/{course_id}")
 def get_config(course_id:str):
@@ -75,7 +83,8 @@ def put_config(course_id:str,x:ConfigIn,x_teacher_token:str|None=Header(None)):
  if c.execute("SELECT 1 FROM evaluation_closures WHERE course_id=?",(course_id,)).fetchone(): c.close();raise HTTPException(409,"La evaluación está cerrada")
  _,v=config_row(c,course_id);v+=1;c.execute("INSERT OR REPLACE INTO configs(course_id,config,version,updated_at) VALUES(?,?,?,?)",(course_id,json.dumps(d),v,now()));c.commit();c.close();return {**d,"version":v}
 @app.post("/api/attempts/start")
-def start_attempt(x:AttemptIn,x_student_token:str|None=Header(None)):\n require_student(x.student_id,x_student_token)
+def start_attempt(x:AttemptIn,x_student_token:str|None=Header(None)):
+ require_student(x.student_id,x_student_token)
  if x.kind not in LIMITS: raise HTTPException(400,"Tipo de intento no válido")
  c=con();c.execute("BEGIN IMMEDIATE")
  active=c.execute("SELECT * FROM attempts WHERE student_id=? AND course_id=? AND kind=? AND item_id=? AND status='started' ORDER BY attempt_no DESC LIMIT 1",(x.student_id,x.course_id,x.kind,x.item_id)).fetchone()
@@ -88,15 +97,17 @@ def start_attempt(x:AttemptIn,x_student_token:str|None=Header(None)):\n require_
   if c.execute("SELECT 1 FROM evaluation_closures WHERE course_id=?",(x.course_id,)).fetchone(): c.rollback();c.close();raise HTTPException(409,"Evaluación cerrada")
  n+=1;c.execute("INSERT INTO attempts(student_id,course_id,kind,item_id,attempt_no,status,started_at,payload) VALUES(?,?,?,?,?,'started',?,?)",(x.student_id,x.course_id,x.kind,x.item_id,n,now(),json.dumps(x.payload or {},ensure_ascii=False)));aid=c.execute("SELECT last_insert_rowid() id").fetchone()["id"];c.commit();c.close();return {"id":aid,"attempt":n,"status":"started","resumed":False}
 @app.post("/api/attempts/{attempt_id}/submit")
-def submit_attempt(attempt_id:int,x:SubmitAttempt):
- c=con();r=c.execute("SELECT status FROM attempts WHERE id=?",(attempt_id,)).fetchone()
+def submit_attempt(attempt_id:int,x:SubmitAttempt,x_student_token:str|None=Header(None)):
+ c=con();r=c.execute("SELECT status,student_id FROM attempts WHERE id=?",(attempt_id,)).fetchone()
+ if r: require_student(r["student_id"],x_student_token)
  if not r:c.close();raise HTTPException(404,"Intento no encontrado")
  if r["status"]!="started":c.close();raise HTTPException(409,"Intento ya entregado")
  c.execute("UPDATE attempts SET status='submitted',submitted_at=?,payload=? WHERE id=?",(now(),json.dumps(x.payload or {},ensure_ascii=False),attempt_id));c.commit();c.close();return {"ok":True}
 @app.post("/api/attempts/{attempt_id}/answer")
-def answer_attempt(attempt_id:int,x:AnswerIn):
+def answer_attempt(attempt_id:int,x:AnswerIn,x_student_token:str|None=Header(None)):
  c=con();c.execute("BEGIN IMMEDIATE");r=c.execute("SELECT * FROM attempts WHERE id=?",(attempt_id,)).fetchone()
  if not r: c.rollback();c.close();raise HTTPException(404,"Intento no encontrado")
+ require_student(r["student_id"],x_student_token)
  if r["status"]!="started": c.rollback();c.close();raise HTTPException(409,"Intento cerrado")
  p=json.loads(r["payload"] or "{}");p["response"]=x.response
  c.execute("UPDATE attempts SET payload=? WHERE id=?",(json.dumps(p,ensure_ascii=False),attempt_id))
@@ -104,7 +115,8 @@ def answer_attempt(attempt_id:int,x:AnswerIn):
  c.commit();c.close();return {"ok":True,"attempt":r["attempt_no"]}
 
 @app.get("/api/recovery/{student_id}/{course_id}")
-def recovery(student_id:str,course_id:str,x_student_token:str|None=Header(None)):\n require_student(student_id,x_student_token)
+def recovery(student_id:str,course_id:str,x_student_token:str|None=Header(None)):
+ require_student(student_id,x_student_token)
  c=con();r=c.execute("SELECT criteria,status,created_at FROM recovery_plans WHERE student_id=? AND course_id=?",(student_id,course_id)).fetchone();c.close()
  if not r:return {"plan":None}
  return {"plan":{"criteria":json.loads(r["criteria"] or "[]"),"status":r["status"],"created_at":r["created_at"]}}
@@ -116,7 +128,8 @@ def put_recovery_bank(course_id:str,x:RecoveryBankIn,x_teacher_token:str|None=He
  c.commit();c.close();return {"items":len(x.items)}
 
 @app.get("/api/recovery/{student_id}/{course_id}/content")
-def recovery_content(student_id:str,course_id:str,x_student_token:str|None=Header(None)):\n require_student(student_id,x_student_token)
+def recovery_content(student_id:str,course_id:str,x_student_token:str|None=Header(None)):
+ require_student(student_id,x_student_token)
  c=con();p=c.execute("SELECT criteria,status FROM recovery_plans WHERE student_id=? AND course_id=?",(student_id,course_id)).fetchone()
  if not p:c.close();return {"plan":None}
  ces=json.loads(p["criteria"] or "[]");rows=[dict(r) for r in c.execute("SELECT item_id,ce,kind,prompt,options,feedback FROM recovery_banks WHERE course_id=? ORDER BY ce,item_id",(course_id,)) if r["ce"] in ces];c.close()
@@ -124,15 +137,17 @@ def recovery_content(student_id:str,course_id:str,x_student_token:str|None=Heade
  return {"plan":{"criteria":ces,"status":p["status"],"items":rows}}
 
 @app.post("/api/recovery/start")
-def recovery_start(x:AttemptIn,x_student_token:str|None=Header(None)):\n require_student(x.student_id,x_student_token)
+def recovery_start(x:AttemptIn,x_student_token:str|None=Header(None)):
+ require_student(x.student_id,x_student_token)
  c=con();p=c.execute("SELECT criteria,status FROM recovery_plans WHERE student_id=? AND course_id=?",(x.student_id,x.course_id)).fetchone();c.close()
  if not p:raise HTTPException(403,"No existe plan de recuperación")
  x.kind="recovery";x.item_id="recovery-final";return start_attempt(x)
 
 @app.post("/api/recovery/{attempt_id}/submit")
-def recovery_submit(attempt_id:int,x:SubmitAttempt):
+def recovery_submit(attempt_id:int,x:SubmitAttempt,x_student_token:str|None=Header(None)):
  c=con();a=c.execute("SELECT * FROM attempts WHERE id=?",(attempt_id,)).fetchone()
  if not a or a["kind"]!="recovery":c.close();raise HTTPException(404,"Intento de recuperación no encontrado")
+ require_student(a["student_id"],x_student_token)
  if a["status"]!="started":c.close();raise HTTPException(409,"Recuperación ya entregada")
  p=c.execute("SELECT criteria,status FROM recovery_plans WHERE student_id=? AND course_id=?",(a["student_id"],a["course_id"])).fetchone()
  if not p or p["status"]!="pending":
@@ -178,7 +193,8 @@ def put_exam_bank(course_id:str,x:BankIn,x_teacher_token:str|None=Header(None)):
  c.commit();c.close();return {"questions":len(x.questions)}
 
 @app.post("/api/exam/start")
-def exam_start(x:AttemptIn,x_student_token:str|None=Header(None)):\n require_student(x.student_id,x_student_token)
+def exam_start(x:AttemptIn,x_student_token:str|None=Header(None)):
+ require_student(x.student_id,x_student_token)
  if x.kind!="exam": raise HTTPException(400,"kind debe ser exam")
  c=con();active=c.execute("SELECT id,attempt_no FROM attempts WHERE student_id=? AND course_id=? AND kind='exam' AND item_id=? AND status='started' ORDER BY attempt_no DESC LIMIT 1",(x.student_id,x.course_id,x.item_id)).fetchone()
  if active:
@@ -212,9 +228,10 @@ def exam_start(x:AttemptIn,x_student_token:str|None=Header(None)):\n require_stu
  c.commit();c.close();return {"attempt_id":gate["id"],"attempt":gate["attempt"],"version":version,"questions":public,"config":cfg,"deadline_at":deadline,"resumed":False}
 
 @app.post("/api/exam/{attempt_id}/submit")
-def exam_submit(attempt_id:int,x:SubmitAttempt):
+def exam_submit(attempt_id:int,x:SubmitAttempt,x_student_token:str|None=Header(None)):
  c=con();v=c.execute("SELECT * FROM exam_versions WHERE attempt_id=?",(attempt_id,)).fetchone();a=c.execute("SELECT * FROM attempts WHERE id=?",(attempt_id,)).fetchone()
  if not v or not a:c.close();raise HTTPException(404,"Examen no encontrado")
+ require_student(a["student_id"],x_student_token)
  if a["status"]!="started":c.close();raise HTTPException(409,"Examen ya entregado")
  if v["deadline_at"] and datetime.datetime.now(datetime.timezone.utc)>datetime.datetime.fromisoformat(v["deadline_at"]):
   c.execute("UPDATE attempts SET status='expired',submitted_at=? WHERE id=?",(now(),attempt_id));c.commit();c.close();raise HTTPException(410,"Tiempo de examen agotado")
@@ -224,13 +241,16 @@ def exam_submit(attempt_id:int,x:SubmitAttempt):
  score=round(good/max(1,len(questions))*100,2);c.execute("UPDATE attempts SET status='submitted',submitted_at=?,payload=? WHERE id=?",(now(),json.dumps({"answers":answers,"score":score,"by_ce":by},ensure_ascii=False),attempt_id));c.commit();c.close();return {"score":score,"by_ce":by,"answered":len(answers),"total":len(questions)}
 
 @app.put("/api/state/{student_id}")
-def put_state(student_id:str,x:StateIn,x_student_token:str|None=Header(None)):\n require_student(student_id,x_student_token)
+def put_state(student_id:str,x:StateIn,x_student_token:str|None=Header(None)):
+ require_student(student_id,x_student_token)
  c=con();c.execute("INSERT OR REPLACE INTO states VALUES(?,?,?,?)",(student_id,x.course_id,json.dumps(x.state),now()));c.commit();c.close();return {"ok":True}
 @app.get("/api/state/{student_id}")
-def get_state(student_id:str,course_id:str,x_student_token:str|None=Header(None)):\n require_student(student_id,x_student_token)
+def get_state(student_id:str,course_id:str,x_student_token:str|None=Header(None)):
+ require_student(student_id,x_student_token)
  c=con();r=c.execute("SELECT state FROM states WHERE student_id=? AND course_id=?",(student_id,course_id)).fetchone();c.close();return {"state":json.loads(r["state"])} if r else {"state":None}
 @app.post("/api/evidence")
-def evidence(x:EventIn,x_student_token:str|None=Header(None)):\n require_student(x.student_id,x_student_token)
+def evidence(x:EventIn,x_student_token:str|None=Header(None)):
+ require_student(x.student_id,x_student_token)
  c=con();correct=x.correct;score=x.score
  if x.kind=="portfolio":
   key=c.execute("SELECT ce,kind,answer FROM portfolio_banks WHERE course_id=? AND item_id=?",(x.course_id,x.item_id)).fetchone()
@@ -245,7 +265,8 @@ def evidence(x:EventIn,x_student_token:str|None=Header(None)):\n require_student
   correct=ok;score=100 if ok else 0
  c.execute("INSERT INTO evidence(student_id,course_id,kind,ce,item_id,attempt,response,correct,score,payload,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)",(x.student_id,x.course_id,x.kind,x.ce,x.item_id,x.attempt,json.dumps(x.response,ensure_ascii=False),None if correct is None else int(correct),score,json.dumps(x.payload or {},ensure_ascii=False),now()));c.commit();c.close();return {"ok":True,"correct":correct,"score":score}
 @app.post("/api/result")
-def result(x:ResultIn,x_student_token:str|None=Header(None)):\n require_student(x.student_id,x_student_token)
+def result(x:ResultIn,x_student_token:str|None=Header(None)):
+ require_student(x.student_id,x_student_token)
  c=con();cfg,_=config_row(c,x.course_id)
  er=c.execute("SELECT payload FROM attempts WHERE student_id=? AND course_id=? AND kind='exam' AND status='submitted' ORDER BY attempt_no DESC LIMIT 1",(x.student_id,x.course_id)).fetchone()
  if not er:c.close();raise HTTPException(409,"No existe examen evaluable entregado")
