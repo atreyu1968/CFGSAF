@@ -140,7 +140,7 @@ def test_missing_ce_cannot_disappear_from_authoritative_denominator():
  answers={q["id"]:(True if q["ce"]=="c1" else False) for q in st.json()["questions"]}
  assert client.post(f"/api/exam/{st.json()['attempt_id']}/submit",headers=SH("u"),json={"payload":{"answers":answers}}).status_code==200
  forged={"student_id":"u","course_id":"UNIVERSE","portfolio":100,"exam":100,"final":100,"ce_passed":2,"ce_total":2,"ra_passed":True,"recovery":[]}
- r=client.post("/api/result",headers=SH("auth"),json=forged);assert r.status_code==200,r.text
+ r=client.post("/api/result",headers=SH("u"),json=forged);assert r.status_code==200,r.text
  d=r.json();assert d["ce_total"]==2;assert d["ce"]["c2"]["portfolio"]==0;assert d["ce"]["c2"]["passed"] is False;assert "c2" in d["recovery"]
 
 def test_portfolio_score_is_server_authoritative():
