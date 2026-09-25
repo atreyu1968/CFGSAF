@@ -16,7 +16,7 @@
       "id": "3.ap2",
       "ce": "3.a",
       "kind": "tf",
-      "prompt": "En Normativa y trámites empresariales, el justificante de una comunicación telemática forma parte del expediente.",
+      "prompt": "Determina si es verdadera o falsa: En Normativa y trámites empresariales, el justificante de una comunicación telemática forma parte del expediente.",
       "options": []
     },
     {
@@ -25,17 +25,17 @@
       "kind": "multi",
       "prompt": "Selecciona controles útiles para Normativa y trámites empresariales.",
       "options": [
-        "Identidad y situación previa",
         "Fechas/periodo",
         "Fuente oficial vigente",
-        "Una captura antigua sin verificar"
+        "Una captura antigua sin verificar",
+        "Identidad y situación previa"
       ]
     },
     {
       "id": "3.ap4",
       "ce": "3.a",
       "kind": "order",
-      "prompt": "Ordena una gestión segura.",
+      "prompt": "Ordena una gestión segura. Revisa la secuencia completa.",
       "options": []
     },
     {
@@ -78,7 +78,7 @@
       "id": "3.bp2",
       "ce": "3.b",
       "kind": "tf",
-      "prompt": "En Bases y aportaciones, el justificante de una comunicación telemática forma parte del expediente.",
+      "prompt": "Determina si es verdadera o falsa: En Bases y aportaciones, el justificante de una comunicación telemática forma parte del expediente.",
       "options": []
     },
     {
@@ -87,17 +87,17 @@
       "kind": "multi",
       "prompt": "Selecciona controles útiles para Bases y aportaciones.",
       "options": [
-        "Identidad y situación previa",
         "Fechas/periodo",
         "Fuente oficial vigente",
-        "Una captura antigua sin verificar"
+        "Una captura antigua sin verificar",
+        "Identidad y situación previa"
       ]
     },
     {
       "id": "3.bp4",
       "ce": "3.b",
       "kind": "order",
-      "prompt": "Ordena una gestión segura.",
+      "prompt": "Ordena una gestión segura. Revisa la secuencia completa.",
       "options": []
     },
     {
@@ -140,7 +140,7 @@
       "id": "3.cp2",
       "ce": "3.c",
       "kind": "tf",
-      "prompt": "En Prestaciones económicas, el justificante de una comunicación telemática forma parte del expediente.",
+      "prompt": "Determina si es verdadera o falsa: En Prestaciones económicas, el justificante de una comunicación telemática forma parte del expediente.",
       "options": []
     },
     {
@@ -149,17 +149,17 @@
       "kind": "multi",
       "prompt": "Selecciona controles útiles para Prestaciones económicas.",
       "options": [
-        "Identidad y situación previa",
         "Fechas/periodo",
         "Fuente oficial vigente",
-        "Una captura antigua sin verificar"
+        "Una captura antigua sin verificar",
+        "Identidad y situación previa"
       ]
     },
     {
       "id": "3.cp4",
       "ce": "3.c",
       "kind": "order",
-      "prompt": "Ordena una gestión segura.",
+      "prompt": "Ordena una gestión segura. Revisa la secuencia completa.",
       "options": []
     },
     {
@@ -202,7 +202,7 @@
       "id": "3.dp2",
       "ce": "3.d",
       "kind": "tf",
-      "prompt": "En Afiliación, altas, bajas y variaciones, el justificante de una comunicación telemática forma parte del expediente.",
+      "prompt": "Determina si es verdadera o falsa: En Afiliación, altas, bajas y variaciones, el justificante de una comunicación telemática forma parte del expediente.",
       "options": []
     },
     {
@@ -211,17 +211,17 @@
       "kind": "multi",
       "prompt": "Selecciona controles útiles para Afiliación, altas, bajas y variaciones.",
       "options": [
-        "Identidad y situación previa",
         "Fechas/periodo",
         "Fuente oficial vigente",
-        "Una captura antigua sin verificar"
+        "Una captura antigua sin verificar",
+        "Identidad y situación previa"
       ]
     },
     {
       "id": "3.dp4",
       "ce": "3.d",
       "kind": "order",
-      "prompt": "Ordena una gestión segura.",
+      "prompt": "Ordena una gestión segura. Revisa la secuencia completa.",
       "options": []
     },
     {
@@ -264,7 +264,7 @@
       "id": "3.ep2",
       "ce": "3.e",
       "kind": "tf",
-      "prompt": "En Vías de comunicación, el justificante de una comunicación telemática forma parte del expediente.",
+      "prompt": "Determina si es verdadera o falsa: En Vías de comunicación, el justificante de una comunicación telemática forma parte del expediente.",
       "options": []
     },
     {
@@ -273,17 +273,17 @@
       "kind": "multi",
       "prompt": "Selecciona controles útiles para Vías de comunicación.",
       "options": [
-        "Identidad y situación previa",
         "Fechas/periodo",
         "Fuente oficial vigente",
-        "Una captura antigua sin verificar"
+        "Una captura antigua sin verificar",
+        "Identidad y situación previa"
       ]
     },
     {
       "id": "3.ep4",
       "ce": "3.e",
       "kind": "order",
-      "prompt": "Ordena una gestión segura.",
+      "prompt": "Ordena una gestión segura. Revisa la secuencia completa.",
       "options": []
     },
     {
@@ -326,7 +326,7 @@
       "id": "3.fp2",
       "ce": "3.f",
       "kind": "tf",
-      "prompt": "En Órganos inspectores y fiscalizadores, el justificante de una comunicación telemática forma parte del expediente.",
+      "prompt": "Determina si es verdadera o falsa: En Órganos inspectores y fiscalizadores, el justificante de una comunicación telemática forma parte del expediente.",
       "options": []
     },
     {
@@ -335,17 +335,17 @@
       "kind": "multi",
       "prompt": "Selecciona controles útiles para Órganos inspectores y fiscalizadores.",
       "options": [
-        "Identidad y situación previa",
         "Fechas/periodo",
         "Fuente oficial vigente",
-        "Una captura antigua sin verificar"
+        "Una captura antigua sin verificar",
+        "Identidad y situación previa"
       ]
     },
     {
       "id": "3.fp4",
       "ce": "3.f",
       "kind": "order",
-      "prompt": "Ordena una gestión segura.",
+      "prompt": "Ordena una gestión segura. Revisa la secuencia completa.",
       "options": []
     },
     {
@@ -388,7 +388,7 @@
       "id": "3.gp2",
       "ce": "3.g",
       "kind": "tf",
-      "prompt": "En Previsión social complementaria, el justificante de una comunicación telemática forma parte del expediente.",
+      "prompt": "Determina si es verdadera o falsa: En Previsión social complementaria, el justificante de una comunicación telemática forma parte del expediente.",
       "options": []
     },
     {
@@ -397,17 +397,17 @@
       "kind": "multi",
       "prompt": "Selecciona controles útiles para Previsión social complementaria.",
       "options": [
-        "Identidad y situación previa",
         "Fechas/periodo",
         "Fuente oficial vigente",
-        "Una captura antigua sin verificar"
+        "Una captura antigua sin verificar",
+        "Identidad y situación previa"
       ]
     },
     {
       "id": "3.gp4",
       "ce": "3.g",
       "kind": "order",
-      "prompt": "Ordena una gestión segura.",
+      "prompt": "Ordena una gestión segura. Revisa la secuencia completa.",
       "options": []
     },
     {
@@ -450,7 +450,7 @@
       "id": "3.hp2",
       "ce": "3.h",
       "kind": "tf",
-      "prompt": "En Aplicaciones informáticas, el justificante de una comunicación telemática forma parte del expediente.",
+      "prompt": "Determina si es verdadera o falsa: En Aplicaciones informáticas, el justificante de una comunicación telemática forma parte del expediente.",
       "options": []
     },
     {
@@ -459,17 +459,17 @@
       "kind": "multi",
       "prompt": "Selecciona controles útiles para Aplicaciones informáticas.",
       "options": [
-        "Identidad y situación previa",
         "Fechas/periodo",
         "Fuente oficial vigente",
-        "Una captura antigua sin verificar"
+        "Una captura antigua sin verificar",
+        "Identidad y situación previa"
       ]
     },
     {
       "id": "3.hp4",
       "ce": "3.h",
       "kind": "order",
-      "prompt": "Ordena una gestión segura.",
+      "prompt": "Ordena una gestión segura. Revisa la secuencia completa.",
       "options": []
     },
     {
