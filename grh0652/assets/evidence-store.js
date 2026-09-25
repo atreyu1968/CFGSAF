@@ -15,5 +15,8 @@ window.EVIDENCE={api:API,
  async submitAttempt(id,payload){return call('/api/attempts/'+encodeURIComponent(id)+'/submit',{method:'POST',body:JSON.stringify({payload:payload||{}})})},
  async startExam(payload){return call('/api/exam/start',{method:'POST',body:JSON.stringify({student_id:student(),course_id:course(),kind:'exam',item_id:'final',payload:payload||{}})})},
  async submitExam(id,answers){return call('/api/exam/'+encodeURIComponent(id)+'/submit',{method:'POST',body:JSON.stringify({payload:{answers}})})},
- async recovery(courseId){return call('/api/recovery/'+encodeURIComponent(student())+'/'+encodeURIComponent(courseId||course()))}
+ async recovery(courseId){return call('/api/recovery/'+encodeURIComponent(student())+'/'+encodeURIComponent(courseId||course()))},
+ async recoveryContent(courseId){return call('/api/recovery/'+encodeURIComponent(student())+'/'+encodeURIComponent(courseId||course())+'/content')},
+ async startRecovery(courseId){return call('/api/recovery/start',{method:'POST',body:JSON.stringify({student_id:student(),course_id:courseId||course(),kind:'recovery',item_id:'recovery-final',payload:{}})})},
+ async submitRecovery(id,answers){return call('/api/recovery/'+encodeURIComponent(id)+'/submit',{method:'POST',body:JSON.stringify({payload:{answers}})})}
 };})();
