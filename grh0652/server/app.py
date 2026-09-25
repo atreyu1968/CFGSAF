@@ -74,11 +74,16 @@ class RecoveryItem(BaseModel): id:str;ce:str;kind:str='choice';prompt:str;option
 class RecoveryBankIn(BaseModel): items:list[RecoveryItem]
 def auth(token):
  if not secrets.compare_digest(token or "",TEACHER_TOKEN): raise HTTPException(401,"Teacher token required")
-def student_auth(token):
+def student_auth(token,c=None):
  if not token: raise HTTPException(401,"Student token required")
- c=con();r=c.execute("SELECT student_id FROM students WHERE token=?",(token,)).fetchone();c.close()
+ own=c is None;db=c or con();r=db.execute("SELECT student_id FROM students WHERE token=?",(token,)).fetchone()
+ if own:db.close()
  if not r: raise HTTPException(401,"Invalid student token")
  return r["student_id"]
+def require_student(claimed,token,c=None):
+ student_id=student_auth(token,c)
+ if claimed!=student_id: raise HTTPException(403,"Student identity mismatch")
+ return student_id
 def require_student(claimed,token):
  student_id=student_auth(token)
  if claimed!=student_id: raise HTTPException(403,"Student identity mismatch")
@@ -120,7 +125,7 @@ def start_attempt(x:AttemptIn,x_student_token:str|None=Header(None)):
 @app.post("/api/attempts/{attempt_id}/submit")
 def submit_attempt(attempt_id:int,x:SubmitAttempt,x_student_token:str|None=Header(None)):
  c=con();r=c.execute("SELECT status,student_id FROM attempts WHERE id=?",(attempt_id,)).fetchone()
- if r: require_student(r["student_id"],x_student_token)
+ if r: require_student(r["student_id"],x_student_token,c)
  if not r:c.close();raise HTTPException(404,"Intento no encontrado")
  if r["status"]!="started":c.close();raise HTTPException(409,"Intento ya entregado")
  c.execute("UPDATE attempts SET status='submitted',submitted_at=?,payload=? WHERE id=?",(now(),json.dumps(x.payload or {},ensure_ascii=False),attempt_id));c.commit();c.close();return {"ok":True}
