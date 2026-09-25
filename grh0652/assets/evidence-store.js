@@ -6,9 +6,9 @@ function localEvent(ev){const k='grh0652.evidence.'+student();const a=JSON.parse
 window.EVIDENCE={
  api:API,
  async event(ev){localEvent(ev);return call('/api/evidence',{method:'POST',body:JSON.stringify({...ev,student_id:student(),course_id:'GRH0652_UT1'})})},
- async state(state){localStorage.setItem('grh0652.remoteState.'+student(),JSON.stringify(state));return call('/api/state/'+encodeURIComponent(student()),{method:'PUT',body:JSON.stringify({course_id:'GRH0652_UT1',state})})},
- async load(){return call('/api/state/'+encodeURIComponent(student())+'?course_id=GRH0652_UT1')},
- async config(){return call('/api/config/GRH0652_UT1')},
+ async state(state,courseId){courseId=courseId||window.SCORM_COURSE_ID||'GRH0652_UT1';localStorage.setItem('grh0652.remoteState.'+courseId+'.'+student(),JSON.stringify(state));return call('/api/state/'+encodeURIComponent(student()),{method:'PUT',body:JSON.stringify({course_id:courseId,state})})},
+ async load(courseId){courseId=courseId||window.SCORM_COURSE_ID||'GRH0652_UT1';return call('/api/state/'+encodeURIComponent(student())+'?course_id='+encodeURIComponent(courseId))},
+ async config(courseId){return call('/api/config/'+encodeURIComponent(courseId||window.SCORM_COURSE_ID||'GRH0652_UT1'))},
  async result(payload){return call('/api/result',{method:'POST',body:JSON.stringify({...payload,student_id:student(),course_id:'GRH0652_UT1'})})}
 };
 })();
