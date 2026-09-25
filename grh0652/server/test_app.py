@@ -174,6 +174,7 @@ def test_bundled_portfolio_resyncs_existing_sqlite_without_touching_other_course
  db.execute("INSERT OR REPLACE INTO portfolio_banks(course_id,item_id,ce,kind,answer) VALUES(?,?,?,?,?)",("GRH0652","1a1","1.a","choice","999"))
  db.execute("INSERT OR REPLACE INTO portfolio_banks(course_id,item_id,ce,kind,answer) VALUES(?,?,?,?,?)",("GRH0652","obsolete","1.a","choice","0"))
  db.execute("INSERT OR REPLACE INTO portfolio_banks(course_id,item_id,ce,kind,answer) VALUES(?,?,?,?,?)",("CUSTOM","keep","x","choice","7"))
+ db.execute("DELETE FROM bank_versions WHERE course_id='GRH0652'")
  db.commit();db.close()
  db=module.con()
  fixed=db.execute("SELECT answer FROM portfolio_banks WHERE course_id='GRH0652' AND item_id='1a1'").fetchone()
