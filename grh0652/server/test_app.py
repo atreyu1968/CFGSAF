@@ -88,7 +88,7 @@ def test_missing_exam_bank_does_not_consume_attempt():
 def test_recovery_uses_configured_ce_threshold_and_closes_passed_plan():
  cfg={"portfolio_weight":40,"exam_weight":60,"pass_score":50,"ce_pass_percent":80,"ce_pass_score":75,"exam_enabled":False,"exam_questions_per_ce":3,"exam_minutes":45,"require_both_instruments":False}
  assert client.put("/api/config/REC",headers=H,json=cfg).status_code==200
- client.post("/api/result",json={"student_id":"rec","course_id":"REC","portfolio":40,"exam":40,"final":40,"ce_passed":0,"ce_total":1,"ra_passed":False,"recovery":["x"]})
+ c=module.con();c.execute("INSERT OR REPLACE INTO results VALUES(?,?,?,?,?,?,?,?,?,?)",("rec","REC",40,40,40,0,1,0,'["x"]',module.now()));c.commit();c.close()
  assert client.post("/api/teacher/close/REC",headers=H).status_code==200
  bank={"items":[
   {"id":"r1","ce":"x","kind":"choice","prompt":"A","options":["A","B"],"answer":0},
