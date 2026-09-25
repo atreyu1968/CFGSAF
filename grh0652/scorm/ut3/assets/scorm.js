@@ -107,9 +107,9 @@ function updateProgress(){
  CRITERIA.forEach(c=>{const ex=PRACTICE[c.id]||[],n=ex.filter(e=>state.mastered.includes(e.id)).length,k=c.id.replace('.','');const tx=document.getElementById('prog-'+k),hb=document.getElementById('homeprog-'+k),bar=document.getElementById('bar-'+k),hbar=document.getElementById('homebar-'+k);if(tx)tx.textContent=n+'/6 dominadas';if(hb)hb.textContent=n+'/6';if(bar)bar.style.width=(n/6*100)+'%';if(hbar)hbar.style.width=(n/6*100)+'%'});
 }
 
-let examQuestions=[];\nfunction renderExam(){
+let examQuestions=[];\nlet examDeadline=null,examTimer=null;\nfunction renderExam(){
  const box=$('#examBox');if(!box)return;
- box.innerHTML=`<div class="notice" id="incidentNotice"><strong>Modo evaluación.</strong> Incidencias de foco: <span id="incidentCount">0</span>/3.</div>`+examQuestions.map((q,i)=>{
+ box.innerHTML=`<div class="notice" id="incidentNotice"><strong>Modo evaluación.</strong> Tiempo restante: <strong id="examCountdown">--:--</strong> · Incidencias de foco: <span id="incidentCount">0</span>/3.</div>`+examQuestions.map((q,i)=>{
  let opts='';
  if(q.type==='choice')opts=q.options.map((o,j)=>`<label class="option"><input type="radio" name="q-${q.id}" value="${j}"> ${safe(o)}</label>`).join('');
  else if(q.type==='tf')opts=`<label class="option"><input type="radio" name="q-${q.id}" value="true"> Verdadero</label><label class="option"><input type="radio" name="q-${q.id}" value="false"> Falso</label>`;
@@ -120,8 +120,8 @@ let examQuestions=[];\nfunction renderExam(){
 }
 async function startExam(){
  if(state.examTaken){alert('El examen solo permite un intento.');return}if(!state.evaluationConfig||!state.evaluationConfig.exam_enabled){alert('El profesor todavía no ha activado el examen.');return}
- const ev=evidence();if(ev&&ev.api){const gate=await ev.startExam({unit:UNIT_ID});if(!gate||gate.error){alert('No se puede iniciar el examen: '+(gate?.error||'servidor no disponible'));return}state.serverExamAttempt=gate.attempt;state.serverExamAttemptId=gate.attempt_id;state.examVersion=gate.version||state.examVersion;examQuestions=(gate.questions||[]).map(q=>({...q,type:q.type||'choice'}));}
- if(!examQuestions.length){alert('El servidor no ha proporcionado preguntas para el examen.');return}\n examActive=true;autoSubmitPending=false;state.incidents=0;state.attempts=(state.attempts||0)+1;document.body.classList.add('exam-mode');$('#examIntro')?.classList.add('hidden');$('#examResult').innerHTML='';$('#examBox')?.classList.remove('hidden');renderExam();requestFull();sync();
+ const ev=evidence();if(ev&&ev.api){const gate=await ev.startExam({unit:UNIT_ID});if(!gate||gate.error){alert('No se puede iniciar el examen: '+(gate?.error||'servidor no disponible'));return}state.serverExamAttempt=gate.attempt;state.serverExamAttemptId=gate.attempt_id;state.examVersion=gate.version||state.examVersion;examDeadline=gate.deadline_at||null;examQuestions=(gate.questions||[]).map(q=>({...q,type:q.type||'choice'}));}
+ if(!examQuestions.length){alert('El servidor no ha proporcionado preguntas para el examen.');return}\n examActive=true;autoSubmitPending=false;state.incidents=0;state.attempts=(state.attempts||0)+1;document.body.classList.add('exam-mode');$('#examIntro')?.classList.add('hidden');$('#examResult').innerHTML='';$('#examBox')?.classList.remove('hidden');renderExam();startExamTimer();requestFull();sync();
 }
 function registerIncident(reason){
  if(!examActive)return;const now=Date.now();if(now-lastIncident<1400)return;lastIncident=now;state.incidents=(state.incidents||0)+1;const c=$('#incidentCount');if(c)c.textContent=state.incidents;sync();
@@ -141,9 +141,9 @@ function recordInteraction(q,a,ok,i){
 }
 async function submitExam(auto){
  if(!examActive)return;
- const answers=EXAM.map(examAnswer),answered=answers.filter(x=>x!==null).length;
- if(!auto&&answered<EXAM.length&&!confirm('Has respondido '+answered+' de '+EXAM.length+'. ¿Quieres entregar igualmente?'))return;
- let good=0,by={},score=0;const ev=evidence();if(!(ev&&ev.api&&state.serverExamAttemptId)){alert('El examen evaluable requiere conexión con el servidor. Tus respuestas no se han entregado.');return}if(ev&&ev.api&&state.serverExamAttemptId){const amap={};EXAM.forEach((q,i)=>amap[q.id]=answers[i]);const graded=await ev.submitExam(state.serverExamAttemptId,amap);if(!graded||graded.error){alert('No se pudo entregar el examen: '+(graded?.error||'error de servidor'));return}score=graded.score;by=graded.by_ce||{};good=Object.values(by).reduce((a,v)=>a+(v.ok||0),0);EXAM.forEach((q,i)=>recordInteraction(q,answers[i],false,i));}state.examTaken=true;state.examScore=score;state.best=score;state.last='examen-evaluable';examActive=false;document.body.classList.remove('exam-mode');$('#examBox')?.classList.add('hidden');
+ const answers=examQuestions.map(examAnswer),answered=answers.filter(x=>x!==null).length;
+ if(!auto&&answered<examQuestions.length&&!confirm('Has respondido '+answered+' de '+examQuestions.length+'. ¿Quieres entregar igualmente?'))return;
+ let good=0,by={},score=0;const ev=evidence();if(!(ev&&ev.api&&state.serverExamAttemptId)){alert('El examen evaluable requiere conexión con el servidor. Tus respuestas no se han entregado.');return}if(ev&&ev.api&&state.serverExamAttemptId){const amap={};examQuestions.forEach((q,i)=>amap[q.id]=answers[i]);const graded=await ev.submitExam(state.serverExamAttemptId,amap);if(!graded||graded.error){alert('No se pudo entregar el examen: '+(graded?.error||'error de servidor'));return}score=graded.score;by=graded.by_ce||{};good=Object.values(by).reduce((a,v)=>a+(v.ok||0),0);examQuestions.forEach((q,i)=>recordInteraction(q,answers[i],false,i));}state.examTaken=true;state.examScore=score;state.best=score;state.last='examen-evaluable';examActive=false;clearInterval(examTimer);examTimer=null;document.body.classList.remove('exam-mode');$('#examBox')?.classList.add('hidden');
  const evaluation=calculateEvaluation(by);
  if(connected&&api){try{api.LMSSetValue('cmi.core.score.raw',String(Math.round(evaluation.final)));api.LMSSetValue('cmi.core.lesson_status',evaluation.ra?'passed':'failed')}catch(e){}}
  try{if(evidence())evidence().event({kind:'exam',attempt:1,score:score,payload:{by_ce:by,incidents:state.incidents,variant:EXAM.map(q=>q.id)}})}catch(e){}
