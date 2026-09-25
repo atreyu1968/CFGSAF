@@ -38,3 +38,18 @@ def test_close_generates_only_failed_recovery():
  r=client.post("/api/teacher/close/GRH0652_UT3",headers=H);assert r.status_code==200;assert r.json()["recovery_plans"]==1
  p=client.get("/api/recovery/fail/GRH0652_UT3").json()["plan"];assert p["criteria"]==["3.c","3.f"]
  assert client.get("/api/recovery/pass/GRH0652_UT3").json()["plan"] is None
+
+def test_exam_snapshot_and_deadline_are_persisted():
+    cfg={"portfolio_weight":40,"exam_weight":60,"pass_score":50,"ce_pass_percent":80,"ce_pass_score":50,"exam_enabled":True,"exam_questions_per_ce":1,"exam_minutes":45,"require_both_instruments":False}
+    assert client.put("/api/config/GRH0652_UT4",headers=H,json=cfg).status_code==200
+    bank={"questions":[{"id":"tq1","ce":"4.a","q":"A","options":["Sí","No"],"answer":0}]}
+    assert client.put("/api/teacher/exam-bank/GRH0652_UT4",headers=H,json=bank).status_code==200
+    r=client.post("/api/exam/start",json={"student_id":"timed","course_id":"GRH0652_UT4","kind":"exam","item_id":"final"})
+    assert r.status_code==200
+    data=r.json()
+    assert data["version"] and data["deadline_at"]
+    assert data["config"]["exam_minutes"]==45
+    again=client.post("/api/exam/start",json={"student_id":"timed","course_id":"GRH0652_UT4","kind":"exam","item_id":"final"})
+    assert again.status_code==200
+    assert again.json()["version"]==data["version"]
+    assert again.json()["deadline_at"]==data["deadline_at"]

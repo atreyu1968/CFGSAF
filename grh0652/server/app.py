@@ -22,9 +22,13 @@ CREATE TABLE IF NOT EXISTS attempts(id INTEGER PRIMARY KEY AUTOINCREMENT,student
 CREATE TABLE IF NOT EXISTS evaluation_closures(course_id TEXT PRIMARY KEY,closed_at TEXT,config_version INTEGER);
 CREATE TABLE IF NOT EXISTS recovery_plans(student_id TEXT,course_id TEXT,criteria TEXT,status TEXT,created_at TEXT,PRIMARY KEY(student_id,course_id));
 CREATE TABLE IF NOT EXISTS exam_banks(course_id TEXT,question_id TEXT,ce TEXT,question TEXT,options TEXT,answer TEXT,PRIMARY KEY(course_id,question_id));
-CREATE TABLE IF NOT EXISTS exam_versions(attempt_id INTEGER PRIMARY KEY,student_id TEXT,course_id TEXT,version TEXT,questions TEXT,answers TEXT,created_at TEXT);
+CREATE TABLE IF NOT EXISTS exam_versions(attempt_id INTEGER PRIMARY KEY,student_id TEXT,course_id TEXT,version TEXT,questions TEXT,answers TEXT,created_at TEXT,config TEXT,deadline_at TEXT);
 CREATE TABLE IF NOT EXISTS recovery_banks(course_id TEXT,item_id TEXT,ce TEXT,kind TEXT,prompt TEXT,options TEXT,answer TEXT,feedback TEXT,PRIMARY KEY(course_id,item_id));
-CREATE TABLE IF NOT EXISTS recovery_results(student_id TEXT,course_id TEXT,score REAL,criteria_passed TEXT,status TEXT,updated_at TEXT,PRIMARY KEY(student_id,course_id));""");return c
+CREATE TABLE IF NOT EXISTS recovery_results(student_id TEXT,course_id TEXT,score REAL,criteria_passed TEXT,status TEXT,updated_at TEXT,PRIMARY KEY(student_id,course_id));""")
+ cols={r["name"] for r in c.execute("PRAGMA table_info(exam_versions)")}
+ if "config" not in cols:c.execute("ALTER TABLE exam_versions ADD COLUMN config TEXT")
+ if "deadline_at" not in cols:c.execute("ALTER TABLE exam_versions ADD COLUMN deadline_at TEXT")
+ c.commit();return c
 
 DEFAULT={"portfolio_weight":40,"exam_weight":60,"pass_score":50,"ce_pass_percent":80,"ce_pass_score":50,"exam_enabled":False,"exam_questions_per_ce":3,"exam_minutes":45,"require_both_instruments":False}
 LIMITS={"practice":3,"portfolio":2,"exam":1,"recovery":1}
@@ -135,8 +139,8 @@ def put_exam_bank(course_id:str,x:BankIn,x_teacher_token:str|None=Header(None)):
 @app.post("/api/exam/start")
 def exam_start(x:AttemptIn):
  if x.kind!="exam": raise HTTPException(400,"kind debe ser exam")
- gate=start_attempt(x);c=con();old=c.execute("SELECT questions FROM exam_versions WHERE attempt_id=?",(gate["id"],)).fetchone()
- if old:c.close();return {"attempt_id":gate["id"],"attempt":gate["attempt"],"questions":json.loads(old["questions"]),"resumed":True}
+ gate=start_attempt(x);c=con();old=c.execute("SELECT * FROM exam_versions WHERE attempt_id=?",(gate["id"],)).fetchone()
+ if old:c.close();return {"attempt_id":gate["id"],"attempt":gate["attempt"],"version":old["version"],"questions":json.loads(old["questions"]),"config":json.loads(old["config"]) if old["config"] else {},"deadline_at":old["deadline_at"],"resumed":True}
  cfg,_=config_row(c,x.course_id);rows=[dict(r) for r in c.execute("SELECT * FROM exam_banks WHERE course_id=? ORDER BY ce,question_id",(x.course_id,))]
  if not rows:c.close();raise HTTPException(409,"Banco de examen no cargado en el servidor")
  import random,hashlib
@@ -147,13 +151,20 @@ def exam_start(x:AttemptIn):
  rnd.shuffle(chosen);public=[];keys={}
  for r in chosen:
   opts=json.loads(r["options"]);correct=json.loads(r["answer"]);pairs=list(enumerate(opts));rnd.shuffle(pairs);public.append({"id":r["question_id"],"ce":r["ce"],"q":r["question"],"options":[p[1] for p in pairs]});keys[r["question_id"]]=pairs.index(next(p for p in pairs if p[0]==correct))
- version=secrets.token_hex(8);c.execute("INSERT INTO exam_versions VALUES(?,?,?,?,?,?,?)",(gate["id"],x.student_id,x.course_id,version,json.dumps(public,ensure_ascii=False),json.dumps(keys),now()));c.commit();c.close();return {"attempt_id":gate["id"],"attempt":gate["attempt"],"version":version,"questions":public,"resumed":False}
+ version=secrets.token_hex(8)
+ created=now()
+ deadline=(datetime.datetime.fromisoformat(created)+datetime.timedelta(minutes=max(1,int(cfg.get("exam_minutes",45))))).isoformat()
+ snap=json.dumps(cfg,ensure_ascii=False)
+ c.execute("INSERT INTO exam_versions(attempt_id,student_id,course_id,version,questions,answers,created_at,config,deadline_at) VALUES(?,?,?,?,?,?,?,?,?)",(gate["id"],x.student_id,x.course_id,version,json.dumps(public,ensure_ascii=False),json.dumps(keys),created,snap,deadline))
+ c.commit();c.close();return {"attempt_id":gate["id"],"attempt":gate["attempt"],"version":version,"questions":public,"config":cfg,"deadline_at":deadline,"resumed":False}
 
 @app.post("/api/exam/{attempt_id}/submit")
 def exam_submit(attempt_id:int,x:SubmitAttempt):
  c=con();v=c.execute("SELECT * FROM exam_versions WHERE attempt_id=?",(attempt_id,)).fetchone();a=c.execute("SELECT * FROM attempts WHERE id=?",(attempt_id,)).fetchone()
  if not v or not a:c.close();raise HTTPException(404,"Examen no encontrado")
  if a["status"]!="started":c.close();raise HTTPException(409,"Examen ya entregado")
+ if v["deadline_at"] and datetime.datetime.now(datetime.timezone.utc)>datetime.datetime.fromisoformat(v["deadline_at"]):
+  c.execute("UPDATE attempts SET status='expired',submitted_at=? WHERE id=?",(now(),attempt_id));c.commit();c.close();raise HTTPException(410,"Tiempo de examen agotado")
  answers=(x.payload or {}).get("answers",{});keys=json.loads(v["answers"]);questions=json.loads(v["questions"]);by={};good=0
  for q in questions:
   ok=answers.get(q["id"])==keys.get(q["id"]);good+=int(ok);d=by.setdefault(q["ce"],{"ok":0,"n":0});d["n"]+=1;d["ok"]+=int(ok)
