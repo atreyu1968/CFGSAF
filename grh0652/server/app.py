@@ -147,13 +147,20 @@ def exam_start(x:AttemptIn):
  rnd.shuffle(chosen);public=[];keys={}
  for r in chosen:
   opts=json.loads(r["options"]);correct=json.loads(r["answer"]);pairs=list(enumerate(opts));rnd.shuffle(pairs);public.append({"id":r["question_id"],"ce":r["ce"],"q":r["question"],"options":[p[1] for p in pairs]});keys[r["question_id"]]=pairs.index(next(p for p in pairs if p[0]==correct))
- version=secrets.token_hex(8);c.execute("INSERT INTO exam_versions VALUES(?,?,?,?,?,?,?)",(gate["id"],x.student_id,x.course_id,version,json.dumps(public,ensure_ascii=False),json.dumps(keys),now()));c.commit();c.close();return {"attempt_id":gate["id"],"attempt":gate["attempt"],"version":version,"questions":public,"resumed":False}
+ version=secrets.token_hex(8)
+ created=now()
+ deadline=(datetime.datetime.fromisoformat(created)+datetime.timedelta(minutes=max(1,int(cfg.get("exam_minutes",45))))).isoformat()
+ snap=json.dumps(cfg,ensure_ascii=False)
+ c.execute("INSERT INTO exam_versions(attempt_id,student_id,course_id,version,questions,answers,created_at,config,deadline_at) VALUES(?,?,?,?,?,?,?,?,?)",(gate["id"],x.student_id,x.course_id,version,json.dumps(public,ensure_ascii=False),json.dumps(keys),created,snap,deadline))
+ c.commit();c.close();return {"attempt_id":gate["id"],"attempt":gate["attempt"],"version":version,"questions":public,"config":cfg,"deadline_at":deadline,"resumed":False}
 
 @app.post("/api/exam/{attempt_id}/submit")
 def exam_submit(attempt_id:int,x:SubmitAttempt):
  c=con();v=c.execute("SELECT * FROM exam_versions WHERE attempt_id=?",(attempt_id,)).fetchone();a=c.execute("SELECT * FROM attempts WHERE id=?",(attempt_id,)).fetchone()
  if not v or not a:c.close();raise HTTPException(404,"Examen no encontrado")
  if a["status"]!="started":c.close();raise HTTPException(409,"Examen ya entregado")
+ if v["deadline_at"] and datetime.datetime.now(datetime.timezone.utc)>datetime.datetime.fromisoformat(v["deadline_at"]):
+  c.execute("UPDATE attempts SET status='expired',submitted_at=? WHERE id=?",(now(),attempt_id));c.commit();c.close();raise HTTPException(410,"Tiempo de examen agotado")
  answers=(x.payload or {}).get("answers",{});keys=json.loads(v["answers"]);questions=json.loads(v["questions"]);by={};good=0
  for q in questions:
   ok=answers.get(q["id"])==keys.get(q["id"]);good+=int(ok);d=by.setdefault(q["ce"],{"ok":0,"n":0});d["n"]+=1;d["ok"]+=int(ok)
