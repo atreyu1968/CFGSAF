@@ -22,9 +22,9 @@ CREATE TABLE IF NOT EXISTS attempts(id INTEGER PRIMARY KEY AUTOINCREMENT,student
 CREATE TABLE IF NOT EXISTS evaluation_closures(course_id TEXT PRIMARY KEY,closed_at TEXT,config_version INTEGER);
 CREATE TABLE IF NOT EXISTS recovery_plans(student_id TEXT,course_id TEXT,criteria TEXT,status TEXT,created_at TEXT,PRIMARY KEY(student_id,course_id));
 CREATE TABLE IF NOT EXISTS exam_banks(course_id TEXT,question_id TEXT,ce TEXT,question TEXT,options TEXT,answer TEXT,PRIMARY KEY(course_id,question_id));
-CREATE TABLE IF NOT EXISTS exam_versions(attempt_id INTEGER PRIMARY KEY,student_id TEXT,course_id TEXT,version TEXT,questions TEXT,answers TEXT,created_at TEXT);
+CREATE TABLE IF NOT EXISTS exam_versions(attempt_id INTEGER PRIMARY KEY,student_id TEXT,course_id TEXT,version TEXT,questions TEXT,answers TEXT,created_at TEXT,config TEXT,deadline_at TEXT);
 CREATE TABLE IF NOT EXISTS recovery_banks(course_id TEXT,item_id TEXT,ce TEXT,kind TEXT,prompt TEXT,options TEXT,answer TEXT,feedback TEXT,PRIMARY KEY(course_id,item_id));
-CREATE TABLE IF NOT EXISTS recovery_results(student_id TEXT,course_id TEXT,score REAL,criteria_passed TEXT,status TEXT,updated_at TEXT,PRIMARY KEY(student_id,course_id));""");return c
+CREATE TABLE IF NOT EXISTS recovery_results(student_id TEXT,course_id TEXT,score REAL,criteria_passed TEXT,status TEXT,updated_at TEXT,PRIMARY KEY(student_id,course_id));""");\n cols={r["name"] for r in c.execute("PRAGMA table_info(exam_versions)")}\n if "config" not in cols:c.execute("ALTER TABLE exam_versions ADD COLUMN config TEXT")\n if "deadline_at" not in cols:c.execute("ALTER TABLE exam_versions ADD COLUMN deadline_at TEXT")\n c.commit();return c
 
 DEFAULT={"portfolio_weight":40,"exam_weight":60,"pass_score":50,"ce_pass_percent":80,"ce_pass_score":50,"exam_enabled":False,"exam_questions_per_ce":3,"exam_minutes":45,"require_both_instruments":False}
 LIMITS={"practice":3,"portfolio":2,"exam":1,"recovery":1}
@@ -135,8 +135,8 @@ def put_exam_bank(course_id:str,x:BankIn,x_teacher_token:str|None=Header(None)):
 @app.post("/api/exam/start")
 def exam_start(x:AttemptIn):
  if x.kind!="exam": raise HTTPException(400,"kind debe ser exam")
- gate=start_attempt(x);c=con();old=c.execute("SELECT questions FROM exam_versions WHERE attempt_id=?",(gate["id"],)).fetchone()
- if old:c.close();return {"attempt_id":gate["id"],"attempt":gate["attempt"],"questions":json.loads(old["questions"]),"resumed":True}
+ gate=start_attempt(x);c=con();old=c.execute("SELECT * FROM exam_versions WHERE attempt_id=?",(gate["id"],)).fetchone()
+ if old:c.close();return {"attempt_id":gate["id"],"attempt":gate["attempt"],"version":old["version"],"questions":json.loads(old["questions"]),"config":json.loads(old["config"]) if old["config"] else {},"deadline_at":old["deadline_at"],"resumed":True}
  cfg,_=config_row(c,x.course_id);rows=[dict(r) for r in c.execute("SELECT * FROM exam_banks WHERE course_id=? ORDER BY ce,question_id",(x.course_id,))]
  if not rows:c.close();raise HTTPException(409,"Banco de examen no cargado en el servidor")
  import random,hashlib
