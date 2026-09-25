@@ -1,0 +1,160 @@
+(function(){
+'use strict';
+const $=s=>document.querySelector(s), $$=s=>Array.from(document.querySelectorAll(s));
+const safe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const shuffle=a=>{const x=[...a];for(let i=x.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[x[i],x[j]]=[x[j],x[i]]}return x};
+let api=null,connected=false,examActive=false,lastIncident=0,autoSubmitPending=false,interactionIndex=0;
+let state={visited:[],mastered:[],best:0,attempts:0,examTaken:false,incidents:0,last:'inicio'};
+
+function findAPI(){
+ let w=window,tries=0;
+ while(w&&tries<10){try{if(w.API)return w.API;if(w.parent&&w.parent!==w)w=w.parent;else break}catch(e){break}tries++}
+ try{if(window.opener&&window.opener.API)return window.opener.API}catch(e){}
+ return null;
+}
+function localKey(){return 'grh0652.sco.'+UNIT_ID}
+function loadLocal(){try{const x=JSON.parse(localStorage.getItem(localKey())||'{}');state=Object.assign(state,x)}catch(e){}}
+function saveLocal(){try{localStorage.setItem(localKey(),JSON.stringify(state))}catch(e){}}
+function initSCORM(){
+ api=findAPI();
+ if(api){try{connected=api.LMSInitialize('')==='true';const raw=api.LMSGetValue('cmi.suspend_data');if(raw){const x=JSON.parse(raw);state=Object.assign(state,x)}const loc=api.LMSGetValue('cmi.core.lesson_location');if(loc)state.last=loc;const score=Number(api.LMSGetValue('cmi.core.score.raw')||0);if(score>state.best)state.best=score;if(api.LMSGetValue('cmi.core.lesson_status')==='not attempted')api.LMSSetValue('cmi.core.lesson_status','incomplete')}catch(e){connected=false;loadLocal()}}
+ else loadLocal();
+ const mode=$('#mode');if(mode)mode.textContent=connected?'Seguimiento SCORM 1.2':'Modo local';
+}
+function sync(){
+ state.visited=[...new Set(state.visited)];state.mastered=[...new Set(state.mastered)];
+ const raw=JSON.stringify(state);
+ if(connected&&api){try{
+   api.LMSSetValue('cmi.suspend_data',raw);
+   api.LMSSetValue('cmi.core.lesson_location',state.last||'inicio');
+   api.LMSSetValue('cmi.core.score.raw',String(Math.round(state.best||0)));
+   api.LMSSetValue('cmi.core.score.min','0');api.LMSSetValue('cmi.core.score.max','100');
+   api.LMSSetValue('cmi.core.lesson_status',state.best>=PASS_SCORE?'passed':(state.examTaken?'failed':'incomplete'));
+   api.LMSSetValue('cmi.core.exit','suspend');
+   api.LMSCommit('');
+ }catch(e){saveLocal()}} else saveLocal();
+ updateProgress();
+}
+function finish(){
+ sync();if(connected&&api){try{api.LMSSetValue('cmi.core.exit','suspend');api.LMSCommit('');api.LMSFinish('')}catch(e){}}
+}
+function showScreen(id,mark=true){
+ if(examActive&&id!=='autoevaluacion')return;
+ const el=document.getElementById(id)||document.getElementById('inicio');
+ $$('.screen').forEach(x=>x.classList.remove('active'));el.classList.add('active');
+ $$('.nav-btn').forEach(x=>x.classList.toggle('active',x.dataset.target===el.id));
+ if(mark&&TRACKED_SCREENS.includes(el.id)&&!state.visited.includes(el.id))state.visited.push(el.id);
+ state.last=el.id;
+ const side=$('.sidebar');if(side)side.classList.remove('open');
+ window.scrollTo(0,0);sync();
+}
+function bindNav(){
+ $$('[data-target]').forEach(b=>b.addEventListener('click',()=>showScreen(b.dataset.target)));
+ $$('[data-goto]').forEach(b=>b.addEventListener('click',()=>showScreen(b.dataset.goto)));
+ const m=$('#menuBtn');if(m)m.onclick=()=>$('.sidebar')?.classList.toggle('open');
+ const f=$('#fullscreenBtn');if(f)f.onclick=toggleFull;
+ const e=$('#exitBtn');if(e)e.onclick=()=>{if(examActive){alert('Entrega primero la autoevaluación.');return}finish();try{if(parent&&parent!==window&&typeof parent.exitCourse==='function')parent.exitCourse();else history.back()}catch(x){history.back()}};
+ const enter=$('#enterBtn');if(enter)enter.onclick=async()=>{$('#launchOverlay')?.classList.add('hidden');await requestFull();showScreen(state.last||'inicio')};
+}
+async function requestFull(){try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen()}catch(e){}}
+async function toggleFull(){try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen()}catch(e){}}
+
+function renderPractice(){
+ CRITERIA.forEach(c=>{const box=document.getElementById('ex-'+c.id.replace('.',''));if(!box)return;box.innerHTML=(PRACTICE[c.id]||[]).map((e,i)=>exerciseHTML(c.id,e,i)).join('')});
+ $$('.check-ex').forEach(b=>b.onclick=()=>checkExercise(b.dataset.ce,b.dataset.id));
+ $$('.move-up').forEach(b=>b.onclick=()=>moveOrder(b,-1));
+ $$('.move-down').forEach(b=>b.onclick=()=>moveOrder(b,1));
+}
+function exerciseHTML(ce,e,i){
+ let body='';
+ if(e.type==='choice'){
+   body=e.options.map((o,j)=>`<label class="option"><input type="radio" name="ex-${e.id}" value="${j}"> ${safe(o)}</label>`).join('');
+ }else if(e.type==='tf'){
+   body=`<label class="option"><input type="radio" name="ex-${e.id}" value="true"> Verdadero</label><label class="option"><input type="radio" name="ex-${e.id}" value="false"> Falso</label>`;
+ }else if(e.type==='multi'){
+   body=e.options.map((o,j)=>`<label class="option"><input type="checkbox" name="ex-${e.id}" value="${j}"> ${safe(o)}</label>`).join('');
+ }else if(e.type==='order'){
+   body=`<ul class="order-list" id="order-${e.id}">${shuffle(e.items).map(it=>`<li class="order-item" data-key="${safe(it[0])}"><span>${safe(it[1])}</span><button class="move move-up" type="button">↑</button><button class="move move-down" type="button">↓</button></li>`).join('')}</ul>`;
+ }else if(e.type==='match'){
+   const rights=e.pairs.map((p,j)=>[j,p[1]]);
+   body=e.pairs.map((p,j)=>`<div class="match-row"><b>${safe(p[0])}</b><select id="match-${e.id}-${j}"><option value="">Selecciona…</option>${shuffle(rights).map(r=>`<option value="${r[0]}">${safe(r[1])}</option>`).join('')}</select></div>`).join('');
+ }
+ const done=state.mastered.includes(e.id);
+ return `<article class="exercise ${done?'done':''}" id="card-${e.id}"><div class="type">Actividad ${i+1} · ${safe(e.type)}</div><h3>${safe(e.q)}</h3>${body}<button class="btn primary check-ex" data-ce="${ce}" data-id="${e.id}" type="button">Comprobar</button><div class="feedback hidden" id="fb-${e.id}"></div></article>`;
+}
+function moveOrder(btn,d){const li=btn.closest('li'),ul=li.parentNode;if(d<0&&li.previousElementSibling)ul.insertBefore(li,li.previousElementSibling);if(d>0&&li.nextElementSibling)ul.insertBefore(li.nextElementSibling,li)}
+function getEx(ce,id){return (PRACTICE[ce]||[]).find(x=>x.id===id)}
+function checkExercise(ce,id){
+ const e=getEx(ce,id);if(!e)return;let ok=false,answered=true;
+ if(e.type==='choice'){const x=$(`input[name="ex-${e.id}"]:checked`);if(!x)answered=false;else ok=Number(x.value)===e.answer}
+ else if(e.type==='tf'){const x=$(`input[name="ex-${e.id}"]:checked`);if(!x)answered=false;else ok=(x.value==='true')===e.answer}
+ else if(e.type==='multi'){const got=$$(`input[name="ex-${e.id}"]:checked`).map(x=>Number(x.value)).sort((a,b)=>a-b);if(!got.length)answered=false;else ok=JSON.stringify(got)===JSON.stringify([...e.answer].sort((a,b)=>a-b))}
+ else if(e.type==='order'){const got=$$(`#order-${e.id} .order-item`).map(x=>x.dataset.key);ok=JSON.stringify(got)===JSON.stringify(e.answer)}
+ else if(e.type==='match'){const got=e.pairs.map((p,j)=>document.getElementById(`match-${e.id}-${j}`)?.value);if(got.some(v=>v===''))answered=false;else ok=got.every((v,j)=>Number(v)===j)}
+ if(!answered){alert('Completa la actividad antes de comprobar.');return}
+ const fb=document.getElementById('fb-'+e.id);fb.classList.remove('hidden','ok','bad');fb.classList.add(ok?'ok':'bad');fb.innerHTML=`<b>${ok?'Correcto.':'Revisa la respuesta.'}</b> ${safe(e.feedback||'')}`;
+ if(ok&&!state.mastered.includes(e.id)){state.mastered.push(e.id);document.getElementById('card-'+e.id)?.classList.add('done');sync()}else updateProgress();
+}
+function updateProgress(){
+ const mastered=state.mastered.length,visited=state.visited.filter(x=>TRACKED_SCREENS.includes(x)).length,best=Number(state.best||0);
+ const pct=Math.min(100,Math.round((visited/TRACKED_SCREENS.length)*30+(mastered/PRACTICE_TOTAL)*50+(best/100)*20));
+ const pb=$('#progressBar'),pt=$('#progressText'),pc=$('#practiceCount'),bs=$('#bestScore');if(pb)pb.style.width=pct+'%';if(pt)pt.textContent=pct+'% recorrido';if(pc)pc.textContent=mastered+'/'+PRACTICE_TOTAL;if(bs)bs.textContent=Math.round(best)+'%';
+ const ps=$('#practiceSummary');if(ps)ps.textContent=mastered+' de '+PRACTICE_TOTAL+' actividades dominadas.';
+ CRITERIA.forEach(c=>{const ex=PRACTICE[c.id]||[],n=ex.filter(e=>state.mastered.includes(e.id)).length,k=c.id.replace('.','');const tx=document.getElementById('prog-'+k),hb=document.getElementById('homeprog-'+k),bar=document.getElementById('bar-'+k),hbar=document.getElementById('homebar-'+k);if(tx)tx.textContent=n+'/6 dominadas';if(hb)hb.textContent=n+'/6';if(bar)bar.style.width=(n/6*100)+'%';if(hbar)hbar.style.width=(n/6*100)+'%'});
+}
+
+function renderExam(){
+ const box=$('#examBox');if(!box)return;
+ box.innerHTML=`<div class="notice" id="incidentNotice"><strong>Modo evaluación.</strong> Incidencias de foco: <span id="incidentCount">0</span>/3.</div>`+EXAM.map((q,i)=>{
+ let opts='';
+ if(q.type==='choice')opts=q.options.map((o,j)=>`<label class="option"><input type="radio" name="q-${q.id}" value="${j}"> ${safe(o)}</label>`).join('');
+ else if(q.type==='tf')opts=`<label class="option"><input type="radio" name="q-${q.id}" value="true"> Verdadero</label><label class="option"><input type="radio" name="q-${q.id}" value="false"> Falso</label>`;
+ else if(q.type==='multi')opts=q.options.map((o,j)=>`<label class="option"><input type="checkbox" name="q-${q.id}" value="${j}"> ${safe(o)}</label>`).join('');
+ return `<article class="question" id="qcard-${q.id}"><div class="qnum">Pregunta ${i+1} de ${EXAM.length} · CE ${safe(q.ce)}</div><h3>${safe(q.q)}</h3>${opts}<div class="feedback hidden" id="qfb-${q.id}"></div></article>`
+ }).join('')+`<button class="btn primary big" id="submitExam" type="button">Entregar autoevaluación</button>`;
+ $('#submitExam').onclick=()=>submitExam(false);
+}
+function startExam(){
+ examActive=true;autoSubmitPending=false;state.incidents=0;state.attempts=(state.attempts||0)+1;document.body.classList.add('exam-mode');$('#examIntro')?.classList.add('hidden');$('#examResult').innerHTML='';$('#examBox')?.classList.remove('hidden');renderExam();requestFull();sync();
+}
+function registerIncident(reason){
+ if(!examActive)return;const now=Date.now();if(now-lastIncident<1400)return;lastIncident=now;state.incidents=(state.incidents||0)+1;const c=$('#incidentCount');if(c)c.textContent=state.incidents;sync();
+ if(state.incidents>=3){autoSubmitPending=true;if(!document.hidden)setTimeout(()=>submitExam(true),200)}
+}
+function examAnswer(q){
+ if(q.type==='choice'){const x=$(`input[name="q-${q.id}"]:checked`);return x?Number(x.value):null}
+ if(q.type==='tf'){const x=$(`input[name="q-${q.id}"]:checked`);return x?(x.value==='true'):null}
+ if(q.type==='multi'){const x=$$(`input[name="q-${q.id}"]:checked`).map(v=>Number(v.value)).sort((a,b)=>a-b);return x.length?x:null}
+ return null;
+}
+function isCorrect(q,a){if(a===null)return false;if(q.type==='multi')return JSON.stringify(a)===JSON.stringify([...q.answer].sort((x,y)=>x-y));return a===q.answer}
+function answerText(q,a){if(a===null)return'(sin respuesta)';if(q.type==='choice')return q.options[a]||'';if(q.type==='tf')return a?'Verdadero':'Falso';if(q.type==='multi')return a.map(i=>q.options[i]).join(' | ');return String(a)}
+function correctText(q){if(q.type==='choice')return q.options[q.answer];if(q.type==='tf')return q.answer?'Verdadero':'Falso';if(q.type==='multi')return q.answer.map(i=>q.options[i]).join(' | ');return''}
+function recordInteraction(q,a,ok,i){
+ if(!connected||!api)return;try{const n=(state.attempts-1)*EXAM.length+i;api.LMSSetValue(`cmi.interactions.${n}.id`,q.id+'-a'+state.attempts);api.LMSSetValue(`cmi.interactions.${n}.type`,q.type==='tf'?'true-false':'choice');api.LMSSetValue(`cmi.interactions.${n}.student_response`,answerText(q,a).slice(0,240));api.LMSSetValue(`cmi.interactions.${n}.result`,ok?'correct':'wrong')}catch(e){}
+}
+function submitExam(auto){
+ if(!examActive)return;
+ const answers=EXAM.map(examAnswer),answered=answers.filter(x=>x!==null).length;
+ if(!auto&&answered<EXAM.length&&!confirm('Has respondido '+answered+' de '+EXAM.length+'. ¿Quieres entregar igualmente?'))return;
+ let good=0;const by={};EXAM.forEach((q,i)=>{const a=answers[i],ok=isCorrect(q,a);if(ok)good++;by[q.ce]=by[q.ce]||{ok:0,n:0};by[q.ce].n++;if(ok)by[q.ce].ok++;const card=document.getElementById('qcard-'+q.id),fb=document.getElementById('qfb-'+q.id);card?.classList.add(ok?'correct':'wrong');if(fb){fb.classList.remove('hidden');fb.classList.add(ok?'ok':'bad');fb.innerHTML=`<b>${ok?'Correcto.':'Respuesta correcta: '+safe(correctText(q))+'.'}</b> ${safe(q.feedback||'')}`}recordInteraction(q,a,ok,i)});
+ const score=Math.round(good/EXAM.length*100);state.examTaken=true;state.best=Math.max(Number(state.best||0),score);state.last='autoevaluacion';examActive=false;document.body.classList.remove('exam-mode');$('#examBox')?.classList.add('hidden');
+ if(connected&&api){try{api.LMSSetValue('cmi.core.score.raw',String(state.best));api.LMSSetValue('cmi.core.lesson_status',state.best>=PASS_SCORE?'passed':'failed')}catch(e){}}
+ const breakdown=CRITERIA.map(c=>{const v=by[c.id]||{ok:0,n:0};return `<div><b>CE ${safe(c.id)}</b><br>${Math.round((v.ok/(v.n||1))*100)}%</div>`}).join('');
+ $('#examResult').innerHTML=`<div class="exam-result"><div class="score-big">${score}%</div><h2>${score>=PASS_SCORE?'Autoevaluación superada':'Debes reforzar algunos contenidos'}</h2><p>${good} respuestas correctas de ${EXAM.length}. Mejor nota registrada: <b>${state.best}%</b>.${auto?' El intento se entregó automáticamente al alcanzar tres incidencias de foco.':''}</p><div class="result-grid">${breakdown}</div><p><button class="btn secondary" id="repeatExam">Realizar otro intento</button></p></div>`;$('#repeatExam').onclick=()=>{$('#examResult').innerHTML='';$('#examIntro')?.classList.remove('hidden')};
+ sync();try{if(document.fullscreenElement)document.exitFullscreen()}catch(e){}
+}
+function bindExam(){
+ const b=$('#startExam');if(b)b.onclick=startExam;
+ document.addEventListener('visibilitychange',()=>{if(examActive){if(document.hidden)registerIncident('visibility');else if(autoSubmitPending&&state.incidents>=3)submitExam(true)}});
+ window.addEventListener('blur',()=>registerIncident('blur'));
+ document.addEventListener('fullscreenchange',()=>{if(examActive&&!document.fullscreenElement&&!document.hidden)registerIncident('fullscreen')});
+}
+window.addEventListener('message',e=>{if(e.origin===location.origin&&e.data&&e.data.type==='scorm-save-exit')sync()});
+window.addEventListener('beforeunload',finish);
+window.addEventListener('pagehide',sync);
+
+initSCORM();bindNav();renderPractice();bindExam();updateProgress();
+const start=state.last&&document.getElementById(state.last)?state.last:'inicio';$$('.screen').forEach(x=>x.classList.remove('active'));document.getElementById(start)?.classList.add('active');$$('.nav-btn').forEach(x=>x.classList.toggle('active',x.dataset.target===start));
+setInterval(sync,15000);
+})();
