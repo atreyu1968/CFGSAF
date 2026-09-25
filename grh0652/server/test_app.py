@@ -74,3 +74,20 @@ def test_missing_exam_bank_does_not_consume_attempt():
  assert client.put("/api/teacher/exam-bank/ATOMIC",headers=H,json=bank).status_code==200
  second=client.post("/api/exam/start",json=body);assert second.status_code==200
  assert second.json()["attempt"]==1
+
+def test_recovery_uses_configured_ce_threshold_and_closes_passed_plan():
+ cfg={"portfolio_weight":40,"exam_weight":60,"pass_score":50,"ce_pass_percent":80,"ce_pass_score":75,"exam_enabled":False,"exam_questions_per_ce":3,"exam_minutes":45,"require_both_instruments":False}
+ assert client.put("/api/config/REC",headers=H,json=cfg).status_code==200
+ client.post("/api/result",json={"student_id":"rec","course_id":"REC","portfolio":40,"exam":40,"final":40,"ce_passed":0,"ce_total":1,"ra_passed":False,"recovery":["x"]})
+ assert client.post("/api/teacher/close/REC",headers=H).status_code==200
+ bank={"items":[
+  {"id":"r1","ce":"x","kind":"choice","prompt":"A","options":["A","B"],"answer":0},
+  {"id":"r2","ce":"x","kind":"tf","prompt":"B","options":[],"answer":True},
+  {"id":"r3","ce":"x","kind":"multi","prompt":"C","options":["A","B","C"],"answer":[0,2]},
+  {"id":"r4","ce":"x","kind":"free","prompt":"D","options":[],"answer":"Respuesta"}]}
+ assert client.put("/api/teacher/recovery-bank/REC",headers=H,json=bank).status_code==200
+ s=client.post("/api/recovery/start",json={"student_id":"rec","course_id":"REC","kind":"recovery","item_id":"ignored","payload":{}});assert s.status_code==200
+ answers={"r1":0,"r2":True,"r3":[2,0],"r4":" respuesta "}
+ done=client.post(f"/api/recovery/{s.json()['id']}/submit",json={"payload":{"answers":answers}});assert done.status_code==200, done.text
+ assert done.json()["status"]=="passed"
+ assert client.post("/api/recovery/start",json={"student_id":"rec","course_id":"REC","kind":"recovery","item_id":"ignored","payload":{}}).status_code==409
