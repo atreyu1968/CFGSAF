@@ -33,14 +33,18 @@ CREATE TABLE IF NOT EXISTS recovery_results(student_id TEXT,course_id TEXT,score
  if "deadline_at" not in cols:c.execute("ALTER TABLE exam_versions ADD COLUMN deadline_at TEXT")
  bcols={r["name"] for r in c.execute("PRAGMA table_info(exam_banks)")}
  if "type" not in bcols:c.execute("ALTER TABLE exam_banks ADD COLUMN type TEXT NOT NULL DEFAULT 'choice'")
- # Seed versioned portfolio answer banks from repository without exposing them to the browser.
- if c.execute("SELECT COUNT(*) n FROM portfolio_banks WHERE course_id='GRH0652'").fetchone()["n"]==0:
-  bank_dir=Path(__file__).resolve().parent/"banks"
-  for unit in ("ut1","ut2","ut3","ut4"):
-   p=bank_dir/f"{unit}_portfolio.json"
-   if p.exists():
-    for q in json.loads(p.read_text(encoding="utf-8")).get("items",[]):
-     c.execute("INSERT OR REPLACE INTO portfolio_banks(course_id,item_id,ce,kind,answer) VALUES(?,?,?,?,?)",("GRH0652",q["id"],q["ce"],q["kind"],json.dumps(q.get("answer"),ensure_ascii=False)))
+ # Synchronize the bundled GRH0652 portfolio bank on every startup so existing SQLite
+ # databases receive corrected/new keys; teacher-managed banks for other courses are untouched.
+ bank_dir=Path(__file__).resolve().parent/"banks";bundled=[]
+ for unit in ("ut1","ut2","ut3","ut4"):
+  p=bank_dir/f"{unit}_portfolio.json"
+  if p.exists():bundled.extend(json.loads(p.read_text(encoding="utf-8")).get("items",[]))
+ if bundled:
+  ids=[q["id"] for q in bundled]
+  marks=",".join("?" for _ in ids)
+  c.execute(f"DELETE FROM portfolio_banks WHERE course_id='GRH0652' AND item_id NOT IN ({marks})",ids)
+  for q in bundled:
+   c.execute("INSERT OR REPLACE INTO portfolio_banks(course_id,item_id,ce,kind,answer) VALUES(?,?,?,?,?)",("GRH0652",q["id"],q["ce"],q["kind"],json.dumps(q.get("answer"),ensure_ascii=False)))
  c.commit();return c
 
 DEFAULT={"portfolio_weight":40,"exam_weight":60,"pass_score":50,"ce_pass_percent":80,"ce_pass_score":50,"exam_enabled":False,"exam_questions_per_ce":3,"exam_minutes":45,"require_both_instruments":False}
