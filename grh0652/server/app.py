@@ -58,11 +58,11 @@ class RecoveryItem(BaseModel): id:str;ce:str;kind:str='choice';prompt:str;option
 class RecoveryBankIn(BaseModel): items:list[RecoveryItem]
 def auth(token):
  if not secrets.compare_digest(token or "",TEACHER_TOKEN): raise HTTPException(401,"Teacher token required")
-def config_row(c,course):
+def student_auth(token):\n if not token: raise HTTPException(401,"Student token required")\n c=con();r=c.execute("SELECT student_id FROM students WHERE token=?",(token,)).fetchone();c.close()\n if not r: raise HTTPException(401,"Invalid student token")\n return r["student_id"]\ndef require_student(claimed,token):\n student_id=student_auth(token)\n if claimed!=student_id: raise HTTPException(403,"Student identity mismatch")\n return student_id\ndef config_row(c,course):
  r=c.execute("SELECT config,version FROM configs WHERE course_id=?",(course,)).fetchone()
  return (json.loads(r["config"]),r["version"]) if r else (DEFAULT,0)
 
-@app.get("/health")
+@app.post("/api/teacher/students/{student_id}")\ndef create_student(student_id:str,x_teacher_token:str|None=Header(None)):\n auth(x_teacher_token);token=secrets.token_urlsafe(32);c=con();c.execute("INSERT OR REPLACE INTO students(student_id,token,created_at) VALUES(?,?,?)",(student_id,token,now()));c.commit();c.close();return {"student_id":student_id,"token":token}\n\n@app.get("/health")
 def health(): return {"ok":True}
 @app.get("/api/config/{course_id}")
 def get_config(course_id:str):
