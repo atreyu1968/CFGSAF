@@ -40,11 +40,16 @@ CREATE TABLE IF NOT EXISTS recovery_results(student_id TEXT,course_id TEXT,score
   p=bank_dir/f"{unit}_portfolio.json"
   if p.exists():bundled.extend(json.loads(p.read_text(encoding="utf-8")).get("items",[]))
  if bundled:
-  ids=[q["id"] for q in bundled]
-  marks=",".join("?" for _ in ids)
-  c.execute(f"DELETE FROM portfolio_banks WHERE course_id='GRH0652' AND item_id NOT IN ({marks})",ids)
-  for q in bundled:
-   c.execute("INSERT OR REPLACE INTO portfolio_banks(course_id,item_id,ce,kind,answer) VALUES(?,?,?,?,?)",("GRH0652",q["id"],q["ce"],q["kind"],json.dumps(q.get("answer"),ensure_ascii=False)))
+  fingerprint=json.dumps([(q["id"],q["ce"],q["kind"],q.get("answer")) for q in bundled],ensure_ascii=False,separators=(",",":"))
+  import hashlib
+  version=hashlib.sha256(fingerprint.encode()).hexdigest()
+  c.execute("CREATE TABLE IF NOT EXISTS bank_versions(course_id TEXT PRIMARY KEY,version TEXT NOT NULL,updated_at TEXT)")
+  current=c.execute("SELECT version FROM bank_versions WHERE course_id='GRH0652'").fetchone()
+  if not current or current["version"]!=version:
+   ids=[q["id"] for q in bundled];marks=",".join("?" for _ in ids)
+   c.execute(f"DELETE FROM portfolio_banks WHERE course_id='GRH0652' AND item_id NOT IN ({marks})",ids)
+   for q in bundled:c.execute("INSERT OR REPLACE INTO portfolio_banks(course_id,item_id,ce,kind,answer) VALUES(?,?,?,?,?)",("GRH0652",q["id"],q["ce"],q["kind"],json.dumps(q.get("answer"),ensure_ascii=False)))
+   c.execute("INSERT OR REPLACE INTO bank_versions(course_id,version,updated_at) VALUES(?,?,?)",("GRH0652",version,now()))
  c.commit();return c
 
 DEFAULT={"portfolio_weight":40,"exam_weight":60,"pass_score":50,"ce_pass_percent":80,"ce_pass_score":50,"exam_enabled":False,"exam_questions_per_ce":3,"exam_minutes":45,"require_both_instruments":False}
