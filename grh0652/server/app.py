@@ -20,7 +20,9 @@ CREATE TABLE IF NOT EXISTS results(student_id TEXT,course_id TEXT,portfolio REAL
 CREATE TABLE IF NOT EXISTS configs(course_id TEXT PRIMARY KEY,config TEXT,version INTEGER NOT NULL DEFAULT 1,updated_at TEXT);
 CREATE TABLE IF NOT EXISTS attempts(id INTEGER PRIMARY KEY AUTOINCREMENT,student_id TEXT NOT NULL,course_id TEXT NOT NULL,kind TEXT NOT NULL,item_id TEXT NOT NULL,attempt_no INTEGER NOT NULL,status TEXT NOT NULL,started_at TEXT NOT NULL,submitted_at TEXT,payload TEXT,UNIQUE(student_id,course_id,kind,item_id,attempt_no));
 CREATE TABLE IF NOT EXISTS evaluation_closures(course_id TEXT PRIMARY KEY,closed_at TEXT,config_version INTEGER);
-CREATE TABLE IF NOT EXISTS recovery_plans(student_id TEXT,course_id TEXT,criteria TEXT,status TEXT,created_at TEXT,PRIMARY KEY(student_id,course_id));""");return c
+CREATE TABLE IF NOT EXISTS recovery_plans(student_id TEXT,course_id TEXT,criteria TEXT,status TEXT,created_at TEXT,PRIMARY KEY(student_id,course_id));
+CREATE TABLE IF NOT EXISTS exam_banks(course_id TEXT,question_id TEXT,ce TEXT,question TEXT,options TEXT,answer TEXT,PRIMARY KEY(course_id,question_id));
+CREATE TABLE IF NOT EXISTS exam_versions(attempt_id INTEGER PRIMARY KEY,student_id TEXT,course_id TEXT,version TEXT,questions TEXT,answers TEXT,created_at TEXT);""");return c
 
 DEFAULT={"portfolio_weight":40,"exam_weight":60,"pass_score":50,"ce_pass_percent":80,"ce_pass_score":50,"exam_enabled":False,"exam_questions_per_ce":3,"exam_minutes":45,"require_both_instruments":False}
 LIMITS={"practice":3,"portfolio":2,"exam":1,"recovery":1}
@@ -33,6 +35,8 @@ class ConfigIn(BaseModel):
 class AttemptIn(BaseModel): student_id:str;course_id:str;kind:str;item_id:str;payload:dict|None=None
 class SubmitAttempt(BaseModel): payload:dict|None=None
 class AnswerIn(BaseModel): response:object|None=None;ce:str|None=None
+class BankQuestion(BaseModel): id:str;ce:str;q:str;options:list[str];answer:object
+class BankIn(BaseModel): questions:list[BankQuestion]
 def auth(token):
  if not secrets.compare_digest(token or "",TEACHER_TOKEN): raise HTTPException(401,"Teacher token required")
 def config_row(c,course):
@@ -85,6 +89,39 @@ def recovery(student_id:str,course_id:str):
  c=con();r=c.execute("SELECT criteria,status,created_at FROM recovery_plans WHERE student_id=? AND course_id=?",(student_id,course_id)).fetchone();c.close()
  if not r:return {"plan":None}
  return {"plan":{"criteria":json.loads(r["criteria"] or "[]"),"status":r["status"],"created_at":r["created_at"]}}
+
+@app.put("/api/teacher/exam-bank/{course_id}")
+def put_exam_bank(course_id:str,x:BankIn,x_teacher_token:str|None=Header(None)):
+ auth(x_teacher_token);c=con();c.execute("DELETE FROM exam_banks WHERE course_id=?",(course_id,))
+ for q in x.questions:c.execute("INSERT INTO exam_banks VALUES(?,?,?,?,?,?)",(course_id,q.id,q.ce,q.q,json.dumps(q.options,ensure_ascii=False),json.dumps(q.answer,ensure_ascii=False)))
+ c.commit();c.close();return {"questions":len(x.questions)}
+
+@app.post("/api/exam/start")
+def exam_start(x:AttemptIn):
+ if x.kind!="exam": raise HTTPException(400,"kind debe ser exam")
+ gate=start_attempt(x);c=con();old=c.execute("SELECT questions FROM exam_versions WHERE attempt_id=?",(gate["id"],)).fetchone()
+ if old:c.close();return {"attempt_id":gate["id"],"attempt":gate["attempt"],"questions":json.loads(old["questions"]),"resumed":True}
+ cfg,_=config_row(c,x.course_id);rows=[dict(r) for r in c.execute("SELECT * FROM exam_banks WHERE course_id=? ORDER BY ce,question_id",(x.course_id,))]
+ if not rows:c.close();raise HTTPException(409,"Banco de examen no cargado en el servidor")
+ import random,hashlib
+ seed=int(hashlib.sha256((x.student_id+"|"+x.course_id+"|"+str(gate["id"])).encode()).hexdigest()[:16],16);rnd=random.Random(seed);by={}
+ for r in rows:by.setdefault(r["ce"],[]).append(r)
+ chosen=[]
+ for ce,a in by.items():rnd.shuffle(a);chosen+=a[:max(1,int(cfg.get("exam_questions_per_ce",3)))]
+ rnd.shuffle(chosen);public=[];keys={}
+ for r in chosen:
+  opts=json.loads(r["options"]);correct=json.loads(r["answer"]);pairs=list(enumerate(opts));rnd.shuffle(pairs);public.append({"id":r["question_id"],"ce":r["ce"],"q":r["question"],"options":[p[1] for p in pairs]});keys[r["question_id"]]=pairs.index(next(p for p in pairs if p[0]==correct))
+ version=secrets.token_hex(8);c.execute("INSERT INTO exam_versions VALUES(?,?,?,?,?,?,?)",(gate["id"],x.student_id,x.course_id,version,json.dumps(public,ensure_ascii=False),json.dumps(keys),now()));c.commit();c.close();return {"attempt_id":gate["id"],"attempt":gate["attempt"],"version":version,"questions":public,"resumed":False}
+
+@app.post("/api/exam/{attempt_id}/submit")
+def exam_submit(attempt_id:int,x:SubmitAttempt):
+ c=con();v=c.execute("SELECT * FROM exam_versions WHERE attempt_id=?",(attempt_id,)).fetchone();a=c.execute("SELECT * FROM attempts WHERE id=?",(attempt_id,)).fetchone()
+ if not v or not a:c.close();raise HTTPException(404,"Examen no encontrado")
+ if a["status"]!="started":c.close();raise HTTPException(409,"Examen ya entregado")
+ answers=(x.payload or {}).get("answers",{});keys=json.loads(v["answers"]);questions=json.loads(v["questions"]);by={};good=0
+ for q in questions:
+  ok=answers.get(q["id"])==keys.get(q["id"]);good+=int(ok);d=by.setdefault(q["ce"],{"ok":0,"n":0});d["n"]+=1;d["ok"]+=int(ok)
+ score=round(good/max(1,len(questions))*100,2);c.execute("UPDATE attempts SET status='submitted',submitted_at=?,payload=? WHERE id=?",(now(),json.dumps({"answers":answers,"score":score,"by_ce":by},ensure_ascii=False),attempt_id));c.commit();c.close();return {"score":score,"by_ce":by,"answered":len(answers),"total":len(questions)}
 
 @app.put("/api/state/{student_id}")
 def put_state(student_id:str,x:StateIn):
