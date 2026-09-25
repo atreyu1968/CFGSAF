@@ -133,3 +133,15 @@ def test_missing_ce_cannot_disappear_from_authoritative_denominator():
  forged={"student_id":"u","course_id":"UNIVERSE","portfolio":100,"exam":100,"final":100,"ce_passed":2,"ce_total":2,"ra_passed":True,"recovery":[]}
  r=client.post("/api/result",json=forged);assert r.status_code==200,r.text
  d=r.json();assert d["ce_total"]==2;assert d["ce"]["c2"]["portfolio"]==0;assert d["ce"]["c2"]["passed"] is False;assert "c2" in d["recovery"]
+
+def test_portfolio_score_is_server_authoritative():
+ bank={"items":[{"id":"p1","ce":"c1","kind":"choice","prompt":"P","options":["A","B"],"answer":1}]}
+ assert client.put("/api/teacher/portfolio-bank/PORT",headers=H,json=bank).status_code==200
+ forged={"student_id":"s","course_id":"PORT","kind":"portfolio","ce":"c1","item_id":"p1","attempt":1,"response":0,"correct":True,"score":100,"payload":{}}
+ r=client.post("/api/evidence",json=forged);assert r.status_code==200,r.text
+ assert r.json()["correct"] is False and r.json()["score"]==0
+ c=module.con();row=c.execute("SELECT correct,score FROM evidence WHERE student_id='s' AND course_id='PORT' AND item_id='p1'").fetchone();c.close()
+ assert row["correct"]==0 and row["score"]==0
+ forged["response"]=1;forged["correct"]=False;forged["score"]=0;forged["attempt"]=2
+ r=client.post("/api/evidence",json=forged);assert r.status_code==200
+ assert r.json()["correct"] is True and r.json()["score"]==100
