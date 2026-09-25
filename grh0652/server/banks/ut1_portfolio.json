@@ -1,0 +1,757 @@
+{
+  "items": [
+    {
+      "id": "1a1",
+      "ce": "1.a",
+      "kind": "choice",
+      "prompt": "Una empresa quiere saber qué norma regula con carácter básico la relación laboral ordinaria. ¿Qué fuente debe consultar?",
+      "options": [
+        "Estatuto de los Trabajadores",
+        "Padrón municipal",
+        "Plan contable",
+        "Contrato de alquiler"
+      ],
+      "answer": 0,
+      "feedback": "El Estatuto de los Trabajadores es la norma legal básica de referencia para la relación laboral ordinaria."
+    },
+    {
+      "id": "1a2",
+      "ce": "1.a",
+      "kind": "multi",
+      "prompt": "Selecciona todas las fuentes que pueden ser relevantes al preparar una contratación laboral.",
+      "options": [
+        "Estatuto de los Trabajadores",
+        "Convenio colectivo aplicable",
+        "Contrato de trabajo",
+        "Catálogo de mobiliario"
+      ],
+      "answer": [
+        0,
+        1,
+        2
+      ],
+      "feedback": "La contratación debe analizar la norma legal, el convenio y el contrato; un catálogo de mobiliario no es una fuente laboral."
+    },
+    {
+      "id": "1a3",
+      "ce": "1.a",
+      "kind": "tf",
+      "prompt": "Una cláusula contractual puede reducir un derecho mínimo imperativo reconocido por una norma superior si ambas partes la firman.",
+      "options": [],
+      "answer": false,
+      "feedback": "La firma no convierte en válida una cláusula que empeora un mínimo indisponible establecido por una norma superior."
+    },
+    {
+      "id": "1a4",
+      "ce": "1.a",
+      "kind": "order",
+      "prompt": "Ordena una secuencia profesional para determinar la regulación aplicable antes de contratar.",
+      "options": [],
+      "answer": [
+        "hecho",
+        "ley",
+        "conv",
+        "contr"
+      ],
+      "feedback": "Primero se define el caso; después se localiza la norma y el convenio; solo al final se formaliza el contrato."
+    },
+    {
+      "id": "1a5",
+      "ce": "1.a",
+      "kind": "match",
+      "prompt": "Relaciona cada fuente con su función principal.",
+      "options": [],
+      "answer": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "feedback": "Cada fuente opera en un nivel distinto y debe respetar la jerarquía normativa."
+    },
+    {
+      "id": "1a6",
+      "ce": "1.a",
+      "kind": "choice",
+      "prompt": "Encuentras una plantilla de contrato de 2022 en un blog y una versión consolidada vigente del Estatuto en el BOE. ¿Cuál debe prevalecer para tomar la decisión jurídica?",
+      "options": [
+        "La plantilla antigua porque ya está redactada",
+        "La fuente oficial vigente y después adaptar el modelo",
+        "El blog si aparece primero en el buscador",
+        "Cualquiera de las dos"
+      ],
+      "answer": 1,
+      "feedback": "En materia laboral debe comprobarse la vigencia en fuentes oficiales antes de utilizar modelos o plantillas."
+    },
+    {
+      "id": "1b1",
+      "ce": "1.b",
+      "kind": "order",
+      "prompt": "Ordena las fases generales de una contratación desde la necesidad hasta el archivo.",
+      "options": [],
+      "answer": [
+        "nec",
+        "anal",
+        "form",
+        "alta",
+        "arch"
+      ],
+      "feedback": "La contratación es un proceso: necesidad, análisis, formalización, comunicación/alta y archivo."
+    },
+    {
+      "id": "1b2",
+      "ce": "1.b",
+      "kind": "choice",
+      "prompt": "¿Qué debe ocurrir antes de cumplimentar un modelo de contrato?",
+      "options": [
+        "Analizar la necesidad y elegir la modalidad adecuada",
+        "Archivar el contrato",
+        "Emitir una nómina",
+        "Tramitar una baja"
+      ],
+      "answer": 0,
+      "feedback": "El modelo se cumplimenta después de haber determinado jurídicamente qué modalidad corresponde."
+    },
+    {
+      "id": "1b3",
+      "ce": "1.b",
+      "kind": "match",
+      "prompt": "Relaciona cada fase con la actuación que mejor la representa.",
+      "options": [],
+      "answer": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "feedback": "Cada actuación pertenece a una fase distinta del procedimiento."
+    },
+    {
+      "id": "1b4",
+      "ce": "1.b",
+      "kind": "multi",
+      "prompt": "¿Qué actuaciones deben estar resueltas antes de considerar cerrada la incorporación?",
+      "options": [
+        "Contrato y anexos correctamente formalizados",
+        "Alta y comunicaciones procedentes",
+        "Justificantes archivados",
+        "Destruir toda evidencia de los trámites"
+      ],
+      "answer": [
+        0,
+        1,
+        2
+      ],
+      "feedback": "El proceso no termina al firmar: deben completarse las comunicaciones y conservarse los justificantes."
+    },
+    {
+      "id": "1b5",
+      "ce": "1.b",
+      "kind": "tf",
+      "prompt": "El archivo del expediente forma parte del proceso administrativo de contratación.",
+      "options": [],
+      "answer": true,
+      "feedback": "El expediente debe conservar la documentación y justificantes necesarios para que el proceso sea trazable."
+    },
+    {
+      "id": "1b6",
+      "ce": "1.b",
+      "kind": "choice",
+      "prompt": "Una empresa ya ha firmado el contrato, pero aún no ha realizado el alta ni la comunicación correspondiente. ¿En qué situación está el procedimiento?",
+      "options": [
+        "Completamente cerrado",
+        "Incompleto: faltan fases administrativas",
+        "No existe contrato",
+        "Solo falta la nómina"
+      ],
+      "answer": 1,
+      "feedback": "La firma es una fase, pero no sustituye las obligaciones de alta, comunicación y archivo."
+    },
+    {
+      "id": "1c1",
+      "ce": "1.c",
+      "kind": "match",
+      "prompt": "Relaciona organismo y función habitual.",
+      "options": [],
+      "answer": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "feedback": "Distinguir las competencias evita remitir trámites al organismo equivocado."
+    },
+    {
+      "id": "1c2",
+      "ce": "1.c",
+      "kind": "choice",
+      "prompt": "¿Qué organismo gestiona habitualmente el alta de una persona trabajadora en el Régimen General?",
+      "options": [
+        "TGSS",
+        "SEPE",
+        "AEAT",
+        "Cabildo"
+      ],
+      "answer": 0,
+      "feedback": "La Tesorería General de la Seguridad Social gestiona afiliación, altas y bajas."
+    },
+    {
+      "id": "1c3",
+      "ce": "1.c",
+      "kind": "choice",
+      "prompt": "¿A qué organismo estatal se comunica el contenido de los contratos por los sistemas habilitados?",
+      "options": [
+        "SEPE",
+        "INSS",
+        "TGSS exclusivamente",
+        "Registro Mercantil"
+      ],
+      "answer": 0,
+      "feedback": "El SEPE recibe las comunicaciones de contratación mediante sus sistemas habilitados."
+    },
+    {
+      "id": "1c4",
+      "ce": "1.c",
+      "kind": "tf",
+      "prompt": "El INSS es el organismo al que se comunica ordinariamente el alta inicial de un trabajador por cuenta ajena.",
+      "options": [],
+      "answer": false,
+      "feedback": "El alta se tramita ante la TGSS; el INSS tiene funciones principalmente vinculadas a prestaciones y gestión de la acción protectora."
+    },
+    {
+      "id": "1c5",
+      "ce": "1.c",
+      "kind": "multi",
+      "prompt": "Selecciona actuaciones que pueden relacionarse con el Servicio Canario de Empleo.",
+      "options": [
+        "Consultar convocatorias de incentivos o programas de empleo",
+        "Obtener información sobre políticas activas de empleo",
+        "Gestionar determinados recursos de orientación y empleo",
+        "Asignar el número de afiliación a la Seguridad Social"
+      ],
+      "answer": [
+        0,
+        1,
+        2
+      ],
+      "feedback": "El SCE desarrolla políticas activas de empleo; la afiliación corresponde a la Seguridad Social."
+    },
+    {
+      "id": "1c6",
+      "ce": "1.c",
+      "kind": "choice",
+      "prompt": "Una asesoría debe tramitar el alta, comunicar el contrato y consultar un programa autonómico de incentivos. ¿Qué combinación es correcta?",
+      "options": [
+        "TGSS + SEPE + SCE",
+        "INSS + AEAT + Ayuntamiento",
+        "SEPE + Catastro + SCE",
+        "TGSS + Registro Mercantil + Cabildo"
+      ],
+      "answer": 0,
+      "feedback": "Las tres actuaciones se relacionan respectivamente con TGSS, SEPE y Servicio Canario de Empleo."
+    },
+    {
+      "id": "1d1",
+      "ce": "1.d",
+      "kind": "choice",
+      "prompt": "Una empresa necesita cubrir de forma estable un puesto estructural. ¿Qué modalidad es la referencia general?",
+      "options": [
+        "Contrato indefinido",
+        "Contrato temporal sin causa",
+        "Contrato de sustitución",
+        "Beca sin contrato"
+      ],
+      "answer": 0,
+      "feedback": "El contrato se presume indefinido y la necesidad estructural encaja, con carácter general, en contratación indefinida."
+    },
+    {
+      "id": "1d2",
+      "ce": "1.d",
+      "kind": "choice",
+      "prompt": "Una actividad hotelera se repite cada temporada y existe una necesidad intermitente recurrente. ¿Qué figura debe analizarse especialmente?",
+      "options": [
+        "Fijo-discontinuo",
+        "Temporal para probar",
+        "Contrato mercantil",
+        "Sustitución sin persona sustituida"
+      ],
+      "answer": 0,
+      "feedback": "El fijo-discontinuo es indefinido y se utiliza para actividades estacionales o intermitentes en los supuestos legales."
+    },
+    {
+      "id": "1d3",
+      "ce": "1.d",
+      "kind": "multi",
+      "prompt": "Según el esquema actual de contratación, selecciona categorías generales de contratos laborales.",
+      "options": [
+        "Indefinido",
+        "Temporal causal",
+        "Formativo",
+        "Contrato por obra y servicio como modalidad ordinaria vigente"
+      ],
+      "answer": [
+        0,
+        1,
+        2
+      ],
+      "feedback": "La contratación actual se articula en torno a indefinidos, temporales causales y formativos; obra y servicio dejó de ser modalidad ordinaria vigente."
+    },
+    {
+      "id": "1d4",
+      "ce": "1.d",
+      "kind": "tf",
+      "prompt": "El contrato fijo-discontinuo es una modalidad de contratación indefinida.",
+      "options": [],
+      "answer": true,
+      "feedback": "La relación fijo-discontinua tiene naturaleza indefinida aunque la prestación de servicios sea intermitente."
+    },
+    {
+      "id": "1d5",
+      "ce": "1.d",
+      "kind": "match",
+      "prompt": "Relaciona modalidad y rasgo principal.",
+      "options": [],
+      "answer": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "feedback": "La elección debe responder a la causa y finalidad reales de la contratación."
+    },
+    {
+      "id": "1d6",
+      "ce": "1.d",
+      "kind": "choice",
+      "prompt": "¿Qué dato define específicamente un contrato a tiempo parcial?",
+      "options": [
+        "Una jornada inferior a la de una persona comparable a tiempo completo",
+        "Que solo se trabaje en verano",
+        "Que el contrato sea siempre temporal",
+        "Que no exista convenio"
+      ],
+      "answer": 0,
+      "feedback": "El tiempo parcial se refiere a la duración de la jornada, no a la intermitencia o temporalidad."
+    },
+    {
+      "id": "1e1",
+      "ce": "1.e",
+      "kind": "choice",
+      "prompt": "Una asesoría incorpora de forma permanente a una administrativa para tareas estructurales. ¿Qué propuesta es la más coherente?",
+      "options": [
+        "Indefinido ordinario, salvo particularidad legal",
+        "Temporal de seis meses para probar",
+        "Sustitución",
+        "Formación en alternancia sin formación"
+      ],
+      "answer": 0,
+      "feedback": "Una necesidad permanente y estructural apunta con carácter general a contratación indefinida."
+    },
+    {
+      "id": "1e2",
+      "ce": "1.e",
+      "kind": "choice",
+      "prompt": "Una trabajadora está de baja con derecho a reserva de puesto y la empresa necesita cubrir sus funciones. ¿Qué modalidad debe analizarse?",
+      "options": [
+        "Contrato de sustitución",
+        "Indefinido fijo-discontinuo",
+        "Temporal sin causa",
+        "Prácticas no laborales"
+      ],
+      "answer": 0,
+      "feedback": "La sustitución está prevista para cubrir a una persona con derecho a reserva en los supuestos legales."
+    },
+    {
+      "id": "1e3",
+      "ce": "1.e",
+      "kind": "choice",
+      "prompt": "Un hotel tiene cada año una campaña estacional recurrente con periodos de actividad e inactividad. ¿Qué figura encaja mejor?",
+      "options": [
+        "Fijo-discontinuo",
+        "Temporal por costumbre cada año",
+        "Contrato mercantil",
+        "Indefinido a tiempo completo necesariamente todo el año"
+      ],
+      "answer": 0,
+      "feedback": "La recurrencia estacional o intermitente es un supuesto característico para analizar el fijo-discontinuo."
+    },
+    {
+      "id": "1e4",
+      "ce": "1.e",
+      "kind": "choice",
+      "prompt": "Una empresa sufre un incremento ocasional e imprevisible de pedidos durante unas semanas, bien documentado y no estructural. ¿Qué modalidad podría proceder si se cumplen los requisitos legales?",
+      "options": [
+        "Temporal por circunstancias de la producción",
+        "Fijo-discontinuo automáticamente",
+        "Sustitución",
+        "Contrato sin alta"
+      ],
+      "answer": 0,
+      "feedback": "Las circunstancias de la producción pueden justificar temporalidad cuando existe la causa legal y se documenta su conexión con la duración."
+    },
+    {
+      "id": "1e5",
+      "ce": "1.e",
+      "kind": "choice",
+      "prompt": "Una persona estudia FP y la empresa quiere compatibilizar trabajo retribuido con su proceso formativo coordinado. ¿Qué contrato debe valorarse?",
+      "options": [
+        "Formación en alternancia",
+        "Sustitución",
+        "Temporal sin causa",
+        "Indefinido fijo-discontinuo por definición"
+      ],
+      "answer": 0,
+      "feedback": "La formación en alternancia combina actividad laboral retribuida y proceso formativo en los términos legales."
+    },
+    {
+      "id": "1e6",
+      "ce": "1.e",
+      "kind": "choice",
+      "prompt": "Una persona acaba de obtener una titulación y se pretende que adquiera práctica profesional adecuada a ese nivel de estudios. ¿Qué modalidad formativa debe analizarse?",
+      "options": [
+        "Contrato formativo para la obtención de práctica profesional",
+        "Sustitución",
+        "Temporal por vacaciones siempre",
+        "Fijo-discontinuo"
+      ],
+      "answer": 0,
+      "feedback": "Existe una modalidad formativa específica orientada a la obtención de práctica profesional adecuada al nivel de estudios."
+    },
+    {
+      "id": "1f1",
+      "ce": "1.f",
+      "kind": "choice",
+      "prompt": "Antes de aplicar un convenio colectivo, ¿qué debe comprobarse?",
+      "options": [
+        "Ámbitos funcional, territorial, personal y temporal",
+        "Solo la portada",
+        "Solo el salario base",
+        "Que tenga muchas páginas"
+      ],
+      "answer": 0,
+      "feedback": "La aplicabilidad depende de sus ámbitos y de su vigencia."
+    },
+    {
+      "id": "1f2",
+      "ce": "1.f",
+      "kind": "multi",
+      "prompt": "¿Qué materias puede concretar habitualmente un convenio colectivo?",
+      "options": [
+        "Clasificación profesional",
+        "Jornada y descansos",
+        "Tablas salariales y complementos",
+        "Número de DNI de cada trabajador"
+      ],
+      "answer": [
+        0,
+        1,
+        2
+      ],
+      "feedback": "Los convenios regulan condiciones colectivas; no contienen datos personales individuales de la plantilla."
+    },
+    {
+      "id": "1f3",
+      "ce": "1.f",
+      "kind": "tf",
+      "prompt": "El periodo de prueba puede estar condicionado por lo previsto en el convenio colectivo aplicable.",
+      "options": [],
+      "answer": true,
+      "feedback": "La regulación legal remite en determinados aspectos a la negociación colectiva, por lo que debe revisarse el convenio."
+    },
+    {
+      "id": "1f4",
+      "ce": "1.f",
+      "kind": "match",
+      "prompt": "Relaciona ámbito del convenio y pregunta de comprobación.",
+      "options": [],
+      "answer": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "feedback": "Los cuatro ámbitos ayudan a determinar si el convenio es realmente aplicable."
+    },
+    {
+      "id": "1f5",
+      "ce": "1.f",
+      "kind": "choice",
+      "prompt": "Una empresa está en Tenerife, pero realiza una actividad distinta a la del convenio que el administrativo suele usar. ¿Qué debe hacer?",
+      "options": [
+        "Comprobar el ámbito funcional y localizar el convenio correcto",
+        "Aplicar el convenio habitual por comodidad",
+        "No aplicar convenio alguno",
+        "Elegir el que tenga salarios más bajos"
+      ],
+      "answer": 0,
+      "feedback": "La actividad real de la empresa y los ámbitos del convenio determinan su aplicabilidad."
+    },
+    {
+      "id": "1f6",
+      "ce": "1.f",
+      "kind": "choice",
+      "prompt": "El contrato individual fija un salario inferior al mínimo de convenio para el grupo profesional correctamente asignado. ¿Qué debe hacer el técnico?",
+      "options": [
+        "Corregirlo para respetar el mínimo aplicable",
+        "Mantenerlo si el trabajador firma",
+        "Ocultarlo en un anexo",
+        "Compensarlo con días libres sin revisar norma"
+      ],
+      "answer": 0,
+      "feedback": "El contrato individual debe respetar los mínimos establecidos por la normativa y convenio aplicables."
+    },
+    {
+      "id": "1g1",
+      "ce": "1.g",
+      "kind": "match",
+      "prompt": "Relaciona documento y finalidad.",
+      "options": [],
+      "answer": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "feedback": "Cada documento cumple una función distinta en la trazabilidad del proceso."
+    },
+    {
+      "id": "1g2",
+      "ce": "1.g",
+      "kind": "choice",
+      "prompt": "¿Qué comprobación es prioritaria antes de firmar un contrato?",
+      "options": [
+        "Que datos, jornada, salario, modalidad y convenio sean coherentes",
+        "Que el archivo tenga un color concreto",
+        "Que el documento ocupe una sola página",
+        "Que no tenga anexos"
+      ],
+      "answer": 0,
+      "feedback": "La revisión debe centrarse en la exactitud y coherencia jurídica y documental."
+    },
+    {
+      "id": "1g3",
+      "ce": "1.g",
+      "kind": "multi",
+      "prompt": "Selecciona documentos o evidencias que conviene conservar en el expediente de contratación.",
+      "options": [
+        "Contrato firmado",
+        "Anexos aplicables",
+        "Justificantes de comunicaciones",
+        "Contraseñas personales del certificado digital"
+      ],
+      "answer": [
+        0,
+        1,
+        2
+      ],
+      "feedback": "Las contraseñas personales no deben archivarse en el expediente; los documentos y justificantes sí deben conservarse conforme a las obligaciones aplicables."
+    },
+    {
+      "id": "1g4",
+      "ce": "1.g",
+      "kind": "tf",
+      "prompt": "Una comunicación telemática sin guardar justificante dificulta demostrar que el trámite se realizó correctamente.",
+      "options": [],
+      "answer": true,
+      "feedback": "El justificante aporta trazabilidad y permite acreditar fecha, contenido o resultado del trámite."
+    },
+    {
+      "id": "1g5",
+      "ce": "1.g",
+      "kind": "order",
+      "prompt": "Ordena una secuencia de control documental.",
+      "options": [],
+      "answer": [
+        "datos",
+        "cumpl",
+        "rev",
+        "firma",
+        "com",
+        "arch"
+      ],
+      "feedback": "El control documental sigue una secuencia de preparación, revisión, formalización, comunicación y archivo."
+    },
+    {
+      "id": "1g6",
+      "ce": "1.g",
+      "kind": "choice",
+      "prompt": "Detectas que el grupo profesional del contrato no coincide con las funciones reales descritas en la oferta. ¿Qué actuación es correcta?",
+      "options": [
+        "Detener la formalización y revisar clasificación y convenio",
+        "Firmar y corregirlo solo si hay una reclamación",
+        "Borrar la descripción del puesto",
+        "Cambiar el DNI del trabajador"
+      ],
+      "answer": 0,
+      "feedback": "La documentación debe reflejar de forma coherente la realidad del puesto y la clasificación aplicable."
+    },
+    {
+      "id": "1h1",
+      "ce": "1.h",
+      "kind": "choice",
+      "prompt": "¿Qué canal se asocia específicamente con la comunicación electrónica de contratos al SEPE?",
+      "options": [
+        "Contrat@ o sistema habilitado por el SEPE",
+        "Registro Mercantil",
+        "Catastro",
+        "Portal de becas"
+      ],
+      "answer": 0,
+      "feedback": "El SEPE dispone de sistemas específicos para la comunicación de contratos."
+    },
+    {
+      "id": "1h2",
+      "ce": "1.h",
+      "kind": "choice",
+      "prompt": "¿Qué sistema se asocia a la comunicación telemática de datos de afiliación, altas y bajas con la TGSS?",
+      "options": [
+        "Sistema RED",
+        "Contrat@",
+        "Sede del Catastro",
+        "Registro de la Propiedad"
+      ],
+      "answer": 0,
+      "feedback": "Sistema RED es una plataforma esencial para trámites con la Tesorería General de la Seguridad Social."
+    },
+    {
+      "id": "1h3",
+      "ce": "1.h",
+      "kind": "multi",
+      "prompt": "¿Qué buenas prácticas deben aplicarse en comunicaciones telemáticas?",
+      "options": [
+        "Comprobar destinatario y datos antes de enviar",
+        "Guardar justificantes y acuses",
+        "Respetar plazos",
+        "Compartir claves de acceso con todo el equipo"
+      ],
+      "answer": [
+        0,
+        1,
+        2
+      ],
+      "feedback": "La seguridad y trazabilidad exigen revisar, conservar justificantes y respetar plazos; las credenciales no deben compartirse indiscriminadamente."
+    },
+    {
+      "id": "1h4",
+      "ce": "1.h",
+      "kind": "tf",
+      "prompt": "Una llamada telefónica informal sustituye siempre cualquier comunicación oficial exigida por la normativa.",
+      "options": [],
+      "answer": false,
+      "feedback": "Cuando la norma exige un canal o forma concreta debe utilizarse y conservarse la evidencia correspondiente."
+    },
+    {
+      "id": "1h5",
+      "ce": "1.h",
+      "kind": "match",
+      "prompt": "Relaciona comunicación y canal habitual.",
+      "options": [],
+      "answer": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "feedback": "La vía depende del destinatario y del trámite; no existe un único canal para todo."
+    },
+    {
+      "id": "1h6",
+      "ce": "1.h",
+      "kind": "choice",
+      "prompt": "El sistema devuelve un error al comunicar un contrato. ¿Qué debe hacer el técnico?",
+      "options": [
+        "Revisar el error, corregir los datos y conservar la evidencia del trámite válido",
+        "Dar por hecho que se envió",
+        "Borrar el expediente",
+        "Enviar el contrato a cualquier organismo"
+      ],
+      "answer": 0,
+      "feedback": "Una comunicación solo debe considerarse completada cuando el sistema confirma el resultado correcto y se conserva el justificante."
+    },
+    {
+      "id": "1i1",
+      "ce": "1.i",
+      "kind": "choice",
+      "prompt": "¿Cuál es la función correcta de un programa de gestión laboral?",
+      "options": [
+        "Ayudar a confeccionar, registrar y archivar, manteniendo la revisión profesional",
+        "Decidir por sí solo qué contrato es legal",
+        "Sustituir el convenio colectivo",
+        "Eliminar la necesidad de proteger datos"
+      ],
+      "answer": 0,
+      "feedback": "El software automatiza tareas, pero la decisión jurídica y la verificación siguen siendo responsabilidad profesional."
+    },
+    {
+      "id": "1i2",
+      "ce": "1.i",
+      "kind": "multi",
+      "prompt": "Selecciona buenas prácticas de archivo digital laboral.",
+      "options": [
+        "Carpetas estructuradas por persona/proceso",
+        "Control de accesos",
+        "Nombres de archivo claros y fechas",
+        "Guardar documentación sensible en carpetas públicas"
+      ],
+      "answer": [
+        0,
+        1,
+        2
+      ],
+      "feedback": "El archivo profesional debe ser ordenado, trazable y protegido; la exposición pública de datos es inadecuada."
+    },
+    {
+      "id": "1i3",
+      "ce": "1.i",
+      "kind": "tf",
+      "prompt": "Si el software genera un contrato sin errores técnicos, no es necesario revisar modalidad, convenio ni datos.",
+      "options": [],
+      "answer": false,
+      "feedback": "La ausencia de errores técnicos no garantiza la corrección jurídica ni documental del contenido."
+    },
+    {
+      "id": "1i4",
+      "ce": "1.i",
+      "kind": "match",
+      "prompt": "Relaciona función digital y objetivo.",
+      "options": [],
+      "answer": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "feedback": "Las herramientas digitales deben mejorar eficiencia, seguridad y trazabilidad."
+    },
+    {
+      "id": "1i5",
+      "ce": "1.i",
+      "kind": "order",
+      "prompt": "Ordena un flujo digital seguro.",
+      "options": [],
+      "answer": [
+        "config",
+        "generar",
+        "verif",
+        "firm",
+        "reg",
+        "arch"
+      ],
+      "feedback": "El software se integra en un flujo de trabajo; siempre debe existir una fase de verificación antes del cierre."
+    },
+    {
+      "id": "1i6",
+      "ce": "1.i",
+      "kind": "choice",
+      "prompt": "Un compañero pide tu contraseña del certificado digital para “ir más rápido”. ¿Qué actuación es correcta?",
+      "options": [
+        "No compartir credenciales personales y seguir el procedimiento autorizado de acceso",
+        "Compartirla por mensajería",
+        "Escribirla en un post-it común",
+        "Desactivar los permisos"
+      ],
+      "answer": 0,
+      "feedback": "Las credenciales personales y certificados deben gestionarse con controles de seguridad y procedimientos autorizados."
+    }
+  ]
+}
