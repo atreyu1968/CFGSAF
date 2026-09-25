@@ -3,7 +3,7 @@
 const $=s=>document.querySelector(s), $$=s=>Array.from(document.querySelectorAll(s));
 const safe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const shuffle=a=>{const x=[...a];for(let i=x.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[x[i],x[j]]=[x[j],x[i]]}return x};
-let api=null,connected=false,examActive=false,lastIncident=0,autoSubmitPending=false,interactionIndex=0;
+let api=null,connected=false,examActive=false,lastIncident=0,autoSubmitPending=false,interactionIndex=0,portfolioBank={};
 let state={visited:[],mastered:[],best:0,attempts:0,examTaken:false,incidents:0,last:'inicio',practiceAttempts:{},portfolioAttempts:{},portfolioScores:{},examScore:null,ceExam:{},evaluationConfig:null};
 
 function findAPI(){
@@ -217,12 +217,25 @@ function installFormativePractice(){
   })
  })
 }
+async function loadSecurePortfolio(){
+ const ev=evidence();if(!ev||!ev.api||!ev.portfolio)return;
+ const r=await ev.portfolio('GRH0652');if(!r||r.error||!Array.isArray(r.items))return;
+ portfolioBank={};r.items.filter(q=>String(q.ce||'').startsWith('4.')).forEach(q=>{(portfolioBank[q.ce]||(portfolioBank[q.ce]=[])).push(q)});
+ CRITERIA.forEach(cr=>{const box=document.getElementById('ex-'+cr.id.replace('.',''));if(!box)return;box.innerHTML=(portfolioBank[cr.id]||[]).map((q,i)=>portfolioHTML(cr.id,q,i)).join('')});
+ installPortfolioRules();
+}
+function portfolioHTML(ce,q,i){
+ const id=q.id,type=q.kind||q.type;let body='';
+ if(type==='choice'||type==='multi')body=(q.options||[]).map((o,j)=>`<label class="option"><input type="${type==='multi'?'checkbox':'radio'}" name="ex-${id}" value="${j}"> ${safe(o)}</label>`).join('');
+ else if(type==='tf')body=`<label class="option"><input type="radio" name="ex-${id}" value="true"> Verdadero</label><label class="option"><input type="radio" name="ex-${id}" value="false"> Falso</label>`;
+ else body=`<textarea id="free-${id}" rows="4" placeholder="Escribe tu respuesta"></textarea>`;
+ return `<article class="exercise" id="card-${id}"><div class="type">Portfolio ${i+1} · ${safe(type)}</div><h3>${safe(q.prompt||q.q)}</h3>${body}<button class="btn primary check-ex" data-ce="${ce}" data-id="${id}" type="button">Entregar</button><div class="feedback hidden" id="fb-${id}"></div></article>`;
+}
+function portfolioAnswer(q){const id=q.id,type=q.kind||q.type;if(type==='choice'){const x=$(`input[name="ex-${id}"]:checked`);return x?Number(x.value):null}if(type==='tf'){const x=$(`input[name="ex-${id}"]:checked`);return x?(x.value==='true'):null}if(type==='multi'){const a=$$(`input[name="ex-${id}"]:checked`).map(x=>Number(x.value));return a.length?a:null}const x=document.getElementById('free-'+id);return x&&x.value.trim()?x.value.trim():null}
 function installPortfolioRules(){
  document.querySelectorAll('.nav-group').forEach(x=>{if(x.textContent.trim()==='Práctica por CE')x.textContent='Portafolio de Actividades'});
  const mh=document.querySelector('#practica-home h1');if(mh)mh.textContent='Portafolio de Actividades · evaluación por criterios';
- document.addEventListener('click',ev=>{const b=ev.target.closest('.check-ex');if(!b)return;const e=getEx(b.dataset.ce,b.dataset.id);if(!e)return;const id=e.id,n=state.portfolioAttempts[id]||0;if(n>=2){ev.preventDefault();ev.stopImmediatePropagation();alert('Esta actividad del portafolio ya ha consumido sus 2 intentos.');return}
-  const a=answerForExercise(e);if(a===null)return;const ok=correctExercise(e,a);state.portfolioAttempts[id]=n+1;
-  try{if(evidence()){const sent=evidence().event({kind:'portfolio',ce:b.dataset.ce,item_id:id,attempt:n+1,response:a,payload:{max_attempts:2}});Promise.resolve(sent).then(r=>{if(r&&typeof r.score==='number'){state.portfolioScores[id]=r.score;saveState();syncState()}}).catch(()=>{})}}catch(x){}
+ document.addEventListener('click',async ev=>{const b=ev.target.closest('.check-ex');if(!b)return;const q=(portfolioBank[b.dataset.ce]||[]).find(x=>x.id===b.dataset.id);if(!q)return;ev.preventDefault();ev.stopImmediatePropagation();const id=q.id,n=state.portfolioAttempts[id]||0;if(n>=2){alert('Esta actividad del portafolio ya ha consumido sus 2 intentos.');return}const a=portfolioAnswer(q);if(a===null){alert('Completa la actividad antes de entregar.');return}const api=evidence();if(!api||!api.api){alert('El portafolio evaluable requiere conexión con el servidor.');return}const gate=await api.startAttempt('portfolio',id,{ce:b.dataset.ce});if(!gate||gate.error){alert('No se puede registrar este intento: '+(gate?.error||'servidor no disponible'));return}await api.answerAttempt(gate.id,a,b.dataset.ce);const sent=await api.event({kind:'portfolio',ce:b.dataset.ce,item_id:id,attempt:n+1,response:a,payload:{max_attempts:2}});await api.submitAttempt(gate.id,{submitted:true});if(sent&&typeof sent.score==='number')state.portfolioScores[id]=sent.score;state.portfolioAttempts[id]=n+1;const fb=document.getElementById('fb-'+id);if(fb){fb.classList.remove('hidden','ok','bad');fb.textContent='Intento registrado. La corrección se ha realizado en el servidor.'}sync();
  },true)
 }
 function seededRandom(seed){let h=2166136261;for(let i=0;i<seed.length;i++){h^=seed.charCodeAt(i);h=Math.imul(h,16777619)}return()=>{h+=0x6D2B79F5;let t=h;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296}}
@@ -250,7 +263,7 @@ window.addEventListener('message',e=>{if(e.origin===location.origin&&e.data&&e.d
 window.addEventListener('beforeunload',finish);
 window.addEventListener('pagehide',sync);
 
-initSCORM();bindNav();renderPractice();installFormativePractice();installPortfolioRules();randomizeExam();bindSelfAssessment();bindExam();loadEvaluationConfig();loadRecovery();updateProgress();
+initSCORM();bindNav();renderPractice();installFormativePractice();loadSecurePortfolio();randomizeExam();bindSelfAssessment();bindExam();loadEvaluationConfig();loadRecovery();updateProgress();
 const start=state.last&&document.getElementById(state.last)?state.last:'inicio';$$('.screen').forEach(x=>x.classList.remove('active'));document.getElementById(start)?.classList.add('active');$$('.nav-btn').forEach(x=>x.classList.toggle('active',x.dataset.target===start));
 setInterval(sync,15000);
 })();
