@@ -75,7 +75,7 @@ def put_config(course_id:str,x:ConfigIn,x_teacher_token:str|None=Header(None)):
  if c.execute("SELECT 1 FROM evaluation_closures WHERE course_id=?",(course_id,)).fetchone(): c.close();raise HTTPException(409,"La evaluación está cerrada")
  _,v=config_row(c,course_id);v+=1;c.execute("INSERT OR REPLACE INTO configs(course_id,config,version,updated_at) VALUES(?,?,?,?)",(course_id,json.dumps(d),v,now()));c.commit();c.close();return {**d,"version":v}
 @app.post("/api/attempts/start")
-def start_attempt(x:AttemptIn):
+def start_attempt(x:AttemptIn,x_student_token:str|None=Header(None)):\n require_student(x.student_id,x_student_token)
  if x.kind not in LIMITS: raise HTTPException(400,"Tipo de intento no válido")
  c=con();c.execute("BEGIN IMMEDIATE")
  active=c.execute("SELECT * FROM attempts WHERE student_id=? AND course_id=? AND kind=? AND item_id=? AND status='started' ORDER BY attempt_no DESC LIMIT 1",(x.student_id,x.course_id,x.kind,x.item_id)).fetchone()
@@ -104,7 +104,7 @@ def answer_attempt(attempt_id:int,x:AnswerIn):
  c.commit();c.close();return {"ok":True,"attempt":r["attempt_no"]}
 
 @app.get("/api/recovery/{student_id}/{course_id}")
-def recovery(student_id:str,course_id:str):
+def recovery(student_id:str,course_id:str,x_student_token:str|None=Header(None)):\n require_student(student_id,x_student_token)
  c=con();r=c.execute("SELECT criteria,status,created_at FROM recovery_plans WHERE student_id=? AND course_id=?",(student_id,course_id)).fetchone();c.close()
  if not r:return {"plan":None}
  return {"plan":{"criteria":json.loads(r["criteria"] or "[]"),"status":r["status"],"created_at":r["created_at"]}}
@@ -116,7 +116,7 @@ def put_recovery_bank(course_id:str,x:RecoveryBankIn,x_teacher_token:str|None=He
  c.commit();c.close();return {"items":len(x.items)}
 
 @app.get("/api/recovery/{student_id}/{course_id}/content")
-def recovery_content(student_id:str,course_id:str):
+def recovery_content(student_id:str,course_id:str,x_student_token:str|None=Header(None)):\n require_student(student_id,x_student_token)
  c=con();p=c.execute("SELECT criteria,status FROM recovery_plans WHERE student_id=? AND course_id=?",(student_id,course_id)).fetchone()
  if not p:c.close();return {"plan":None}
  ces=json.loads(p["criteria"] or "[]");rows=[dict(r) for r in c.execute("SELECT item_id,ce,kind,prompt,options,feedback FROM recovery_banks WHERE course_id=? ORDER BY ce,item_id",(course_id,)) if r["ce"] in ces];c.close()
@@ -124,7 +124,7 @@ def recovery_content(student_id:str,course_id:str):
  return {"plan":{"criteria":ces,"status":p["status"],"items":rows}}
 
 @app.post("/api/recovery/start")
-def recovery_start(x:AttemptIn):
+def recovery_start(x:AttemptIn,x_student_token:str|None=Header(None)):\n require_student(x.student_id,x_student_token)
  c=con();p=c.execute("SELECT criteria,status FROM recovery_plans WHERE student_id=? AND course_id=?",(x.student_id,x.course_id)).fetchone();c.close()
  if not p:raise HTTPException(403,"No existe plan de recuperación")
  x.kind="recovery";x.item_id="recovery-final";return start_attempt(x)
@@ -178,7 +178,7 @@ def put_exam_bank(course_id:str,x:BankIn,x_teacher_token:str|None=Header(None)):
  c.commit();c.close();return {"questions":len(x.questions)}
 
 @app.post("/api/exam/start")
-def exam_start(x:AttemptIn):
+def exam_start(x:AttemptIn,x_student_token:str|None=Header(None)):\n require_student(x.student_id,x_student_token)
  if x.kind!="exam": raise HTTPException(400,"kind debe ser exam")
  c=con();active=c.execute("SELECT id,attempt_no FROM attempts WHERE student_id=? AND course_id=? AND kind='exam' AND item_id=? AND status='started' ORDER BY attempt_no DESC LIMIT 1",(x.student_id,x.course_id,x.item_id)).fetchone()
  if active:
@@ -224,13 +224,13 @@ def exam_submit(attempt_id:int,x:SubmitAttempt):
  score=round(good/max(1,len(questions))*100,2);c.execute("UPDATE attempts SET status='submitted',submitted_at=?,payload=? WHERE id=?",(now(),json.dumps({"answers":answers,"score":score,"by_ce":by},ensure_ascii=False),attempt_id));c.commit();c.close();return {"score":score,"by_ce":by,"answered":len(answers),"total":len(questions)}
 
 @app.put("/api/state/{student_id}")
-def put_state(student_id:str,x:StateIn):
+def put_state(student_id:str,x:StateIn,x_student_token:str|None=Header(None)):\n require_student(student_id,x_student_token)
  c=con();c.execute("INSERT OR REPLACE INTO states VALUES(?,?,?,?)",(student_id,x.course_id,json.dumps(x.state),now()));c.commit();c.close();return {"ok":True}
 @app.get("/api/state/{student_id}")
-def get_state(student_id:str,course_id:str):
+def get_state(student_id:str,course_id:str,x_student_token:str|None=Header(None)):\n require_student(student_id,x_student_token)
  c=con();r=c.execute("SELECT state FROM states WHERE student_id=? AND course_id=?",(student_id,course_id)).fetchone();c.close();return {"state":json.loads(r["state"])} if r else {"state":None}
 @app.post("/api/evidence")
-def evidence(x:EventIn):
+def evidence(x:EventIn,x_student_token:str|None=Header(None)):\n require_student(x.student_id,x_student_token)
  c=con();correct=x.correct;score=x.score
  if x.kind=="portfolio":
   key=c.execute("SELECT ce,kind,answer FROM portfolio_banks WHERE course_id=? AND item_id=?",(x.course_id,x.item_id)).fetchone()
@@ -245,7 +245,7 @@ def evidence(x:EventIn):
   correct=ok;score=100 if ok else 0
  c.execute("INSERT INTO evidence(student_id,course_id,kind,ce,item_id,attempt,response,correct,score,payload,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)",(x.student_id,x.course_id,x.kind,x.ce,x.item_id,x.attempt,json.dumps(x.response,ensure_ascii=False),None if correct is None else int(correct),score,json.dumps(x.payload or {},ensure_ascii=False),now()));c.commit();c.close();return {"ok":True,"correct":correct,"score":score}
 @app.post("/api/result")
-def result(x:ResultIn):
+def result(x:ResultIn,x_student_token:str|None=Header(None)):\n require_student(x.student_id,x_student_token)
  c=con();cfg,_=config_row(c,x.course_id)
  er=c.execute("SELECT payload FROM attempts WHERE student_id=? AND course_id=? AND kind='exam' AND status='submitted' ORDER BY attempt_no DESC LIMIT 1",(x.student_id,x.course_id)).fetchone()
  if not er:c.close();raise HTTPException(409,"No existe examen evaluable entregado")
