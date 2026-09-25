@@ -148,7 +148,7 @@ def recovery_start(x:AttemptIn,x_student_token:str|None=Header(None)):
  require_student(x.student_id,x_student_token)
  c=con();p=c.execute("SELECT criteria,status FROM recovery_plans WHERE student_id=? AND course_id=?",(x.student_id,x.course_id)).fetchone();c.close()
  if not p:raise HTTPException(403,"No existe plan de recuperación")
- x.kind="recovery";x.item_id="recovery-final";return start_attempt(x)
+ x.kind="recovery";x.item_id="recovery-final";return start_attempt(x,x_student_token)
 
 @app.post("/api/recovery/{attempt_id}/submit")
 def recovery_submit(attempt_id:int,x:SubmitAttempt,x_student_token:str|None=Header(None)):
@@ -212,7 +212,7 @@ def exam_start(x:AttemptIn,x_student_token:str|None=Header(None)):
  if c.execute("SELECT 1 FROM evaluation_closures WHERE course_id=?",(x.course_id,)).fetchone():c.close();raise HTTPException(409,"Evaluación cerrada")
  rows=[dict(r) for r in c.execute("SELECT * FROM exam_banks WHERE course_id=? ORDER BY ce,question_id",(x.course_id,))]
  if not rows:c.close();raise HTTPException(409,"Banco de examen no cargado en el servidor")
- c.close();gate=start_attempt(x);c=con()
+ c.close();gate=start_attempt(x,x_student_token);c=con()
  import random,hashlib
  seed=int(hashlib.sha256((x.student_id+"|"+x.course_id+"|"+str(gate["id"])).encode()).hexdigest()[:16],16);rnd=random.Random(seed);by={}
  for r in rows:by.setdefault(r["ce"],[]).append(r)
