@@ -16,7 +16,7 @@
       "id": "2.ap2",
       "ce": "2.a",
       "kind": "tf",
-      "prompt": "En procedimiento, la trazabilidad documental forma parte de una gestión correcta.",
+      "prompt": "Determina si es verdadera o falsa: En procedimiento, la trazabilidad documental forma parte de una gestión correcta.",
       "options": []
     },
     {
@@ -25,17 +25,17 @@
       "kind": "multi",
       "prompt": "Selecciona las comprobaciones necesarias para fuente aplicable.",
       "options": [
-        "Normativa/convenio vigente",
         "Fecha y hechos del expediente",
         "Evidencia de comunicación",
-        "Una plantilla sin verificar"
+        "Una plantilla sin verificar",
+        "Normativa/convenio vigente"
       ]
     },
     {
       "id": "2.ap4",
       "ce": "2.a",
       "kind": "order",
-      "prompt": "Ordena el procedimiento profesional.",
+      "prompt": "Ordena el procedimiento profesional. Revisa la secuencia completa.",
       "options": []
     },
     {
@@ -78,7 +78,7 @@
       "id": "2.bp2",
       "ce": "2.b",
       "kind": "tf",
-      "prompt": "En vacaciones pendientes, la trazabilidad documental forma parte de una gestión correcta.",
+      "prompt": "Determina si es verdadera o falsa: En vacaciones pendientes, la trazabilidad documental forma parte de una gestión correcta.",
       "options": []
     },
     {
@@ -87,17 +87,17 @@
       "kind": "multi",
       "prompt": "Selecciona las comprobaciones necesarias para indemnización.",
       "options": [
-        "Normativa/convenio vigente",
         "Fecha y hechos del expediente",
         "Evidencia de comunicación",
-        "Una plantilla sin verificar"
+        "Una plantilla sin verificar",
+        "Normativa/convenio vigente"
       ]
     },
     {
       "id": "2.bp4",
       "ce": "2.b",
       "kind": "order",
-      "prompt": "Ordena el procedimiento profesional.",
+      "prompt": "Ordena el procedimiento profesional. Revisa la secuencia completa.",
       "options": []
     },
     {
@@ -140,7 +140,7 @@
       "id": "2.cp2",
       "ce": "2.c",
       "kind": "tf",
-      "prompt": "En expediente, la trazabilidad documental forma parte de una gestión correcta.",
+      "prompt": "Determina si es verdadera o falsa: En expediente, la trazabilidad documental forma parte de una gestión correcta.",
       "options": []
     },
     {
@@ -149,17 +149,17 @@
       "kind": "multi",
       "prompt": "Selecciona las comprobaciones necesarias para documentación.",
       "options": [
-        "Normativa/convenio vigente",
         "Fecha y hechos del expediente",
         "Evidencia de comunicación",
-        "Una plantilla sin verificar"
+        "Una plantilla sin verificar",
+        "Normativa/convenio vigente"
       ]
     },
     {
       "id": "2.cp4",
       "ce": "2.c",
       "kind": "order",
-      "prompt": "Ordena el procedimiento profesional.",
+      "prompt": "Ordena el procedimiento profesional. Revisa la secuencia completa.",
       "options": []
     },
     {
@@ -202,7 +202,7 @@
       "id": "2.dp2",
       "ce": "2.d",
       "kind": "tf",
-      "prompt": "En acuse, la trazabilidad documental forma parte de una gestión correcta.",
+      "prompt": "Determina si es verdadera o falsa: En acuse, la trazabilidad documental forma parte de una gestión correcta.",
       "options": []
     },
     {
@@ -211,17 +211,17 @@
       "kind": "multi",
       "prompt": "Selecciona las comprobaciones necesarias para comunicación.",
       "options": [
-        "Normativa/convenio vigente",
         "Fecha y hechos del expediente",
         "Evidencia de comunicación",
-        "Una plantilla sin verificar"
+        "Una plantilla sin verificar",
+        "Normativa/convenio vigente"
       ]
     },
     {
       "id": "2.dp4",
       "ce": "2.d",
       "kind": "order",
-      "prompt": "Ordena el procedimiento profesional.",
+      "prompt": "Ordena el procedimiento profesional. Revisa la secuencia completa.",
       "options": []
     },
     {
@@ -264,7 +264,7 @@
       "id": "2.ep2",
       "ce": "2.e",
       "kind": "tf",
-      "prompt": "En fecha de efectos, la trazabilidad documental forma parte de una gestión correcta.",
+      "prompt": "Determina si es verdadera o falsa: En fecha de efectos, la trazabilidad documental forma parte de una gestión correcta.",
       "options": []
     },
     {
@@ -273,17 +273,17 @@
       "kind": "multi",
       "prompt": "Selecciona las comprobaciones necesarias para trazabilidad.",
       "options": [
-        "Normativa/convenio vigente",
         "Fecha y hechos del expediente",
         "Evidencia de comunicación",
-        "Una plantilla sin verificar"
+        "Una plantilla sin verificar",
+        "Normativa/convenio vigente"
       ]
     },
     {
       "id": "2.ep4",
       "ce": "2.e",
       "kind": "order",
-      "prompt": "Ordena el procedimiento profesional.",
+      "prompt": "Ordena el procedimiento profesional. Revisa la secuencia completa.",
       "options": []
     },
     {
@@ -326,7 +326,7 @@
       "id": "2.fp2",
       "ce": "2.f",
       "kind": "tf",
-      "prompt": "En archivo, la trazabilidad documental forma parte de una gestión correcta.",
+      "prompt": "Determina si es verdadera o falsa: En archivo, la trazabilidad documental forma parte de una gestión correcta.",
       "options": []
     },
     {
@@ -335,17 +335,17 @@
       "kind": "multi",
       "prompt": "Selecciona las comprobaciones necesarias para protección de datos.",
       "options": [
-        "Normativa/convenio vigente",
         "Fecha y hechos del expediente",
         "Evidencia de comunicación",
-        "Una plantilla sin verificar"
+        "Una plantilla sin verificar",
+        "Normativa/convenio vigente"
       ]
     },
     {
       "id": "2.fp4",
       "ce": "2.f",
       "kind": "order",
-      "prompt": "Ordena el procedimiento profesional.",
+      "prompt": "Ordena el procedimiento profesional. Revisa la secuencia completa.",
       "options": []
     },
     {
