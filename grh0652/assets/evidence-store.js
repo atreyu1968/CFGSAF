@@ -7,6 +7,15 @@ async function call(path,opt={}){if(!API)return null;try{const r=await fetch(API
 function localEvent(ev){const k='grh0652.evidence.'+course()+'.'+student();const a=JSON.parse(localStorage.getItem(k)||'[]');a.push({...ev,student_id:student(),course_id:course(),ts:new Date().toISOString()});localStorage.setItem(k,JSON.stringify(a.slice(-2000)))}
 window.EVIDENCE={api:API,
  async event(ev){localEvent(ev);return call('/api/evidence',{method:'POST',body:JSON.stringify({...ev,student_id:student(),course_id:course()})})},
+ async documentEvent(ev){
+  const started=await this.startAttempt('portfolio',ev.item_id,ev.payload||{});
+  if(!started||started.error)return started||{error:'No se pudo iniciar el intento'};
+  const saved=await this.event({...ev,attempt:started.attempt});
+  if(!saved||saved.error)return saved||{error:'No se pudo guardar la evidencia'};
+  const closed=await this.submitAttempt(started.id,{activity:(ev.payload||{}).activity||'document',evidence_saved:true});
+  if(closed&&closed.error)return closed;
+  return {...saved,attempt:started.attempt,attempt_id:started.id};
+ },
  async state(state,courseId){courseId=courseId||course();localStorage.setItem('grh0652.remoteState.'+courseId+'.'+student(),JSON.stringify(state));return call('/api/state/'+encodeURIComponent(student()),{method:'PUT',body:JSON.stringify({course_id:courseId,state})})},
  async load(courseId){courseId=courseId||course();return call('/api/state/'+encodeURIComponent(student())+'?course_id='+encodeURIComponent(courseId))},
  async config(courseId){return call('/api/config/'+encodeURIComponent(courseId||course()))},
