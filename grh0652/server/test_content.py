@@ -77,6 +77,20 @@ def test_ra2_ra3_have_no_ra1_legacy_content():
    assert marker not in html,f"{unit} conserva contenido heredado de RA1: {marker}"
 
 
+def test_frontend_identity_is_token_session_based_not_student_query_based():
+ index=(ROOT/"index.html").read_text(encoding="utf-8")
+ course=(ROOT/"course.html").read_text(encoding="utf-8")
+ player=(ROOT/"player.html").read_text(encoding="utf-8")
+ evidence=(ROOT/"assets"/"evidence-store.js").read_text(encoding="utf-8")
+ assert "/api/student/session" in index
+ assert "d.student_id" in index and "grh0652.studentKey" in index
+ assert "q.get('student')" not in index
+ assert "q.get('student')" not in player
+ assert "?student=" not in player
+ assert "grh0652.studentKey" in course
+ assert "X-Student-Token" in evidence
+
+
 def test_exam_and_self_assessment_are_separate_in_player():
  for unit in EXPECTED:
   js=(ROOT/"scorm"/unit/"assets"/"scorm.js").read_text(encoding="utf-8")
