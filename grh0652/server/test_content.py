@@ -91,6 +91,16 @@ def test_frontend_identity_is_token_session_based_not_student_query_based():
  assert "X-Student-Token" in evidence
 
 
+def test_unverified_ra_weights_are_not_presented_as_official_module_weights():
+ cfg=(ROOT/"assets"/"course-config.js").read_text(encoding="utf-8")
+ course=(ROOT/"course.html").read_text(encoding="utf-8")
+ assert "raWeightsVerified:false" in cfg
+ assert cfg.count("weight:null")==4
+ assert "weight:25" not in cfg and "weight:20" not in cfg and "weight:15" not in cfg and "weight:40" not in cfg
+ assert "pendiente de validar con la programación oficial" in course
+ assert "GRH_COURSE.raWeightsVerified" in course
+
+
 def test_exam_and_self_assessment_are_separate_in_player():
  for unit in EXPECTED:
   js=(ROOT/"scorm"/unit/"assets"/"scorm.js").read_text(encoding="utf-8")
