@@ -14,6 +14,15 @@ Cree localmente archivos `*.json` con uno de estos esquemas.
 {"course_id":"GRH0652_UT1","kind":"recovery","items":[{"id":"r1","ce":"1.a","kind":"choice","prompt":"Enunciado","options":["A","B"],"answer":1,"feedback":"Orientación tras responder"}]}
 ```
 
+La recuperación admite `choice`, `tf`, `multi`, `free`, `text`, `case`, `calculation`, `order` y `match`. En `order`, `options` contiene los elementos y `answer` la secuencia de índices correcta. En `match`, los pares visibles se declaran en `pairs` y la clave privada conserva en `answer` la correspondencia por índices:
+
+```json
+{"course_id":"GRH0652_UT1","kind":"recovery","items":[
+  {"id":"r-order","ce":"1.b","kind":"order","prompt":"Ordena el procedimiento","options":["Paso A","Paso B","Paso C"],"answer":[0,1,2]},
+  {"id":"r-match","ce":"1.c","kind":"match","prompt":"Relaciona organismo y función","options":[],"pairs":[["TGSS","Afiliación, altas y bajas"],["SEPE","Comunicación de contratos"]],"answer":[0,1]}
+]}
+```
+
 ## Portafolio
 El archivo privado de Portafolio solo necesita metadatos y respuesta. Debe contener **exactamente** los mismos `id`, CE y tipos que el banco público de la unidad.
 
