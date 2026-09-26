@@ -63,6 +63,22 @@ def test_practice_screen_markup_matches_own_ra():
    assert f'id="pract-{prefix}' not in practice_block
 
 
+def test_ra2_ra3_have_no_ra1_legacy_content():
+ forbidden=(
+  'id="pract-1',
+  'data-goto="pract-1',
+  'data-ce="1.',
+  'Seleccionar la normativa que regula la contratación laboral',
+  'Identificar las fases del proceso de contratación',
+  'Proponer la modalidad contractual adecuada',
+  'SEPE: modelos y guía de contratos',
+ )
+ for unit in ("ut2","ut3"):
+  html=(ROOT/"scorm"/unit/"index.html").read_text(encoding="utf-8")
+  for marker in forbidden:
+   assert marker not in html,f"{unit} conserva contenido heredado de RA1: {marker}"
+
+
 def test_exam_and_self_assessment_are_separate_in_player():
  for unit in EXPECTED:
   js=(ROOT/"scorm"/unit/"assets"/"scorm.js").read_text(encoding="utf-8")
