@@ -60,7 +60,7 @@ CREATE TABLE IF NOT EXISTS ai_rubrics(id INTEGER PRIMARY KEY AUTOINCREMENT,cours
     {"id":"bases","name":"Bases de cotización","weight":35,"description":"Construye correctamente las bases, prorratas y reglas especiales del supuesto."},
     {"id":"cuotas","name":"Cuotas","weight":30,"description":"Aplica tipos y distingue aportación del trabajador y empresarial cuando corresponda."},
     {"id":"proceso","name":"Procedimiento y trazabilidad","weight":15,"description":"Operaciones ordenadas, verificables y vinculadas a los datos del supuesto."}]),
-   ("GRH0652_UT4","4.g","","Nóminas — confección del recibo","Valora la confección integral del recibo salarial y documentos asociados, atendiendo a coherencia aritmética y documental.",[
+   ("GRH0652_UT4","4.e","","Nóminas — confección del recibo","Valora la confección integral del recibo salarial y documentos asociados, atendiendo a coherencia aritmética y documental.",[
     {"id":"devengos","name":"Devengos","weight":20,"description":"Conceptos, importes y clasificación salarial/no salarial correctos."},
     {"id":"bases","name":"Bases","weight":20,"description":"Bases de cotización y, cuando proceda, base sujeta a retención correctamente determinadas."},
     {"id":"deducciones","name":"Cotización e IRPF","weight":25,"description":"Deducciones y retenciones calculadas y aplicadas correctamente."},
