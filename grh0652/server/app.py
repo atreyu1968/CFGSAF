@@ -76,8 +76,8 @@ CREATE TABLE IF NOT EXISTS ai_rubrics(id INTEGER PRIMARY KEY AUTOINCREMENT,cours
   for course,ce,item,name,rubric,criteria in defaults:
    c.execute("INSERT OR IGNORE INTO ai_rubrics(course_id,ce,item_id,name,rubric,updated_at,criteria) VALUES(?,?,?,?,?,?,?)",(course,ce,item,name,rubric,now(),json.dumps(criteria,ensure_ascii=False)))
   _defaults_seeded=True
- # Portfolio answer keys are intentionally not loaded from repository files.
- # Production keys must be provisioned into SQLite through the authenticated teacher endpoint.
+ # Answer keys never come from the public repository. They may be provisioned
+ # through authenticated teacher endpoints or from the read-only private bank directory.
  if not _private_banks_seeded and PRIVATE_BANK_DIR:
   root=Path(PRIVATE_BANK_DIR)
   if not root.is_dir():raise RuntimeError("GRH_PRIVATE_BANK_DIR no existe o no es un directorio")
@@ -85,7 +85,9 @@ CREATE TABLE IF NOT EXISTS ai_rubrics(id INTEGER PRIMARY KEY AUTOINCREMENT,cours
    try:d=json.loads(p.read_text(encoding="utf-8"))
    except Exception as e:raise RuntimeError(f"Banco privado inválido {p.name}: {e}")
    course=str(d.get("course_id","")).strip();kind=str(d.get("kind","")).strip();items=d.get("questions" if kind=="exam" else "items")
-   if not course or kind not in ("exam","recovery") or not isinstance(items,list) or not items:raise RuntimeError(f"Banco privado inválido {p.name}: course_id/kind/items")
+   if not course or kind not in ("exam","recovery","portfolio") or not isinstance(items,list) or not items:raise RuntimeError(f"Banco privado inválido {p.name}: course_id/kind/items")
+   public=portfolio_public_map(course) if kind=="portfolio" else {}
+   if kind=="portfolio" and not public:raise RuntimeError(f"Banco privado inválido {p.name}: no existe banco público de portafolio para {course}")
    seen=set()
    for q in items:
     qid=str(q.get("id","")).strip();ce=str(q.get("ce","")).strip()
@@ -95,10 +97,16 @@ CREATE TABLE IF NOT EXISTS ai_rubrics(id INTEGER PRIMARY KEY AUTOINCREMENT,cours
      prompt=str(q.get("q","")).strip();opts=q.get("options",[])
      if not prompt or "answer" not in q or not isinstance(opts,list):raise RuntimeError(f"Banco privado inválido {p.name}: pregunta incompleta {qid}")
      c.execute("INSERT OR IGNORE INTO exam_banks(course_id,question_id,ce,question,options,answer,type) VALUES(?,?,?,?,?,?,?)",(course,qid,ce,prompt,json.dumps(opts,ensure_ascii=False),json.dumps(q["answer"],ensure_ascii=False),str(q.get("type","choice"))))
-    else:
+    elif kind=="recovery":
      prompt=str(q.get("prompt","")).strip();opts=q.get("options",[])
      if not prompt or "answer" not in q or not isinstance(opts,list):raise RuntimeError(f"Banco privado inválido {p.name}: recuperación incompleta {qid}")
      c.execute("INSERT OR IGNORE INTO recovery_banks(course_id,item_id,ce,kind,prompt,options,answer,feedback) VALUES(?,?,?,?,?,?,?,?)",(course,qid,ce,str(q.get("kind","choice")),prompt,json.dumps(opts,ensure_ascii=False),json.dumps(q["answer"],ensure_ascii=False),str(q.get("feedback",""))))
+    else:
+     qkind=str(q.get("kind","")).strip();pub=public.get(qid)
+     if "answer" not in q or not pub or pub.get("ce")!=ce or pub.get("kind")!=qkind:raise RuntimeError(f"Banco privado inválido {p.name}: metadatos de portafolio no coinciden para {qid}")
+     ph=portfolio_public_hash(pub)
+     c.execute("INSERT INTO portfolio_banks(course_id,item_id,ce,kind,answer,public_hash) VALUES(?,?,?,?,?,?) ON CONFLICT(course_id,item_id) DO UPDATE SET ce=excluded.ce,kind=excluded.kind,answer=excluded.answer,public_hash=excluded.public_hash",(course,qid,ce,qkind,json.dumps(q["answer"],ensure_ascii=False),ph))
+   if kind=="portfolio" and seen!=set(public):raise RuntimeError(f"Banco privado inválido {p.name}: el portafolio debe contener exactamente todas las actividades públicas de {course}")
   _private_banks_seeded=True
  c.commit();return c
 
