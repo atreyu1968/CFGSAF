@@ -62,6 +62,8 @@ class PortfolioKey(BaseModel): id:str;ce:str;kind:str;answer:object
 class PortfolioKeysIn(BaseModel): items:list[PortfolioKey]
 class AISettingsIn(BaseModel):
  enabled:bool=False;base_url:str="";api_key:str|None=None;model:str="";rubric:str="";confidence:float=0.75;auto_kinds:list[str]=["free"]
+
+class AIReviewDecision(BaseModel): score:float;feedback:str="";status:str="accepted"
 class AITestIn(BaseModel): text:str="Explica brevemente qué es un contrato de trabajo."
 def ai_settings_row(c):
  r=c.execute("SELECT * FROM ai_settings WHERE id=1").fetchone()
@@ -120,6 +122,19 @@ def get_ai_reviews(course_id:str|None=None,x_teacher_token:str|None=Header(None)
  for r in rows:
   r["response"]=json.loads(r["response"]) if r["response"] else None;r.pop("reference",None)
  return rows
+
+@app.put("/api/teacher/ai-reviews/{review_id}")
+def decide_ai_review(review_id:int,x:AIReviewDecision,x_teacher_token:str|None=Header(None)):
+ auth(x_teacher_token)
+ if not 0<=x.score<=100:raise HTTPException(400,"La puntuación debe estar entre 0 y 100")
+ if x.status not in ("accepted","rejected"):raise HTTPException(400,"Estado no válido")
+ c=con();r=c.execute("SELECT * FROM ai_reviews WHERE id=?",(review_id,)).fetchone()
+ if not r:c.close();raise HTTPException(404,"Revisión no encontrada")
+ final_score=float(x.score) if x.status=="accepted" else 0.0;cfg,_=config_row(c,r["course_id"]);correct=final_score>=float(cfg.get("ce_pass_score",50))
+ ev=c.execute("SELECT id FROM evidence WHERE student_id=? AND course_id=? AND kind='portfolio' AND ce=? AND item_id=? AND attempt=? ORDER BY id DESC LIMIT 1",(r["student_id"],r["course_id"],r["ce"],r["item_id"],r["attempt"])).fetchone()
+ if not ev:c.close();raise HTTPException(409,"No se encontró la evidencia asociada")
+ c.execute("UPDATE evidence SET score=?,correct=?,payload=? WHERE id=?",(final_score,int(correct),json.dumps({"ai_review_id":review_id,"teacher_feedback":x.feedback,"teacher_decision":x.status},ensure_ascii=False),ev["id"]))
+ c.execute("UPDATE ai_reviews SET score=?,feedback=?,status=? WHERE id=?",(final_score,x.feedback,x.status,review_id));c.commit();c.close();return {"ok":True,"score":final_score,"correct":correct,"status":x.status}
 
 @app.post("/api/teacher/students/{student_id}")
 def create_student(student_id:str,x_teacher_token:str|None=Header(None)):
@@ -357,7 +372,15 @@ def evidence(x:EventIn,x_student_token:str|None=Header(None)):
   if x.ce!=key["ce"]:c.close();raise HTTPException(409,"CE de portafolio no coincide con la definición autoritativa")
   expected=json.loads(key["answer"]);given=x.response;kind=key["kind"] or "choice"
   if kind=="multi" and isinstance(given,list) and isinstance(expected,list):ok=sorted(given)==sorted(expected)
-  elif kind=="free":ok=str(given or "").strip().casefold()==str(expected or "").strip().casefold()
+  elif kind=="free":
+   exact=str(given or "").strip().casefold()==str(expected or "").strip().casefold();settings=ai_settings_row(c)
+   if exact:ok=True;score=100
+   elif settings.get("enabled") and kind in settings.get("auto_kinds",[]):
+    try:
+     grade=ai_grade(settings,given,expected,{"course_id":x.course_id,"ce":x.ce,"item_id":x.item_id,"kind":kind});review=grade["confidence"]<float(settings.get("confidence",0.75));score=None if review else grade["score"];ok=None if review else grade["score"]>=float(config_row(c,x.course_id)[0].get("ce_pass_score",50))
+     c.execute("INSERT INTO ai_reviews(student_id,course_id,ce,item_id,attempt,response,reference,score,confidence,verdict,feedback,status,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)",(x.student_id,x.course_id,x.ce,x.item_id,x.attempt,json.dumps(given,ensure_ascii=False),json.dumps(expected,ensure_ascii=False),grade["score"],grade["confidence"],grade["verdict"],grade["feedback"],"pending" if review else "accepted",now()))
+    except Exception as e:ok=None;score=None;c.execute("INSERT INTO ai_reviews(student_id,course_id,ce,item_id,attempt,response,reference,score,confidence,verdict,feedback,status,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)",(x.student_id,x.course_id,x.ce,x.item_id,x.attempt,json.dumps(given,ensure_ascii=False),json.dumps(expected,ensure_ascii=False),None,0,"error",str(e)[:1200],"pending",now()))
+   else:ok=False;score=0
   elif kind=="order":ok=given==expected
   elif kind=="match":ok=isinstance(given,list) and isinstance(expected,list) and [str(v) for v in given]==[str(v) for v in expected]
   else:ok=given==expected
