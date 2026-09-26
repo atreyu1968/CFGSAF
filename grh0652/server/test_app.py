@@ -553,3 +553,32 @@ def test_payroll_document_teacher_review_updates_ra4_ce():
  db=module.con();ev=db.execute("SELECT attempt,score,correct,payload FROM evidence WHERE id=?",(z["evidence_id"],)).fetchone();db.close()
  assert ev["attempt"]==1 and ev["score"]==91 and ev["correct"]==1
  ep=json.loads(ev["payload"]);assert ep["teacher_decision"]=="accepted" and ep["teacher_feedback"]
+
+
+def test_ut4_private_keys_grade_reclassified_4g_4h_without_public_leak():
+ import json
+ from pathlib import Path
+ public=json.loads((Path(module.__file__).resolve().parent/"banks"/"ut4_portfolio.json").read_text(encoding="utf-8"))["items"]
+ answers={
+  "4.gp1":0,"4.gp2":[0,1,2,3],"4.gp3":False,"4.gp4":1,"4.gp5":0,"4.gp6":0,
+  "4.hp1":0,"4.hp2":1,"4.hp3":[0,1,2,3],"4.hp4":1,"4.hp5":1,"4.hp6":[0,1,2,3,4],
+ }
+ private=[]
+ for q in public:
+  answer=answers.get(q["id"])
+  if answer is None:
+   answer=False if q["kind"]=="tf" else ([0] if q["kind"] in ("multi","order") else 0)
+  private.append({"id":q["id"],"ce":q["ce"],"kind":q["kind"],"prompt":q.get("prompt",""),"options":q.get("options",[]),"answer":answer})
+ loaded=client.put("/api/teacher/portfolio-bank/GRH0652_UT4",headers=H,json={"items":private})
+ assert loaded.status_code==200,loaded.text
+ created=client.post("/api/teacher/students/ut4-private-e2e",headers=H);assert created.status_code==200
+ sh={"X-Student-Token":created.json()["token"]}
+ good=client.post("/api/evidence",headers=sh,json={"student_id":"ut4-private-e2e","course_id":"GRH0652_UT4","kind":"portfolio","ce":"4.g","item_id":"4.gp4","attempt":1,"response":1})
+ assert good.status_code==200,good.text
+ assert good.json()["correct"] is True and good.json()["score"]==100
+ bad=client.post("/api/evidence",headers=sh,json={"student_id":"ut4-private-e2e","course_id":"GRH0652_UT4","kind":"portfolio","ce":"4.h","item_id":"4.hp2","attempt":1,"response":0})
+ assert bad.status_code==200,bad.text
+ assert bad.json()["correct"] is False and bad.json()["score"]==0
+ pub=client.get("/api/portfolio/GRH0652",headers=sh);assert pub.status_code==200
+ selected=[x for x in pub.json()["items"] if x["id"] in ("4.gp4","4.hp2")]
+ assert len(selected)==2 and all("answer" not in x for x in selected)
