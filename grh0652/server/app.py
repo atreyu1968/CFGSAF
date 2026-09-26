@@ -563,6 +563,24 @@ def teacher_dashboard(course_id:str,x_teacher_token:str|None=Header(None)):
   if x["result"]:x["result"]["recovery"]=json.loads(x["result"]["recovery"] or "[]")
  return {"course_id":course_id,"criteria":ces,"students":out}
 
+@app.get("/api/teacher/exam-monitor/{course_id}")
+def teacher_exam_monitor(course_id:str,x_teacher_token:str|None=Header(None)):
+ auth(x_teacher_token);c=con();rows=c.execute("SELECT a.id,a.student_id,a.attempt_no,a.status,a.started_at,a.submitted_at,a.payload,v.deadline_at FROM attempts a LEFT JOIN exam_versions v ON v.attempt_id=a.id WHERE a.course_id=? AND a.kind='exam' ORDER BY a.started_at DESC",(course_id,)).fetchall();out=[];t=datetime.datetime.now(datetime.timezone.utc)
+ for r in rows:
+  p=json.loads(r["payload"] or "{}");ig=p.get("integrity",{});remaining=None
+  if r["deadline_at"]:
+   try:remaining=max(0,int((datetime.datetime.fromisoformat(r["deadline_at"])-t).total_seconds()))
+   except Exception:pass
+  out.append({"attempt_id":r["id"],"student_id":r["student_id"],"attempt":r["attempt_no"],"status":r["status"],"started_at":r["started_at"],"submitted_at":r["submitted_at"],"deadline_at":r["deadline_at"],"remaining_seconds":remaining,"incidents":int(ig.get("incidents",0) or 0),"auto":bool(ig.get("auto",False))})
+ c.close();return {"course_id":course_id,"now":t.isoformat(),"attempts":out}
+
+@app.post("/api/teacher/exam-monitor/{attempt_id}/finish")
+def teacher_finish_exam(attempt_id:int,x_teacher_token:str|None=Header(None)):
+ auth(x_teacher_token);c=con();r=c.execute("SELECT status,payload FROM attempts WHERE id=? AND kind='exam'",(attempt_id,)).fetchone()
+ if not r:c.close();raise HTTPException(404,"Intento de examen no encontrado")
+ if r["status"]!="started":c.close();raise HTTPException(409,"El examen ya no está en curso")
+ p=json.loads(r["payload"] or "{}");p["teacher_finished"]=True;p["teacher_finished_at"]=now();c.execute("UPDATE attempts SET status='teacher_finished',submitted_at=?,payload=? WHERE id=?",(now(),json.dumps(p,ensure_ascii=False),attempt_id));c.commit();c.close();return {"ok":True,"attempt_id":attempt_id,"status":"teacher_finished"}
+
 @app.get("/api/teacher/overview")
 def overview(x_teacher_token:str|None=Header(None)):
  auth(x_teacher_token);c=con();rows=[dict(r) for r in c.execute("SELECT * FROM results ORDER BY course_id,student_id")];c.close()
