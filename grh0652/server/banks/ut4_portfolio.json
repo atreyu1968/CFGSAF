@@ -16,14 +16,14 @@
       "id": "4.ap2",
       "ce": "4.a",
       "kind": "tf",
-      "prompt": "En 4.a, los datos variables, reglas y fuentes utilizadas deben quedar identificados por periodo.",
+      "prompt": "Las comisiones e incentivos de una nómina deben quedar vinculados al periodo, a la regla de cálculo y a la fuente de datos que los origina.",
       "options": []
     },
     {
       "id": "4.ap3",
       "ce": "4.a",
       "kind": "multi",
-      "prompt": "Selecciona los elementos que deben comprobarse.",
+      "prompt": "Antes de liquidar una retribución fija más variable, selecciona los elementos que RR. HH. debe comprobar.",
       "options": [
         "Convenio y estructura salarial",
         "Criterio del incentivo",
@@ -35,7 +35,7 @@
       "id": "4.ap4",
       "ce": "4.a",
       "kind": "order",
-      "prompt": "Ordena el procedimiento profesional.",
+      "prompt": "Ordena la parametrización profesional de una estructura retributiva antes de calcular la nómina.",
       "options": [
         "Identificar puesto y convenio",
         "Clasificar conceptos salariales",
@@ -83,14 +83,14 @@
       "id": "4.bp2",
       "ce": "4.b",
       "kind": "tf",
-      "prompt": "En 4.b, los datos variables, reglas y fuentes utilizadas deben quedar identificados por periodo.",
+      "prompt": "SMI, IPREM y otras referencias legales deben identificarse por periodo y fuente antes de utilizarlas en un cálculo.",
       "options": []
     },
     {
       "id": "4.bp3",
       "ce": "4.b",
       "kind": "multi",
-      "prompt": "Selecciona los elementos que deben comprobarse.",
+      "prompt": "Vas a comparar una retribución con una referencia legal anual. Selecciona los datos que debes comprobar.",
       "options": [
         "Año de referencia",
         "Importe anual comparable",
@@ -102,7 +102,7 @@
       "id": "4.bp4",
       "ce": "4.b",
       "kind": "order",
-      "prompt": "Ordena el procedimiento profesional.",
+      "prompt": "Ordena la comparación profesional con SMI/IPREM desde la identificación de la magnitud hasta la documentación.",
       "options": [
         "Identificar magnitud necesaria",
         "Consultar fuente oficial vigente",
@@ -150,14 +150,14 @@
       "id": "4.cp2",
       "ce": "4.c",
       "kind": "tf",
-      "prompt": "En 4.c, los datos variables, reglas y fuentes utilizadas deben quedar identificados por periodo.",
+      "prompt": "Un incentivo debe poder reproducirse indicando objetivo, métrica, periodo y fórmula aplicada.",
       "options": []
     },
     {
       "id": "4.cp3",
       "ce": "4.c",
       "kind": "multi",
-      "prompt": "Selecciona los elementos que deben comprobarse.",
+      "prompt": "La empresa implanta un bonus por objetivos. Selecciona los elementos que hacen auditable el incentivo.",
       "options": [
         "Indicador medible",
         "Periodo",
@@ -169,7 +169,7 @@
       "id": "4.cp4",
       "ce": "4.c",
       "kind": "order",
-      "prompt": "Ordena el procedimiento profesional.",
+      "prompt": "Ordena el cálculo y validación de un incentivo desde la definición del objetivo hasta su registro.",
       "options": [
         "Definir objetivo",
         "Fijar métrica y periodo",
@@ -217,14 +217,14 @@
       "id": "4.dp2",
       "ce": "4.d",
       "kind": "tf",
-      "prompt": "En 4.d, los datos variables, reglas y fuentes utilizadas deben quedar identificados por periodo.",
+      "prompt": "Para confeccionar una nómina deben quedar identificadas las incidencias del periodo y las fuentes de los datos que modifican los devengos o deducciones.",
       "options": []
     },
     {
       "id": "4.dp3",
       "ce": "4.d",
       "kind": "multi",
-      "prompt": "Selecciona los elementos que deben comprobarse.",
+      "prompt": "Antes de abrir el cálculo mensual, selecciona la documentación y los datos que deben revisarse.",
       "options": [
         "Contrato y convenio",
         "Incidencias del periodo",
@@ -236,7 +236,7 @@
       "id": "4.dp4",
       "ce": "4.d",
       "kind": "order",
-      "prompt": "Ordena el procedimiento profesional.",
+      "prompt": "Ordena la confección de un recibo salarial desde los datos maestros hasta la revisión del cálculo.",
       "options": [
         "Reunir datos maestros",
         "Incorporar incidencias",
@@ -284,14 +284,14 @@
       "id": "4.ep2",
       "ce": "4.e",
       "kind": "tf",
-      "prompt": "En 4.e, los datos variables, reglas y fuentes utilizadas deben quedar identificados por periodo.",
+      "prompt": "Una nómina debe conservar la trazabilidad de los datos, reglas y fuentes usados para obtener devengos, bases, deducciones y líquido.",
       "options": []
     },
     {
       "id": "4.ep3",
       "ce": "4.e",
       "kind": "multi",
-      "prompt": "Selecciona los elementos que deben comprobarse.",
+      "prompt": "Antes de validar el líquido a percibir, selecciona los bloques que deben comprobarse.",
       "options": [
         "Devengos",
         "Deducciones aplicables",
@@ -303,7 +303,7 @@
       "id": "4.ep4",
       "ce": "4.e",
       "kind": "order",
-      "prompt": "Ordena el procedimiento profesional.",
+      "prompt": "Ordena la confección aritmética de una nómina desde los devengos hasta la verificación del líquido.",
       "options": [
         "Calcular devengos",
         "Construir bases",
@@ -351,14 +351,14 @@
       "id": "4.fp2",
       "ce": "4.f",
       "kind": "tf",
-      "prompt": "En 4.f, los datos variables, reglas y fuentes utilizadas deben quedar identificados por periodo.",
+      "prompt": "Para calcular una aportación a la Seguridad Social deben quedar identificados la base, el tipo aplicable y el periodo al que pertenecen.",
       "options": []
     },
     {
       "id": "4.fp3",
       "ce": "4.f",
       "kind": "multi",
-      "prompt": "Selecciona los elementos que deben comprobarse.",
+      "prompt": "Una base ya está calculada. Selecciona qué dato adicional es imprescindible comprobar antes de obtener una cuota de cotización.",
       "options": [
         "Tipo aplicable y periodo",
         "Color del recibo",
@@ -370,7 +370,7 @@
       "id": "4.fp4",
       "ce": "4.f",
       "kind": "order",
-      "prompt": "Ordena el procedimiento profesional.",
+      "prompt": "Ordena el cálculo de una cuota de Seguridad Social y su comprobación final.",
       "options": [
         "Determinar base correcta",
         "Identificar tipo vigente",
@@ -558,14 +558,14 @@
       "id": "4.ip2",
       "ce": "4.i",
       "kind": "tf",
-      "prompt": "En 4.i, los datos variables, reglas y fuentes utilizadas deben quedar identificados por periodo.",
+      "prompt": "Una comunicación telemática de nóminas o cotizaciones no termina con el envío: debe revisarse la respuesta y vincularse al expediente del periodo.",
       "options": []
     },
     {
       "id": "4.ip3",
       "ce": "4.i",
       "kind": "multi",
-      "prompt": "Selecciona los elementos que deben comprobarse.",
+      "prompt": "El organismo devuelve una respuesta al envío. Selecciona las actuaciones correctas antes de cerrar el expediente.",
       "options": [
         "Leer y valorar la respuesta",
         "Relacionarla con el expediente",
@@ -577,7 +577,7 @@
       "id": "4.ip4",
       "ce": "4.i",
       "kind": "order",
-      "prompt": "Ordena el procedimiento profesional.",
+      "prompt": "Ordena el ciclo de una comunicación retributiva o de cotización desde la preparación hasta el archivo o la rectificación.",
       "options": [
         "Preparar información",
         "Enviar por canal autorizado",
@@ -625,14 +625,14 @@
       "id": "4.jp2",
       "ce": "4.j",
       "kind": "tf",
-      "prompt": "En 4.j, los datos variables, reglas y fuentes utilizadas deben quedar identificados por periodo.",
+      "prompt": "Un cálculo generado por software debe poder reproducirse con los datos maestros, incidencias, parámetros y tablas vigentes del periodo.",
       "options": []
     },
     {
       "id": "4.jp3",
       "ce": "4.j",
       "kind": "multi",
-      "prompt": "Selecciona los elementos que deben comprobarse.",
+      "prompt": "Antes de ejecutar la nómina en una aplicación, selecciona qué configuración debe comprobar el técnico.",
       "options": [
         "Datos maestros e incidencias",
         "Parámetros y convenio configurados",
@@ -644,7 +644,7 @@
       "id": "4.jp4",
       "ce": "4.j",
       "kind": "order",
-      "prompt": "Ordena el procedimiento profesional.",
+      "prompt": "El software arroja un resultado distinto del control manual. Ordena el proceso para localizar y corregir la diferencia.",
       "options": [
         "Comparar entradas",
         "Revisar parametrización",
