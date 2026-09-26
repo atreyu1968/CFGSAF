@@ -51,12 +51,21 @@ function showScreen(id,mark=true){
  const side=$('.sidebar');if(side)side.classList.remove('open');
  window.scrollTo(0,0);sync();
 }
+
+async function loadStudentFeedback(){
+ const box=document.getElementById('studentFeedback');if(!box)return;const ev=evidence();if(!ev||!ev.api||!ev.feedback){box.innerHTML='<p>El feedback requiere conexión con el servidor de evaluación.</p>';return}
+ box.innerHTML='<p>Cargando correcciones…</p>';const rows=await ev.feedback();if(!rows||rows.error){box.innerHTML='<p>No se pudieron cargar las correcciones.</p>';return}
+ if(!rows.length){box.innerHTML='<p>Todavía no tienes respuestas abiertas corregidas y validadas.</p>';return}
+ box.innerHTML=rows.map(r=>'<article class="exercise done"><div class="type">CE '+safe(r.ce||'')+' · '+safe(r.item_id||'')+'</div><h3>'+Math.round(Number(r.score||0))+' / 100</h3><p>'+safe(r.feedback||'Sin comentario')+'</p>'+(r.breakdown&&r.breakdown.length?'<div class="ce-table">'+r.breakdown.map(x=>'<div><b>'+safe(x.name)+' · '+Number(x.weight||0)+'%</b><span>'+Math.round(Number(x.score||0))+'/100 · '+safe(x.feedback||'')+'</span></div>').join('')+'</div>':'')+'</article>').join('');
+}
+
 function bindNav(){
  $$('[data-target]').forEach(b=>b.addEventListener('click',()=>showScreen(b.dataset.target)));
  $$('[data-goto]').forEach(b=>b.addEventListener('click',()=>showScreen(b.dataset.goto)));
  const m=$('#menuBtn');if(m)m.onclick=()=>$('.sidebar')?.classList.toggle('open');
  const f=$('#fullscreenBtn');if(f)f.onclick=toggleFull;
  const e=$('#exitBtn');if(e)e.onclick=()=>{if(examActive){alert('Entrega primero la autoevaluación.');return}finish();try{if(parent&&parent!==window&&typeof parent.exitCourse==='function')parent.exitCourse();else history.back()}catch(x){history.back()}};
+ const lf=document.getElementById('loadFeedback');if(lf)lf.onclick=loadStudentFeedback;
  const enter=$('#enterBtn');if(enter)enter.onclick=async()=>{$('#launchOverlay')?.classList.add('hidden');await requestFull();showScreen(state.last||'inicio')};
 }
 async function requestFull(){try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen()}catch(e){}}
