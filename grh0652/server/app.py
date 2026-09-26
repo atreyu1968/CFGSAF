@@ -229,8 +229,9 @@ def decide_ai_review(review_id:int,x:AIReviewDecision,x_teacher_token:str|None=H
  final_score=float(x.score) if x.status=="accepted" else 0.0;cfg,_=config_row(c,r["course_id"]);correct=final_score>=float(cfg.get("ce_pass_score",50))
  ev=c.execute("SELECT id FROM evidence WHERE student_id=? AND course_id=? AND kind='portfolio' AND ce=? AND item_id=? AND attempt=? ORDER BY id DESC LIMIT 1",(r["student_id"],r["course_id"],r["ce"],r["item_id"],r["attempt"])).fetchone()
  if not ev:c.close();raise HTTPException(409,"No se encontró la evidencia asociada")
- c.execute("UPDATE evidence SET score=?,correct=?,payload=? WHERE id=?",(final_score,int(correct),json.dumps({"ai_review_id":review_id,"teacher_feedback":x.feedback,"teacher_decision":x.status},ensure_ascii=False),ev["id"]))
- c.execute("UPDATE ai_reviews SET score=?,feedback=?,status=? WHERE id=?",(final_score,x.feedback,x.status,review_id));c.commit();c.close();return {"ok":True,"score":final_score,"correct":correct,"status":x.status}
+ oldev=c.execute("SELECT payload FROM evidence WHERE id=?",(ev["id"],)).fetchone();ep=json.loads(oldev["payload"] or "{}") if oldev else {};ep.update({"ai_review_id":review_id,"teacher_feedback":x.feedback,"teacher_decision":x.status,"teacher_reviewed_at":now()})
+ c.execute("UPDATE evidence SET score=?,correct=?,payload=? WHERE id=?",(final_score,int(correct),json.dumps(ep,ensure_ascii=False),ev["id"]))
+ c.execute("UPDATE ai_reviews SET score=?,feedback=?,status=? WHERE id=?",(final_score,x.feedback,x.status,review_id));official=recompute_official(c,r["student_id"],r["course_id"]);c.commit();c.close();return {"ok":True,"score":final_score,"correct":correct,"status":x.status,"evidence_id":ev["id"],"result":official}
 
 @app.post("/api/teacher/students/{student_id}")
 def create_student(student_id:str,x_teacher_token:str|None=Header(None)):
