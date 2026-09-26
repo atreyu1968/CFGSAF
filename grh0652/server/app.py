@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS recovery_banks(course_id TEXT,item_id TEXT,ce TEXT,ki
 CREATE TABLE IF NOT EXISTS portfolio_banks(course_id TEXT,item_id TEXT,ce TEXT,kind TEXT,answer TEXT,PRIMARY KEY(course_id,item_id));
 CREATE TABLE IF NOT EXISTS recovery_results(student_id TEXT,course_id TEXT,score REAL,criteria_passed TEXT,status TEXT,updated_at TEXT,PRIMARY KEY(student_id,course_id));
 CREATE TABLE IF NOT EXISTS grade_adjustments(id INTEGER PRIMARY KEY AUTOINCREMENT,student_id TEXT NOT NULL,course_id TEXT NOT NULL,scope TEXT NOT NULL,scope_key TEXT NOT NULL DEFAULT '',old_score REAL,new_score REAL NOT NULL,reason TEXT NOT NULL,created_at TEXT NOT NULL,active INTEGER NOT NULL DEFAULT 1,reversed_at TEXT,reversal_reason TEXT);\nCREATE TABLE IF NOT EXISTS ai_settings(id INTEGER PRIMARY KEY CHECK(id=1),enabled INTEGER NOT NULL DEFAULT 0,base_url TEXT,api_key TEXT,model TEXT,rubric TEXT,confidence REAL NOT NULL DEFAULT 0.75,auto_kinds TEXT,updated_at TEXT);\nCREATE TABLE IF NOT EXISTS ai_reviews(id INTEGER PRIMARY KEY AUTOINCREMENT,student_id TEXT,course_id TEXT,ce TEXT,item_id TEXT,attempt INTEGER,response TEXT,reference TEXT,score REAL,confidence REAL,verdict TEXT,feedback TEXT,status TEXT,created_at TEXT);
-CREATE TABLE IF NOT EXISTS ai_rubrics(id INTEGER PRIMARY KEY AUTOINCREMENT,course_id TEXT NOT NULL,ce TEXT NOT NULL DEFAULT '',item_id TEXT NOT NULL DEFAULT '',name TEXT NOT NULL,rubric TEXT NOT NULL,updated_at TEXT,UNIQUE(course_id,ce,item_id));""")
+CREATE TABLE IF NOT EXISTS ai_rubrics(id INTEGER PRIMARY KEY AUTOINCREMENT,course_id TEXT NOT NULL,ce TEXT NOT NULL DEFAULT '',item_id TEXT NOT NULL DEFAULT '',name TEXT NOT NULL,rubric TEXT NOT NULL,updated_at TEXT,UNIQUE(course_id,ce,item_id));\nCREATE TABLE IF NOT EXISTS exam_reopen_audit(id INTEGER PRIMARY KEY AUTOINCREMENT,source_attempt_id INTEGER NOT NULL,new_attempt_id INTEGER NOT NULL,student_id TEXT NOT NULL,course_id TEXT NOT NULL,reason TEXT NOT NULL,minutes INTEGER NOT NULL,source_status TEXT NOT NULL,source_payload TEXT,created_at TEXT NOT NULL);""")
   _schema_ready=True
  cols={r["name"] for r in c.execute("PRAGMA table_info(exam_versions)")}
  if "config" not in cols:c.execute("ALTER TABLE exam_versions ADD COLUMN config TEXT")
@@ -76,6 +76,7 @@ class AIReviewDecision(BaseModel): score:float;feedback:str="";status:str="accep
 class GradeAdjustmentIn(BaseModel): scope:str;scope_key:str="";new_score:float;reason:str
 class GradeReversalIn(BaseModel): reason:str
 class ExamTimeExtensionIn(BaseModel): minutes:int;reason:str=""
+class ExamReopenIn(BaseModel): minutes:int=45;reason:str
 class AITestIn(BaseModel): text:str="Explica brevemente qué es un contrato de trabajo."
 
 def exam_access(cfg,student_id,pin=""):
@@ -615,6 +616,26 @@ def teacher_finish_exam(attempt_id:int,x_teacher_token:str|None=Header(None)):
  if not r:c.close();raise HTTPException(404,"Intento de examen no encontrado")
  if r["status"]!="started":c.close();raise HTTPException(409,"El examen ya no está en curso")
  p=json.loads(r["payload"] or "{}");p["teacher_finished"]=True;p["teacher_finished_at"]=now();c.execute("UPDATE attempts SET status='teacher_finished',submitted_at=?,payload=? WHERE id=?",(now(),json.dumps(p,ensure_ascii=False),attempt_id));c.commit();c.close();return {"ok":True,"attempt_id":attempt_id,"status":"teacher_finished"}
+
+@app.post("/api/teacher/exam-monitor/{attempt_id}/reopen")
+def teacher_reopen_exam(attempt_id:int,x:ExamReopenIn,x_teacher_token:str|None=Header(None)):
+ auth(x_teacher_token)
+ reason=x.reason.strip()
+ if len(reason)<5:raise HTTPException(400,"Debe indicar un motivo de reapertura de al menos 5 caracteres")
+ if not 1<=x.minutes<=180:raise HTTPException(400,"La nueva duración debe estar entre 1 y 180 minutos")
+ c=con();c.execute("BEGIN IMMEDIATE")
+ a=c.execute("SELECT * FROM attempts WHERE id=? AND kind='exam'",(attempt_id,)).fetchone();v=c.execute("SELECT * FROM exam_versions WHERE attempt_id=?",(attempt_id,)).fetchone()
+ if not a or not v:c.rollback();c.close();raise HTTPException(404,"Intento de examen no encontrado")
+ if a["status"] not in ("submitted","teacher_finished","expired"):c.rollback();c.close();raise HTTPException(409,"Solo puede reabrirse un examen ya cerrado")
+ if c.execute("SELECT 1 FROM attempts WHERE student_id=? AND course_id=? AND kind='exam' AND item_id=? AND status='started'",(a["student_id"],a["course_id"],a["item_id"])).fetchone():c.rollback();c.close();raise HTTPException(409,"El alumno ya tiene un examen activo")
+ n=c.execute("SELECT COALESCE(MAX(attempt_no),0)+1 n FROM attempts WHERE student_id=? AND course_id=? AND kind='exam' AND item_id=?",(a["student_id"],a["course_id"],a["item_id"])).fetchone()["n"]
+ oldp=json.loads(a["payload"] or "{}");draft=oldp.get("answers",oldp.get("draft_answers",{}));created=now();deadline=(datetime.datetime.fromisoformat(created)+datetime.timedelta(minutes=x.minutes)).isoformat()
+ newp={"draft_answers":draft,"draft_saved_at":created,"reopened_from_attempt_id":attempt_id,"reopen_reason":reason}
+ c.execute("INSERT INTO attempts(student_id,course_id,kind,item_id,attempt_no,status,started_at,payload) VALUES(?,?,?,?,?,'started',?,?)",(a["student_id"],a["course_id"],"exam",a["item_id"],n,created,json.dumps(newp,ensure_ascii=False)));new_id=c.execute("SELECT last_insert_rowid() id").fetchone()["id"]
+ cfg=json.loads(v["config"] or "{}");cfg.setdefault("teacher_reopens",[]).append({"source_attempt_id":attempt_id,"reason":reason,"minutes":x.minutes,"at":created})
+ c.execute("INSERT INTO exam_versions(attempt_id,student_id,course_id,version,questions,answers,created_at,config,deadline_at) VALUES(?,?,?,?,?,?,?,?,?)",(new_id,a["student_id"],a["course_id"],secrets.token_hex(8),v["questions"],v["answers"],created,json.dumps(cfg,ensure_ascii=False),deadline))
+ c.execute("INSERT INTO exam_reopen_audit(source_attempt_id,new_attempt_id,student_id,course_id,reason,minutes,source_status,source_payload,created_at) VALUES(?,?,?,?,?,?,?,?,?)",(attempt_id,new_id,a["student_id"],a["course_id"],reason,x.minutes,a["status"],a["payload"],created))
+ c.commit();c.close();return {"ok":True,"source_attempt_id":attempt_id,"attempt_id":new_id,"attempt":n,"status":"started","deadline_at":deadline,"restored_answers":len(draft),"reason":reason}
 
 @app.get("/api/teacher/overview")
 def overview(x_teacher_token:str|None=Header(None)):
