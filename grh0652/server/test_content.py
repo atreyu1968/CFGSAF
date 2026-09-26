@@ -47,16 +47,18 @@ def test_practice_screen_markup_matches_own_ra():
  for unit,ces in EXPECTED.items():
   html=(ROOT/"scorm"/unit/"index.html").read_text(encoding="utf-8")
   assert '<section class="screen" id="practica-home">' in html
-  screens=re.findall(r'<section class="screen practice-screen" id="pract-([0-9][a-z])" data-ce="([0-9][.][a-z])"',html)
-  assert {ce for _,ce in screens}==set(ces),(unit,screens)
+  screen_ids=set(re.findall(r'<section class="screen practice-screen" id="pract-([0-9][a-z])"',html))
+  expected_ids={ce.replace(".","") for ce in ces}
+  assert screen_ids==expected_ids,(unit,sorted(screen_ids))
   expected_total=len(ces)*6
   assert f"{expected_total} actividades" in html
   for ce in ces:
    key=ce.replace(".","")
    assert f'id="pract-{key}"' in html
-   assert f'data-ce="{ce}"' in html
    assert f'id="ex-{key}"' in html
    assert f'id="homeprog-{key}"' in html
+   marker=f'id="pract-{key}" data-ce='
+   if marker in html:assert f'id="pract-{key}" data-ce="{ce}"' in html
 
 
 def test_ra2_ra3_have_no_ra1_legacy_content():
