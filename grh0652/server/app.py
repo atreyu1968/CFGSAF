@@ -49,14 +49,14 @@ CREATE TABLE IF NOT EXISTS ai_rubrics(id INTEGER PRIMARY KEY AUTOINCREMENT,cours
  # Production keys must be provisioned into SQLite through the authenticated teacher endpoint.
  c.commit();return c
 
-DEFAULT={"portfolio_weight":40,"exam_weight":60,"pass_score":50,"ce_pass_percent":80,"ce_pass_score":50,"exam_enabled":False,"exam_questions_per_ce":3,"exam_minutes":45,"require_both_instruments":False}
+DEFAULT={"portfolio_weight":40,"exam_weight":60,"pass_score":50,"ce_pass_percent":80,"ce_pass_score":50,"exam_enabled":False,"exam_questions_per_ce":3,"exam_minutes":45,"require_both_instruments":False,"exam_integrity_enabled":True,"exam_fullscreen_required":True,"exam_incident_limit":3,"exam_incident_policy":"submit","exam_exempt_students":[]}
 LIMITS={"practice":3,"portfolio":2,"exam":1,"recovery":1}
 class StateIn(BaseModel): course_id:str;state:dict
 class EventIn(BaseModel):
  student_id:str;course_id:str;kind:str;ce:str|None=None;item_id:str|None=None;attempt:int|None=None;response:object|None=None;correct:bool|None=None;score:float|None=None;payload:dict|None=None
 class ResultIn(BaseModel): student_id:str;course_id:str;portfolio:float;exam:float;final:float;ce_passed:int;ce_total:int;ra_passed:bool;recovery:list[str]=[]
 class ConfigIn(BaseModel):
- portfolio_weight:int=40;exam_weight:int=60;pass_score:float=50;ce_pass_percent:int=80;ce_pass_score:float=50;exam_enabled:bool=False;exam_questions_per_ce:int=3;exam_minutes:int=45;require_both_instruments:bool=False
+ portfolio_weight:int=40;exam_weight:int=60;pass_score:float=50;ce_pass_percent:int=80;ce_pass_score:float=50;exam_enabled:bool=False;exam_questions_per_ce:int=3;exam_minutes:int=45;require_both_instruments:bool=False;exam_integrity_enabled:bool=True;exam_fullscreen_required:bool=True;exam_incident_limit:int=3;exam_incident_policy:str="submit";exam_exempt_students:list[str]=[]
 class AttemptIn(BaseModel): student_id:str;course_id:str;kind:str;item_id:str;payload:dict|None=None
 class SubmitAttempt(BaseModel): payload:dict|None=None
 class AnswerIn(BaseModel): response:object|None=None;ce:str|None=None
@@ -253,6 +253,9 @@ def get_config(course_id:str):
 def put_config(course_id:str,x:ConfigIn,x_teacher_token:str|None=Header(None)):
  auth(x_teacher_token);d=x.model_dump()
  if d["portfolio_weight"]+d["exam_weight"]!=100: raise HTTPException(400,"Los pesos deben sumar 100")
+ if d["exam_incident_policy"] not in ("log","warn","submit"):raise HTTPException(400,"Política de incidencias no válida")
+ if not 1<=d["exam_incident_limit"]<=99:raise HTTPException(400,"Límite de incidencias no válido")
+ if not 1<=d["exam_minutes"]<=300:raise HTTPException(400,"Duración de examen no válida")
  c=con()
  if c.execute("SELECT 1 FROM evaluation_closures WHERE course_id=?",(course_id,)).fetchone(): c.close();raise HTTPException(409,"La evaluación está cerrada")
  _,v=config_row(c,course_id);v+=1;c.execute("INSERT OR REPLACE INTO configs(course_id,config,version,updated_at) VALUES(?,?,?,?)",(course_id,json.dumps(d),v,now()));c.commit();c.close();return {**d,"version":v}
@@ -441,6 +444,7 @@ def exam_start(x:AttemptIn,x_student_token:str|None=Header(None)):
  version=secrets.token_hex(8)
  created=now()
  deadline=(datetime.datetime.fromisoformat(created)+datetime.timedelta(minutes=max(1,int(cfg.get("exam_minutes",45))))).isoformat()
+ cfg={**cfg,"exam_integrity_exempt":x.student_id in cfg.get("exam_exempt_students",[])}
  snap=json.dumps(cfg,ensure_ascii=False)
  c.execute("INSERT INTO exam_versions(attempt_id,student_id,course_id,version,questions,answers,created_at,config,deadline_at) VALUES(?,?,?,?,?,?,?,?,?)",(gate["id"],x.student_id,x.course_id,version,json.dumps(public,ensure_ascii=False),json.dumps(keys),created,snap,deadline))
  c.commit();c.close();return {"attempt_id":gate["id"],"attempt":gate["attempt"],"version":version,"questions":public,"config":cfg,"deadline_at":deadline,"resumed":False}
