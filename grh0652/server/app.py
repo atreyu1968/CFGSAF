@@ -19,6 +19,7 @@ _schema_ready=False
 _defaults_seeded=False
 _private_banks_seeded=False
 PRIVATE_BANK_DIR=os.getenv("GRH_PRIVATE_BANK_DIR","").strip()
+BACKUP_REQUIRED_TABLES={"students","states","evidence","results","configs","attempts","evaluation_closures","recovery_plans","exam_banks","exam_versions","recovery_banks","portfolio_banks","recovery_results","grade_adjustments","ai_settings","ai_reviews","ai_rubrics","exam_reopen_audit"}
 
 def con():
  global _schema_ready,_defaults_seeded,_private_banks_seeded
@@ -337,7 +338,7 @@ async def teacher_validate_backup(file:UploadFile=File(...),x_teacher_token:str|
  if len(data)<100 or data[:16]!=b"SQLite format 3\x00":raise HTTPException(400,"El archivo no es una copia SQLite válida")
  p=tempfile.NamedTemporaryFile(suffix=".db",delete=False);p.write(data);p.close()
  try:
-  c=sqlite3.connect(p.name);tables={r[0] for r in c.execute("SELECT name FROM sqlite_master WHERE type='table'")};required={"students","states","evidence","results","configs","attempts","exam_banks","exam_versions"};missing=sorted(required-tables)
+  c=sqlite3.connect(p.name);tables={r[0] for r in c.execute("SELECT name FROM sqlite_master WHERE type='table'")};required=BACKUP_REQUIRED_TABLES;missing=sorted(required-tables)
   integrity=c.execute("PRAGMA integrity_check").fetchone()[0];counts={t:c.execute("SELECT COUNT(*) FROM "+t).fetchone()[0] for t in sorted(required&tables)};c.close()
  finally:
   try:os.unlink(p.name)
@@ -353,7 +354,7 @@ async def teacher_restore_backup(file:UploadFile=File(...),confirm:str=Header(""
  if len(data)<100 or data[:16]!=b"SQLite format 3\x00":raise HTTPException(400,"El archivo no es una copia SQLite válida")
  p=tempfile.NamedTemporaryFile(suffix=".db",delete=False);p.write(data);p.close()
  try:
-  src=sqlite3.connect(p.name);integrity=src.execute("PRAGMA integrity_check").fetchone()[0];tables={r[0] for r in src.execute("SELECT name FROM sqlite_master WHERE type='table'")};required={"students","states","evidence","results","configs","attempts","exam_banks","exam_versions"}
+  src=sqlite3.connect(p.name);integrity=src.execute("PRAGMA integrity_check").fetchone()[0];tables={r[0] for r in src.execute("SELECT name FROM sqlite_master WHERE type='table'")};required=BACKUP_REQUIRED_TABLES
   if integrity!="ok" or required-tables:src.close();raise HTTPException(400,{"integrity":integrity,"missing_tables":sorted(required-tables)})
   dst=con();pre=tempfile.NamedTemporaryFile(prefix="grh0652-pre-restore-",suffix=".db",delete=False);pre.close();safe=sqlite3.connect(pre.name);dst.backup(safe);safe.close()
   dst.execute("PRAGMA wal_checkpoint(FULL)");src.backup(dst);dst.commit();src.close();dst.close()
