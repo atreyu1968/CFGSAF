@@ -256,3 +256,18 @@ def test_low_confidence_ai_answer_is_not_auto_scored(monkeypatch):
  r=client.post("/api/evidence",headers=SH("ai-low"),json=ev);assert r.status_code==200,r.text
  assert r.json()["score"] is None and r.json()["correct"] is None
  rows=client.get("/api/teacher/ai-reviews?course_id=AI",headers=H).json();assert any(x["student_id"]=="ai-low" and x["status"]=="pending" for x in rows)
+
+
+def test_teacher_can_override_pending_ai_review_authoritatively(monkeypatch):
+ body={"enabled":True,"base_url":"https://ai.example/v1","api_key":"secret-key","model":"test-model","rubric":"R","confidence":0.9,"auto_kinds":["free"]}
+ assert client.put("/api/teacher/ai-settings",headers=H,json=body).status_code==200
+ bank={"items":[{"id":"rev1","ce":"1.b","kind":"free","prompt":"Razona","options":[],"answer":"Referencia"}]}
+ assert client.put("/api/teacher/portfolio-bank/REVIEW",headers=H,json=bank).status_code==200
+ monkeypatch.setattr(module,"ai_grade",lambda *a,**k:{"score":65,"confidence":0.4,"verdict":"partial","feedback":"Dudosa"})
+ ev={"student_id":"review-student","course_id":"REVIEW","kind":"portfolio","ce":"1.b","item_id":"rev1","attempt":1,"response":"Respuesta alternativa","payload":{}}
+ r=client.post("/api/evidence",headers=SH("review-student"),json=ev);assert r.status_code==200 and r.json()["score"] is None
+ reviews=client.get("/api/teacher/ai-reviews?course_id=REVIEW",headers=H).json();rid=reviews[0]["id"]
+ done=client.put(f"/api/teacher/ai-reviews/{rid}",headers=H,json={"score":82,"feedback":"Respuesta válida y bien razonada","status":"accepted"});assert done.status_code==200,done.text
+ assert done.json()["score"]==82 and done.json()["correct"] is True
+ db=module.con();row=db.execute("SELECT score,correct,payload FROM evidence WHERE student_id='review-student' AND course_id='REVIEW' AND item_id='rev1'").fetchone();db.close()
+ assert row["score"]==82 and row["correct"]==1 and "Respuesta válida" in row["payload"]
