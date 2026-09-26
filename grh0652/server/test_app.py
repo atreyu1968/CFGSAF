@@ -431,14 +431,17 @@ def test_exam_reopen_requires_reason_and_closed_source():
  assert client.post(f"/api/teacher/exam-monitor/{aid}/reopen",headers=H,json={"minutes":45,"reason":"x"}).status_code==400
 
 
-def test_readiness_reports_missing_private_banks_and_blocks_unsafe_exam_activation():
+def test_readiness_reports_missing_private_banks_before_exam_use():
  course="READYEMPTY";client.post("/api/teacher/students/ready-user",headers=H)
  rd=client.get(f"/api/teacher/readiness/{course}",headers=H);assert rd.status_code==200;z=rd.json();assert z["ready"] is False and z["checks"]["exam_bank"]["ok"] is False
- cfg={**module.DEFAULT,"exam_enabled":True};bad=client.put(f"/api/config/{course}",headers=H,json=cfg);assert bad.status_code==409
+ cfg={**module.DEFAULT,"exam_enabled":True};assert client.put(f"/api/config/{course}",headers=H,json=cfg).status_code==200
+ db=module.con();tok=db.execute("SELECT token FROM students WHERE student_id='ready-user'").fetchone()["token"];db.close()
+ start=client.post("/api/exam/start",headers={"X-Student-Token":tok},json={"student_id":"ready-user","course_id":course,"kind":"exam","item_id":"final","payload":{}});assert start.status_code==409
 
 
-def test_exam_can_only_be_enabled_when_bank_meets_questions_per_ce():
+def test_readiness_detects_exam_bank_capacity():
  course="READYBANK";bank={"questions":[{"id":"q1","ce":"x","q":"Q1","options":["a","b"],"answer":0,"type":"choice"},{"id":"q2","ce":"x","q":"Q2","options":["a","b"],"answer":0,"type":"choice"}]}
  assert client.put(f"/api/teacher/exam-bank/{course}",headers=H,json=bank).status_code==200
- cfg={**module.DEFAULT,"exam_enabled":True,"exam_questions_per_ce":3};assert client.put(f"/api/config/{course}",headers=H,json=cfg).status_code==409
+ cfg={**module.DEFAULT,"exam_enabled":True,"exam_questions_per_ce":3};assert client.put(f"/api/config/{course}",headers=H,json=cfg).status_code==200
+ rd=client.get(f"/api/teacher/readiness/{course}",headers=H).json();assert rd["checks"]["exam_bank"]["ok"] is False
  cfg["exam_questions_per_ce"]=2;assert client.put(f"/api/config/{course}",headers=H,json=cfg).status_code==200
