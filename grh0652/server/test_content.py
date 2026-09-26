@@ -134,3 +134,12 @@ def test_portfolio_banks_are_varied_and_orders_are_populated():
     if item["kind"]=="order":
      assert len(item.get("options",[]))>=4,f"{unit} {ce}: ordenación vacía"
      assert len(set(item["options"]))==len(item["options"])
+
+
+def test_ut4_embedded_questions_follow_official_ce_boundaries():
+ html=(ROOT/"scorm"/"ut4"/"index.html").read_text(encoding="utf-8")
+ assert html.count('"ce":"4.h","type":"choice"')>=12
+ assert '"id":"4hqx1","ce":"4.h"' in html and "declaración-liquidación" in html
+ assert '"id":"4eqx7","ce":"4.e"' in html and "Finiquito:" in html
+ assert '"id":"4gqx3","ce":"4.g"' in html and "fecha de presentación" in html
+ assert '"id":"4gq7","ce":"4.g"' not in html
