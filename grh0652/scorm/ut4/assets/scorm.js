@@ -179,7 +179,7 @@ function correctText(q){if(q.type==='choice')return q.options[q.answer];if(q.typ
 function recordInteraction(q,a,ok,i){
  if(!connected||!api)return;try{const n=(state.attempts-1)*EXAM.length+i;api.LMSSetValue(`cmi.interactions.${n}.id`,q.id+'-a'+state.attempts);api.LMSSetValue(`cmi.interactions.${n}.type`,q.type==='tf'?'true-false':'choice');api.LMSSetValue(`cmi.interactions.${n}.student_response`,answerText(q,a).slice(0,240));api.LMSSetValue(`cmi.interactions.${n}.result`,ok?'correct':'wrong')}catch(e){}
 }
-async function submitExam(auto){
+async function submitExam(auto,reason){
  if(!examActive)return;
  const answers=examQuestions.map(examAnswer),answered=answers.filter(x=>x!==null).length;
  if(!auto&&answered<examQuestions.length&&!confirm('Has respondido '+answered+' de '+examQuestions.length+'. ¿Quieres entregar igualmente?'))return;
