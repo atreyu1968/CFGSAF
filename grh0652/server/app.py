@@ -178,6 +178,24 @@ def decide_ai_review(review_id:int,x:AIReviewDecision,x_teacher_token:str|None=H
 def create_student(student_id:str,x_teacher_token:str|None=Header(None)):
  auth(x_teacher_token);token=secrets.token_urlsafe(32);c=con();c.execute("INSERT OR REPLACE INTO students(student_id,token,created_at) VALUES(?,?,?)",(student_id,token,now()));c.commit();c.close();return {"student_id":student_id,"token":token}
 
+@app.get("/api/student/dashboard/{course_id}")
+def student_dashboard(course_id:str,x_student_token:str|None=Header(None)):
+ sid=student_auth(x_student_token);c=con();r=c.execute("SELECT * FROM results WHERE student_id=? AND course_id=?",(sid,course_id)).fetchone();plan=c.execute("SELECT criteria,status,created_at FROM recovery_plans WHERE student_id=? AND course_id=?",(sid,course_id)).fetchone();cfg,_=config_row(c,course_id)
+ er=c.execute("SELECT payload FROM attempts WHERE student_id=? AND course_id=? AND kind='exam' AND status='submitted' ORDER BY attempt_no DESC LIMIT 1",(sid,course_id)).fetchone();exam_by=json.loads(er["payload"] or "{}").get("by_ce",{}) if er else {}
+ rows=c.execute("SELECT ce,item_id,attempt,score FROM evidence WHERE student_id=? AND course_id=? AND kind='portfolio' AND ce IS NOT NULL AND score IS NOT NULL ORDER BY id",(sid,course_id)).fetchall();c.close();latest={}
+ for e in rows:
+  k=(e["ce"],e["item_id"]);prev=latest.get(k)
+  if not prev or int(e["attempt"] or 0)>=int(prev["attempt"] or 0):latest[k]=dict(e)
+ pb={}
+ for e in latest.values():pb.setdefault(e["ce"],[]).append(float(e["score"] or 0))
+ ces=sorted(set(pb)|set(exam_by));pw=float(cfg["portfolio_weight"])/100;ew=float(cfg["exam_weight"])/100;detail={}
+ for ce in ces:
+  vals=pb.get(ce,[]);ps=sum(vals)/len(vals) if vals else 0;ex=exam_by.get(ce,{});es=(float(ex.get("ok",0))/max(1,int(ex.get("n",0)))*100) if ex.get("n",0) else 0;final=ps*pw+es*ew;detail[ce]={"portfolio":round(ps,2),"exam":round(es,2),"final":round(final,2),"passed":final>=float(cfg["ce_pass_score"])}
+ result_data=None
+ if r:
+  result_data={"portfolio":round(r["portfolio"],2),"exam":round(r["exam"],2),"final":round(r["final"],2),"ce_passed":r["ce_passed"],"ce_total":r["ce_total"],"ra_passed":bool(r["ra_passed"]),"recovery":json.loads(r["recovery"] or "[]")}
+ return {"result":result_data,"ce":detail,"recovery_plan":({"criteria":json.loads(plan["criteria"] or "[]"),"status":plan["status"],"created_at":plan["created_at"]} if plan else None)}
+
 @app.get("/api/student/feedback/{course_id}")
 def student_feedback(course_id:str,x_student_token:str|None=Header(None)):
  sid=student_auth(x_student_token);c=con();rows=[dict(r) for r in c.execute("SELECT ce,item_id,score,feedback,status,breakdown,created_at FROM ai_reviews WHERE student_id=? AND course_id=? AND status IN ('accepted','rejected') ORDER BY id DESC",(sid,course_id))];c.close()
