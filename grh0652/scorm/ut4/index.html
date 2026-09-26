@@ -139,13 +139,22 @@ benefit:['Prestación','Cantidad satisfecha como prestación durante la suspensi
 combined:['Ingresos totales diferenciados','Suma didáctica de importes procedentes de pagadores distintos.','Suma salario empresarial y prestación solo para analizar el total del periodo.','Mantén identificada la procedencia de cada importe.'],
 reduction:['Reducción','Importe salarial que deja de devengarse por el tiempo no retribuido del supuesto.','Valor diario u horario × tiempo no retribuido.','La causa de la ausencia puede producir efectos jurídicos diferentes.'],
 net:['Total salarial del supuesto','Resultado salarial final del ejercicio simplificado.','Salario inicial − reducción indicada.','No lo trates como nómina real completa si faltan cotizaciones o IRPF.'],
-hourly:['Valor salarial por hora','Valor utilizado para calcular una reducción horaria en el supuesto.','Valor diario ÷ horas de jornada indicadas.','No dividas el salario mensual directamente por 8.']
+hourly:['Valor salarial por hora','Valor utilizado para calcular una reducción horaria en el supuesto.','Valor diario ÷ horas de jornada indicadas.','No dividas el salario mensual directamente por 8.'],
+d60:['Días al 60 %','Número de días de IT por enfermedad común que, según el esquema didáctico del supuesto, generan prestación al 60 % de la base reguladora.','Cuenta únicamente los días comprendidos en el tramo al 60 % que marque el caso.','No incluyas los tres primeros días sin prestación ni los días que correspondan al tramo del 75 %.'],
+d75:['Días al 75 %','Número de días de IT por enfermedad común que, según el supuesto, generan prestación al 75 % de la base reguladora.','Cuenta los días incluidos en el tramo al 75 % a partir del momento indicado en el ejercicio.','No apliques el 75 % desde el primer día si el supuesto distingue tramos.'],
+dias:['Días con prestación','Número de días cubiertos por la prestación de AT/EP en el supuesto.','Determina los días posteriores al hecho causante que el ejercicio considera cubiertos y multiplícalos por la prestación diaria.','No cuentes automáticamente el día del accidente si el caso indica que la prestación comienza al día siguiente.']
+};
+const PAYROLL_FIELD_OVERRIDES={
+ 'pay:base':['Salario base','Retribución básica mensual de la trabajadora en la nómina ordinaria del caso 17.','Traslada el salario base indicado en el enunciado: 1.500 € en este supuesto.','No introduzcas aquí la base de cotización ni el total devengado.'],
+ 'pay10:net':['Líquido de atrasos','Importe neto que corresponde percibir en el recibo separado de atrasos después de sus deducciones.','Total bruto de atrasos − cuota de Seguridad Social del trabajador − IRPF del supuesto.','No uses el salario mensual ordinario ni mezcles este líquido con la nómina corriente.']
 };
 function payrollHelpFor(input){
- const attrs=[...input.attributes].find(a=>/^data-(pay\d*|rpay)$/.test(a.name));
- const key=attrs?attrs.value:'';
+ const attr=[...input.attributes].find(a=>/^data-(pay\d*|rpay|rand-ec|rand-at|rand-fin)$/.test(a.name));
+ const key=attr?attr.value:'';
+ const family=attr?attr.name.slice(5):'';
+ const token=family&&key?family+':'+key:'';
  const label=input.closest('.payroll-row')?.querySelector('span')?.textContent?.trim()||'Campo de nómina';
- const h=PAYROLL_FIELD_HELP[key]||[label,'Campo que debes obtener a partir de los datos del supuesto.','Localiza los datos relacionados, identifica la regla aplicable y realiza el cálculo antes de introducirlo.','Comprueba unidades, porcentajes y redondeo.'];
+ const h=PAYROLL_FIELD_OVERRIDES[token]||PAYROLL_FIELD_HELP[key]||[label,'Campo que debes obtener a partir de los datos del supuesto.','Localiza los datos relacionados, identifica la regla aplicable y realiza el cálculo antes de introducirlo.','Comprueba unidades, porcentajes y redondeo.'];
  return {label,h};
 }
 const payrollTip=document.createElement('div');payrollTip.className='payroll-help';payrollTip.hidden=true;document.body.appendChild(payrollTip);
