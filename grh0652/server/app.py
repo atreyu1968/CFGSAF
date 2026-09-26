@@ -109,10 +109,10 @@ def recompute_official(c,student_id,course_id):
    elif key=="exam":exam=float(x["new_score"])
    else:final=float(x["new_score"])
  if adj.get(("ra","")):ra=final>=float(cfg["pass_score"])
- c.execute("INSERT OR REPLACE INTO results VALUES(?,?,?,?,?,?,?,?,?,?)",(student_id,course_id,portfolio,exam,final,passed,len(vals),int(ra),json.dumps(recovery),now()))
+ base=c.execute("SELECT * FROM results WHERE student_id=? AND course_id=?",(student_id,course_id)).fetchone()
  plan=c.execute("SELECT 1 FROM recovery_plans WHERE student_id=? AND course_id=?",(student_id,course_id)).fetchone()
  if plan or recovery:c.execute("INSERT OR REPLACE INTO recovery_plans VALUES(?,?,?,?,?)",(student_id,course_id,json.dumps(recovery),"completed" if not recovery else "pending",now()))
- return {"portfolio":round(portfolio,2),"exam":round(exam,2),"final":round(final,2),"ce_passed":passed,"ce_total":len(vals),"ra_passed":ra,"recovery":recovery,"ce":detail}
+ return {"portfolio":round(portfolio,2),"exam":round(exam,2),"final":round(final,2),"ce_passed":passed,"ce_total":len(vals),"ra_passed":ra,"recovery":recovery,"ce":detail,"calculated":({"portfolio":base["portfolio"],"exam":base["exam"],"final":base["final"]} if base else None)}
 
 def ai_settings_row(c):
  r=c.execute("SELECT * FROM ai_settings WHERE id=1").fetchone()
