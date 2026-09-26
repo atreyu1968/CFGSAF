@@ -807,3 +807,21 @@ def test_full_student_to_teacher_evaluation_cycle_e2e():
  exported=client.get("/api/teacher/export-additio/"+course,headers=H);assert exported.status_code==200,exported.text
  rows=list(csv.reader(io.StringIO(exported.content.decode("utf-8-sig"),newline=""),delimiter=";"));hdr=rows[0];erow=next(x for x in rows[1:] if x[0]==sid)
  assert hdr==["Alumno","CE 1.a","Portafolio","Examen","RA"];assert [float(x) for x in erow[1:]]==[100,100,100,100]
+
+
+def test_ut4_advanced_payroll_cases_are_preserved():
+    """Regression guard for evaluable part-time and salary-arrears payroll practice."""
+    from pathlib import Path
+    html = (Path(__file__).resolve().parents[1] / "scorm" / "ut4" / "index.html").read_text(encoding="utf-8")
+    assert "Caso 29 · Nómina a tiempo parcial" in html
+    assert 'id="payroll-form-9"' in html
+    assert 'data-pay9="basep"' in html
+    assert 'id="checkPayroll9"' in html
+    assert "9:{basep:900,compp:120,dev:1020" in html
+    assert "Caso 30 · Atrasos salariales" in html
+    assert 'id="payroll-form-10"' in html
+    assert 'data-pay10="basearrears"' in html
+    assert 'id="checkPayroll10"' in html
+    assert "10:{monthly:100,basearrears:320,comparrears:80,gross:400" in html
+    assert "10:'4.e'" in html
+    assert "recordPayrollEvidence('4.ep-payroll-'+n" in html
