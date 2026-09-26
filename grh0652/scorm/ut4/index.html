@@ -95,6 +95,14 @@ renderLab();
 renderPractice();scormInit();show('inicio');
 
 const PAYROLL_FIELD_HELP={
+basep:['Salario base proporcional','Salario base correspondiente al porcentaje de jornada del caso a tiempo parcial.','Salario base de jornada completa × porcentaje de jornada.','No reduzcas dos veces el salario ni apliques el porcentaje al total devengado.'],
+compp:['Complemento proporcional','Parte del complemento de puesto que corresponde a la jornada parcial.','Complemento de jornada completa × porcentaje de jornada.','No uses el complemento completo cuando el supuesto exige proporcionalidad.'],
+dev:['Total devengado','Suma de las percepciones que se abonan en el periodo antes de deducciones.','Suma salario base proporcional y complementos/percepciones cobradas en el mes.','No añadas la prorrata si el caso indica que solo se utiliza para cotizar.'],
+monthly:['Diferencia mensual de atrasos','Incremento retributivo reconocido por cada mes afectado.','Incremento mensual de salario base + incremento mensual de complemento.','No multipliques por los meses hasta haber obtenido primero la diferencia de un mes.'],
+basearrears:['Atrasos de salario base','Diferencias acumuladas de salario base durante el periodo de regularización.','Incremento mensual de salario base × número de meses afectados.','No incluyas aquí los atrasos de complementos.'],
+comparrears:['Atrasos de complemento','Diferencias acumuladas del complemento durante el periodo regularizado.','Incremento mensual del complemento × número de meses afectados.','No mezcles este importe con el salario base antes de comprobar ambos cálculos.'],
+gross:['Total bruto de atrasos','Suma total de diferencias salariales generadas por la revisión retroactiva.','Atrasos de salario base + atrasos de complementos.','No restes todavía Seguridad Social ni IRPF.'],
+ss:['Seguridad Social sobre atrasos','Cuota de Seguridad Social del trabajador calculada sobre la diferencia salarial según el tipo didáctico indicado.','Total bruto de atrasos × porcentaje de Seguridad Social facilitado en el caso.','No introduzcas el porcentaje: el campo pide el importe de la cuota.'],
 base:['Salario base','Retribución fijada para el grupo, nivel o puesto según contrato y convenio.','Traslada el importe mensual que corresponda al periodo.','No confundas salario base con total devengado.'],
 comp:['Complemento salarial','Cantidad añadida al salario base por puesto, condiciones, resultados u otra causa prevista.','Identifica el complemento indicado en el supuesto o convenio.','No incluyas aquí conceptos extrasalariales.'],
 comision:['Comisión / variable','Retribución vinculada a ventas, objetivos o resultados.','Aplica el porcentaje o condición indicada y comprueba si se alcanzó el objetivo.','No la sumes dos veces al total.'],
