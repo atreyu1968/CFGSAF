@@ -6,7 +6,9 @@ services:
       - .env
     environment:
       GRH_DB: /data/grh0652.db
+      GRH_PRIVATE_BANK_DIR: /private-banks
     volumes:
       - ./data:/data
+      - ./private-banks:/private-banks:ro
     ports:
       - "8080:8080"
