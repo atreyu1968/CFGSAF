@@ -45,6 +45,7 @@ CREATE TABLE IF NOT EXISTS ai_rubrics(id INTEGER PRIMARY KEY AUTOINCREMENT,cours
  if "criteria" not in rcols:c.execute("ALTER TABLE ai_rubrics ADD COLUMN criteria TEXT NOT NULL DEFAULT '[]'")
  vcols={r["name"] for r in c.execute("PRAGMA table_info(ai_reviews)")}
  if "breakdown" not in vcols:c.execute("ALTER TABLE ai_reviews ADD COLUMN breakdown TEXT NOT NULL DEFAULT '[]'")
+ if "source_kind" not in vcols:c.execute("ALTER TABLE ai_reviews ADD COLUMN source_kind TEXT NOT NULL DEFAULT 'portfolio'")
  # Portfolio answer keys are intentionally not loaded from repository files.
  # Production keys must be provisioned into SQLite through the authenticated teacher endpoint.
  c.commit();return c
@@ -219,6 +220,18 @@ def get_ai_reviews(course_id:str|None=None,x_teacher_token:str|None=Header(None)
   r["response"]=json.loads(r["response"]) if r["response"] else None;r["breakdown"]=json.loads(r.get("breakdown") or "[]");r.pop("reference",None)
  return rows
 
+def recompute_recovery_from_reviews(c,student_id,course_id,attempt_no):
+ a=c.execute("SELECT payload FROM attempts WHERE student_id=? AND course_id=? AND kind='recovery' AND attempt_no=? ORDER BY id DESC LIMIT 1",(student_id,course_id,attempt_no)).fetchone();p=c.execute("SELECT criteria FROM recovery_plans WHERE student_id=? AND course_id=?",(student_id,course_id)).fetchone()
+ if not a or not p:return None
+ payload=json.loads(a["payload"] or "{}");by=payload.get("by_ce",{});ces=json.loads(p["criteria"] or "[]");cfg,_=config_row(c,course_id);threshold=float(cfg.get("ce_pass_score",50))/100
+ for r in c.execute("SELECT ce,item_id,score,status FROM ai_reviews WHERE student_id=? AND course_id=? AND attempt=? AND source_kind='recovery'",(student_id,course_id,attempt_no)):
+  d=by.setdefault(r["ce"],{"ok":0,"n":1});d["pending"]=max(0,int(d.get("pending",0))-1)
+  if r["status"] in ("accepted","rejected"):
+   d["graded"]=int(d.get("graded",0))+1;d["points"]=float(d.get("points",0))+float(r["score"] or 0)
+   if float(r["score"] or 0)>=float(cfg.get("ce_pass_score",50)):d["ok"]=int(d.get("ok",0))+1
+ pending=any(int(v.get("pending",0))>0 for v in by.values());passed=[ce for ce,v in by.items() if not int(v.get("pending",0)) and int(v.get("graded",0))>=int(v.get("n",0)) and float(v.get("points",0))/(100*max(1,int(v.get("n",0))))>=threshold];graded=sum(int(v.get("graded",0)) for v in by.values());score=round(sum(float(v.get("points",0)) for v in by.values())/max(1,graded),2) if graded else 0;status="review" if pending else ("passed" if len(passed)==len(ces) else "pending")
+ c.execute("INSERT OR REPLACE INTO recovery_results VALUES(?,?,?,?,?,?)",(student_id,course_id,score,json.dumps(passed),status,now()));return {"score":score,"passed":passed,"status":status}
+
 @app.put("/api/teacher/ai-reviews/{review_id}")
 def decide_ai_review(review_id:int,x:AIReviewDecision,x_teacher_token:str|None=Header(None)):
  auth(x_teacher_token)
@@ -227,11 +240,12 @@ def decide_ai_review(review_id:int,x:AIReviewDecision,x_teacher_token:str|None=H
  c=con();r=c.execute("SELECT * FROM ai_reviews WHERE id=?",(review_id,)).fetchone()
  if not r:c.close();raise HTTPException(404,"Revisión no encontrada")
  final_score=float(x.score) if x.status=="accepted" else 0.0;cfg,_=config_row(c,r["course_id"]);correct=final_score>=float(cfg.get("ce_pass_score",50))
- ev=c.execute("SELECT id FROM evidence WHERE student_id=? AND course_id=? AND kind='portfolio' AND ce=? AND item_id=? AND attempt=? ORDER BY id DESC LIMIT 1",(r["student_id"],r["course_id"],r["ce"],r["item_id"],r["attempt"])).fetchone()
- if not ev:c.close();raise HTTPException(409,"No se encontró la evidencia asociada")
- oldev=c.execute("SELECT payload FROM evidence WHERE id=?",(ev["id"],)).fetchone();ep=json.loads(oldev["payload"] or "{}") if oldev else {};ep.update({"ai_review_id":review_id,"teacher_feedback":x.feedback,"teacher_decision":x.status,"teacher_reviewed_at":now()})
- c.execute("UPDATE evidence SET score=?,correct=?,payload=? WHERE id=?",(final_score,int(correct),json.dumps(ep,ensure_ascii=False),ev["id"]))
- c.execute("UPDATE ai_reviews SET score=?,feedback=?,status=? WHERE id=?",(final_score,x.feedback,x.status,review_id));official=recompute_official(c,r["student_id"],r["course_id"]);c.commit();c.close();return {"ok":True,"score":final_score,"correct":correct,"status":x.status,"evidence_id":ev["id"],"result":official}
+ source=r["source_kind"] if "source_kind" in r.keys() else "portfolio";ev=None
+ if source!="recovery":ev=c.execute("SELECT id FROM evidence WHERE student_id=? AND course_id=? AND kind='portfolio' AND ce=? AND item_id=? AND attempt=? ORDER BY id DESC LIMIT 1",(r["student_id"],r["course_id"],r["ce"],r["item_id"],r["attempt"])).fetchone()
+ if source!="recovery" and not ev:c.close();raise HTTPException(409,"No se encontró la evidencia asociada")
+ if ev:
+  oldev=c.execute("SELECT payload FROM evidence WHERE id=?",(ev["id"],)).fetchone();ep=json.loads(oldev["payload"] or "{}") if oldev else {};ep.update({"ai_review_id":review_id,"teacher_feedback":x.feedback,"teacher_decision":x.status,"teacher_reviewed_at":now()});c.execute("UPDATE evidence SET score=?,correct=?,payload=? WHERE id=?",(final_score,int(correct),json.dumps(ep,ensure_ascii=False),ev["id"]))
+ c.execute("UPDATE ai_reviews SET score=?,feedback=?,status=? WHERE id=?",(final_score,x.feedback,x.status,review_id));recovery=recompute_recovery_from_reviews(c,r["student_id"],r["course_id"],r["attempt"]) if source=="recovery" else None;official=recompute_official(c,r["student_id"],r["course_id"]);c.commit();c.close();return {"ok":True,"score":final_score,"correct":correct,"status":x.status,"source_kind":source,"evidence_id":ev["id"] if ev else None,"recovery_result":recovery,"result":official}
 
 @app.post("/api/teacher/students/{student_id}")
 def create_student(student_id:str,x_teacher_token:str|None=Header(None)):
@@ -354,9 +368,9 @@ def recovery_submit(attempt_id:int,x:SubmitAttempt,x_student_token:str|None=Head
    elif settings.get("enabled") and kind in settings.get("auto_kinds",[]):
     try:
      rub=rubric_for(c,a["course_id"],r["ce"] or "",r["item_id"] or "",settings.get("rubric") or "");local_settings=dict(settings);local_settings["rubric"]=rub["rubric"];local_settings["criteria"]=rub.get("criteria",[]);grade=ai_grade(local_settings,given,expected,{"course_id":a["course_id"],"ce":r["ce"],"item_id":r["item_id"],"kind":kind,"rubric_name":rub.get("name","")});review=grade["confidence"]<float(settings.get("confidence",0.75));score=None if review else float(grade["score"]);ok=None if review else score>=float(cfg.get("ce_pass_score",50))
-     c.execute("INSERT INTO ai_reviews(student_id,course_id,ce,item_id,attempt,response,reference,score,confidence,verdict,feedback,status,created_at,breakdown) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)",(a["student_id"],a["course_id"],r["ce"],r["item_id"],a["attempt_no"],json.dumps(given,ensure_ascii=False),json.dumps(expected,ensure_ascii=False),grade["score"],grade["confidence"],grade["verdict"],grade["feedback"],"pending" if review else "accepted",now(),json.dumps(grade.get("criteria",[]),ensure_ascii=False)))
+     c.execute("INSERT INTO ai_reviews(student_id,course_id,ce,item_id,attempt,response,reference,score,confidence,verdict,feedback,status,created_at,breakdown,source_kind) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",(a["student_id"],a["course_id"],r["ce"],r["item_id"],a["attempt_no"],json.dumps(given,ensure_ascii=False),json.dumps(expected,ensure_ascii=False),grade["score"],grade["confidence"],grade["verdict"],grade["feedback"],"pending" if review else "accepted",now(),json.dumps(grade.get("criteria",[]),ensure_ascii=False),"recovery"))
     except Exception as e:
-     ok=None;score=None;c.execute("INSERT INTO ai_reviews(student_id,course_id,ce,item_id,attempt,response,reference,score,confidence,verdict,feedback,status,created_at,breakdown) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)",(a["student_id"],a["course_id"],r["ce"],r["item_id"],a["attempt_no"],json.dumps(given,ensure_ascii=False),json.dumps(expected,ensure_ascii=False),None,0,"error",str(e)[:1200],"pending",now(),"[]"))
+     ok=None;score=None;c.execute("INSERT INTO ai_reviews(student_id,course_id,ce,item_id,attempt,response,reference,score,confidence,verdict,feedback,status,created_at,breakdown,source_kind) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",(a["student_id"],a["course_id"],r["ce"],r["item_id"],a["attempt_no"],json.dumps(given,ensure_ascii=False),json.dumps(expected,ensure_ascii=False),None,0,"error",str(e)[:1200],"pending",now(),"[]","recovery"))
    else:ok=False;score=0
   else:ok=given==expected;score=100 if ok else 0
   if ok is None:d["pending"]=d.get("pending",0)+1
@@ -522,8 +536,8 @@ def evidence(x:EventIn,x_student_token:str|None=Header(None)):
    elif settings.get("enabled") and kind in settings.get("auto_kinds",[]):
     try:
      rub=rubric_for(c,x.course_id,x.ce or "",x.item_id or "",settings.get("rubric") or "");local_settings=dict(settings);local_settings["rubric"]=rub["rubric"];local_settings["criteria"]=rub.get("criteria",[]);grade=ai_grade(local_settings,given,expected,{"course_id":x.course_id,"ce":x.ce,"item_id":x.item_id,"kind":kind,"rubric_name":rub.get("name","")});review=grade["confidence"]<float(settings.get("confidence",0.75));score=None if review else grade["score"];ok=None if review else grade["score"]>=float(config_row(c,x.course_id)[0].get("ce_pass_score",50))
-     c.execute("INSERT INTO ai_reviews(student_id,course_id,ce,item_id,attempt,response,reference,score,confidence,verdict,feedback,status,created_at,breakdown) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)",(x.student_id,x.course_id,x.ce,x.item_id,x.attempt,json.dumps(given,ensure_ascii=False),json.dumps(expected,ensure_ascii=False),grade["score"],grade["confidence"],grade["verdict"],grade["feedback"],"pending" if review else "accepted",now(),json.dumps(grade.get("criteria",[]),ensure_ascii=False)))
-    except Exception as e:ok=None;score=None;c.execute("INSERT INTO ai_reviews(student_id,course_id,ce,item_id,attempt,response,reference,score,confidence,verdict,feedback,status,created_at,breakdown) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)",(x.student_id,x.course_id,x.ce,x.item_id,x.attempt,json.dumps(given,ensure_ascii=False),json.dumps(expected,ensure_ascii=False),None,0,"error",str(e)[:1200],"pending",now(),"[]"))
+     c.execute("INSERT INTO ai_reviews(student_id,course_id,ce,item_id,attempt,response,reference,score,confidence,verdict,feedback,status,created_at,breakdown) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)",(x.student_id,x.course_id,x.ce,x.item_id,x.attempt,json.dumps(given,ensure_ascii=False),json.dumps(expected,ensure_ascii=False),grade["score"],grade["confidence"],grade["verdict"],grade["feedback"],"pending" if review else "accepted",now(),json.dumps(grade.get("criteria",[]),ensure_ascii=False),"recovery"))
+    except Exception as e:ok=None;score=None;c.execute("INSERT INTO ai_reviews(student_id,course_id,ce,item_id,attempt,response,reference,score,confidence,verdict,feedback,status,created_at,breakdown) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)",(x.student_id,x.course_id,x.ce,x.item_id,x.attempt,json.dumps(given,ensure_ascii=False),json.dumps(expected,ensure_ascii=False),None,0,"error",str(e)[:1200],"pending",now(),"[]","recovery"))
    else:ok=False;score=0
   elif kind=="order":ok=given==expected
   elif kind=="match":ok=isinstance(given,list) and isinstance(expected,list) and [str(v) for v in given]==[str(v) for v in expected]
