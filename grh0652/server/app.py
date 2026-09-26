@@ -114,6 +114,9 @@ def recompute_official(c,student_id,course_id):
   ps=sum(pb.get(ce,[]))/len(pb[ce]) if pb.get(ce) else 0;ex=eb.get(ce,{});es=float(ex.get("ok",0))/max(1,int(ex.get("n",0)))*100 if ex.get("n",0) else 0;fv=ps*pw+es*ew;x=adj.get(("ce",ce))
   if x:fv=float(x["new_score"])
   detail[ce]={"portfolio":round(ps,2),"exam":round(es,2),"final":round(fv,2),"passed":fv>=float(cfg["ce_pass_score"])}
+ rec=c.execute("SELECT criteria_passed,status FROM recovery_results WHERE student_id=? AND course_id=?",(student_id,course_id)).fetchone();recovered=set(json.loads(rec["criteria_passed"] or "[]")) if rec else set()
+ for ce in recovered:
+  if ce in detail:detail[ce]["passed"]=True;detail[ce]["recovered"]=True
  vals=list(detail.values());portfolio=sum(v["portfolio"] for v in vals)/len(vals) if vals else 0;exam=sum(v["exam"] for v in vals)/len(vals) if vals else 0;final=portfolio*pw+exam*ew;passed=sum(v["passed"] for v in vals);needed=(len(vals)*int(cfg["ce_pass_percent"])+99)//100 if vals else 0;both=(not cfg.get("require_both_instruments")) or (portfolio>=float(cfg["pass_score"]) and exam>=float(cfg["pass_score"]));ra=final>=float(cfg["pass_score"]) and passed>=needed and both;recovery=[k for k,v in detail.items() if not v["passed"]]
  for scope,key in (("portfolio","portfolio"),("exam","exam"),("ra","final")):
   x=adj.get((scope,""))
@@ -346,14 +349,14 @@ def recovery_submit(attempt_id:int,x:SubmitAttempt,x_student_token:str|None=Head
    if exact:ok=True;score=100
    elif settings.get("enabled") and kind in settings.get("auto_kinds",[]):
     try:
-     rub=rubric_for(c,x.course_id,x.ce or "",x.item_id or "",settings.get("rubric") or "");local_settings=dict(settings);local_settings["rubric"]=rub["rubric"];local_settings["criteria"]=rub.get("criteria",[]);grade=ai_grade(local_settings,given,expected,{"course_id":x.course_id,"ce":x.ce,"item_id":x.item_id,"kind":kind,"rubric_name":rub.get("name","")});review=grade["confidence"]<float(settings.get("confidence",0.75));score=None if review else grade["score"];ok=None if review else grade["score"]>=float(config_row(c,x.course_id)[0].get("ce_pass_score",50))
-     c.execute("INSERT INTO ai_reviews(student_id,course_id,ce,item_id,attempt,response,reference,score,confidence,verdict,feedback,status,created_at,breakdown) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)",(x.student_id,x.course_id,x.ce,x.item_id,x.attempt,json.dumps(given,ensure_ascii=False),json.dumps(expected,ensure_ascii=False),grade["score"],grade["confidence"],grade["verdict"],grade["feedback"],"pending" if review else "accepted",now(),json.dumps(grade.get("criteria",[]),ensure_ascii=False)))
+     rub=rubric_for(c,a["course_id"],r["ce"] or "",r["item_id"] or "",settings.get("rubric") or "");local_settings=dict(settings);local_settings["rubric"]=rub["rubric"];local_settings["criteria"]=rub.get("criteria",[]);grade=ai_grade(local_settings,given,expected,{"course_id":a["course_id"],"ce":r["ce"],"item_id":r["item_id"],"kind":kind,"rubric_name":rub.get("name","")});review=grade["confidence"]<float(settings.get("confidence",0.75));score=None if review else grade["score"];ok=None if review else grade["score"]>=float(config_row(c,x.course_id)[0].get("ce_pass_score",50))
+     c.execute("INSERT INTO ai_reviews(student_id,course_id,ce,item_id,attempt,response,reference,score,confidence,verdict,feedback,status,created_at,breakdown) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)",(a["student_id"],a["course_id"],r["ce"],r["item_id"],a["attempt_no"],json.dumps(given,ensure_ascii=False),json.dumps(expected,ensure_ascii=False),grade["score"],grade["confidence"],grade["verdict"],grade["feedback"],"pending" if review else "accepted",now(),json.dumps(grade.get("criteria",[]),ensure_ascii=False)))
     except Exception as e:ok=None;score=None;c.execute("INSERT INTO ai_reviews(student_id,course_id,ce,item_id,attempt,response,reference,score,confidence,verdict,feedback,status,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)",(x.student_id,x.course_id,x.ce,x.item_id,x.attempt,json.dumps(given,ensure_ascii=False),json.dumps(expected,ensure_ascii=False),None,0,"error",str(e)[:1200],"pending",now()))
    else:ok=False;score=0
   else:ok=given==expected
   if ok:d["ok"]+=1
  passed=[ce for ce,v in by.items() if v["n"] and v["ok"]/v["n"]>=threshold];score=round(sum(v["ok"] for v in by.values())/max(1,sum(v["n"] for v in by.values()))*100,2);status="passed" if len(passed)==len(ces) else "pending"
- c.execute("UPDATE attempts SET status='submitted',submitted_at=?,payload=? WHERE id=?",(now(),json.dumps({"answers":answers,"score":score,"by_ce":by,"integrity":integrity},ensure_ascii=False),attempt_id));c.execute("INSERT OR REPLACE INTO recovery_results VALUES(?,?,?,?,?,?)",(a["student_id"],a["course_id"],score,json.dumps(passed),status,now()))
+ c.execute("UPDATE attempts SET status='submitted',submitted_at=?,payload=? WHERE id=?",(now(),json.dumps({"answers":answers,"score":score,"by_ce":by},ensure_ascii=False),attempt_id));c.execute("INSERT OR REPLACE INTO recovery_results VALUES(?,?,?,?,?,?)",(a["student_id"],a["course_id"],score,json.dumps(passed),status,now()))
  rr=c.execute("SELECT * FROM results WHERE student_id=? AND course_id=?",(a["student_id"],a["course_id"])).fetchone()
  authoritative=None
  if rr:
