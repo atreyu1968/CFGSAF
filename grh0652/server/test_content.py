@@ -160,3 +160,19 @@ def test_ut4_interactive_practice_matches_official_ra4_ce():
  assert "4.g · Recibo salarial y documentos de cotización" not in html
  assert "4.h · Plazos de pago y presentación" not in html
 
+
+
+def test_all_units_use_shared_secure_evaluable_exam():
+ for unit in ("ut1","ut2","ut3","ut4"):
+  html=(ROOT/"scorm"/unit/"index.html").read_text(encoding="utf-8")
+  assert "../../assets/secure-exam.js" in html
+  assert "GRH_SECURE_EXAM?.mount" in html
+ ut4=(ROOT/"scorm"/"ut4"/"index.html").read_text(encoding="utf-8")
+ assert "addEventListener('click',()=>quizUI(balancedExam(36),'examQuiz','examResult',true))" not in ut4
+ assert "startId:'startExamBtn',boxId:'examQuiz',resultId:'examResult'" in ut4
+
+
+def test_secure_exam_client_has_integrity_and_persistence_guards():
+ js=(ROOT/"assets"/"secure-exam.js").read_text(encoding="utf-8")
+ for required in ("EVIDENCE.startExam","EVIDENCE.saveExamAnswers","EVIDENCE.submitExam","visibilitychange","window.addEventListener('blur'","fullscreenchange","beforeunload","incident_limit","timeout"):
+  assert required in js
