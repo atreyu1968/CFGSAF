@@ -143,13 +143,13 @@ async function startExam(){
 }
 
 function examGuard(e){if(!examActive)return;if(e.type==='beforeunload'){e.preventDefault();e.returnValue='';return ''}if(e.type==='popstate'){history.pushState(null,'',location.href);registerIncident('navigation')}if(e.type==='contextmenu'||(e.type==='keydown'&&(e.key==='F5'||(e.ctrlKey||e.metaKey)&&['r','l','t','n','w'].includes(e.key.toLowerCase())))){e.preventDefault();registerIncident('blocked_command')}}
-document.addEventListener('fullscreenchange',()=>{if(examActive&&!document.fullscreenElement){registerIncident('fullscreen_exit');setTimeout(()=>{if(examActive)requestFull()},150)}});
+document.addEventListener('fullscreenchange',()=>{if(examActive&&!document.fullscreenElement&&examServerConfig.exam_fullscreen_required!==false&&!examServerConfig.exam_integrity_exempt){registerIncident('fullscreen_exit');setTimeout(()=>{if(examActive)requestFull()},150)}});
 document.addEventListener('visibilitychange',()=>{if(examActive&&document.hidden)registerIncident('tab_hidden')});
 window.addEventListener('blur',()=>{if(examActive)registerIncident('window_blur')});
 window.addEventListener('beforeunload',examGuard);window.addEventListener('popstate',examGuard);document.addEventListener('contextmenu',examGuard);document.addEventListener('keydown',examGuard,true);
 
 function registerIncident(reason){
- if(!examActive)return;const now=Date.now();if(now-lastIncident<1400)return;lastIncident=now;state.incidents=(state.incidents||0)+1;state.examIncidentLog=(state.examIncidentLog||[]);state.examIncidentLog.push({reason:reason||'focus',at:new Date().toISOString()});const c=$('#incidentCount');if(c)c.textContent=state.incidents;sync();
+ if(!examActive||examServerConfig.exam_integrity_enabled===false||examServerConfig.exam_integrity_exempt)return;const now=Date.now();if(now-lastIncident<1400)return;lastIncident=now;state.incidents=(state.incidents||0)+1;state.examIncidentLog=(state.examIncidentLog||[]);state.examIncidentLog.push({reason:reason||'focus',at:new Date().toISOString()});const c=$('#incidentCount');if(c)c.textContent=state.incidents;sync();
  if(state.incidents>=3){autoSubmitPending=true;if(!document.hidden)setTimeout(()=>submitExam(true),200)}
 }
 function examAnswer(q){
