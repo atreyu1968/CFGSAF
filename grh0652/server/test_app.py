@@ -17,6 +17,21 @@ def start(kind,item="x",student="s1",course="GRH0652_UT1"):
  return client.post("/api/attempts/start",headers=SH(student),json={"student_id":student,"course_id":course,"kind":kind,"item_id":item,"payload":{}})
 def submit(i,payload=None,student="s1"):return client.post(f"/api/attempts/{i}/submit",headers=SH(student),json={"payload":payload or {}})
 def test_health():assert client.get("/health").json()["ok"]
+def test_student_session_derives_identity_from_token_and_blocks_spoofing():
+ a=client.post("/api/teacher/students/identity-a",headers=H);assert a.status_code==200,a.text
+ b=client.post("/api/teacher/students/identity-b",headers=H);assert b.status_code==200,b.text
+ ha={"X-Student-Token":a.json()["token"]}
+ hb={"X-Student-Token":b.json()["token"]}
+ sa=client.get("/api/student/session",headers=ha);assert sa.status_code==200 and sa.json()["student_id"]=="identity-a"
+ sb=client.get("/api/student/session",headers=hb);assert sb.status_code==200 and sb.json()["student_id"]=="identity-b"
+ spoof=client.post("/api/attempts/start",headers=ha,json={"student_id":"identity-b","course_id":"GRH0652_UT1","kind":"practice","item_id":"spoof","payload":{}})
+ assert spoof.status_code==403,spoof.text
+ state=client.put("/api/state/identity-b",headers=ha,json={"course_id":"GRH0652_UT1","state":{"x":1}})
+ assert state.status_code==403,state.text
+ evidence=client.post("/api/evidence",headers=ha,json={"student_id":"identity-b","course_id":"GRH0652_UT1","kind":"practice","ce":"1.a","item_id":"spoof","attempt":1,"response":0})
+ assert evidence.status_code==403,evidence.text
+
+
 def test_practice_three_attempt_limit():
  for n in range(3):
   r=start("practice","p1");assert r.status_code==200;assert r.json()["attempt"]==n+1;assert submit(r.json()["id"]).status_code==200
