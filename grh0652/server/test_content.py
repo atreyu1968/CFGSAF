@@ -201,3 +201,13 @@ def test_secure_exam_polls_live_status_for_teacher_actions():
  assert "st.status!=='started'||st.teacher_finished" in js
  assert "statusTimer=setInterval(syncStatus,5000)" in js
  assert "clearInterval(statusTimer)" in js
+
+
+def test_ut1_has_explained_completed_contract_examples():
+ html=(ROOT/"scorm"/"ut1"/"index.html").read_text(encoding="utf-8")
+ assert 'id="ejemplos-contratos"' in html
+ assert "Ejemplo 1 · Indefinido ordinario" in html
+ assert "Ejemplo 2 · Indefinido fijo-discontinuo" in html
+ assert "Ejemplo 3 · Duración determinada por circunstancias de la producción" in html
+ assert html.count("EJEMPLO RESUELTO")>=3
+ assert "Por qué se elige:" in html and "Uso profesional:" in html
