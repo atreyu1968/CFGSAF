@@ -464,3 +464,19 @@ def test_restore_requires_confirmation_and_restores_valid_snapshot():
  no=client.post("/api/teacher/backup/restore",headers=H,files={"file":("backup.db",b.content,"application/vnd.sqlite3")});assert no.status_code==400
  yes=client.post("/api/teacher/backup/restore",headers={**H,"X-Restore-Confirm":"RESTAURAR"},files={"file":("backup.db",b.content,"application/vnd.sqlite3")});assert yes.status_code==200,yes.text;assert yes.json()["integrity"]=="ok"
  db=module.con();assert db.execute("SELECT 1 FROM students WHERE student_id='pre-restore'").fetchone();assert db.execute("SELECT 1 FROM students WHERE student_id='post-backup'").fetchone() is None;db.close()
+
+
+def test_all_public_portfolio_banks_have_six_items_per_ce_and_unique_ids():
+ from collections import Counter
+ for u in range(1,5):
+  p=module.Path(module.__file__).resolve().parent/"banks"/f"ut{u}_portfolio.json";items=json.loads(p.read_text(encoding="utf-8"))["items"];ids=[x["id"] for x in items];assert len(ids)==len(set(ids))
+  counts=Counter(x["ce"] for x in items);assert counts and all(n>=6 for n in counts.values()),(u,counts)
+  assert all(x["kind"] in ("choice","tf","multi","free","order","match") for x in items)
+
+
+def test_private_portfolio_bank_must_match_public_metadata_and_coverage():
+ p=module.Path(module.__file__).resolve().parent/"banks"/"ut2_portfolio.json";items=json.loads(p.read_text(encoding="utf-8"))["items"]
+ private=[{"id":x["id"],"ce":x["ce"],"kind":x["kind"],"answer":True if x["kind"]=="tf" else 0} for x in items]
+ assert client.put("/api/teacher/portfolio-bank/GRH0652_UT2",headers=H,json={"items":private[:-1]}).status_code==400
+ bad=[dict(x) for x in private];bad[0]["ce"]="9.z";assert client.put("/api/teacher/portfolio-bank/GRH0652_UT2",headers=H,json={"items":bad}).status_code==400
+ assert client.put("/api/teacher/portfolio-bank/GRH0652_UT2",headers=H,json={"items":private}).status_code==200
