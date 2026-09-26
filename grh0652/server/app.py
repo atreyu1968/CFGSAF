@@ -536,6 +536,7 @@ def portfolio_public_hash(item:dict):
   "kind":item.get("kind"),
   "prompt":item.get("prompt"),
   "options":item.get("options",[]),
+  "pairs":item.get("pairs",[]),
  }
  raw=json.dumps(payload,ensure_ascii=False,sort_keys=True,separators=(",",":"))
  return hashlib.sha256(raw.encode("utf-8")).hexdigest()
