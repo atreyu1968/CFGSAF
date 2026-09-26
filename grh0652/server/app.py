@@ -574,7 +574,8 @@ def put_portfolio_bank(course_id:str,x:RecoveryBankIn,x_teacher_token:str|None=H
   if public:
    pub=public.get(q.id)
    if not pub or pub.get("ce")!=q.ce or pub.get("kind")!=q.kind:c.close();raise HTTPException(400,f"Metadatos no coinciden con el banco público para {q.id}")
-  c.execute("INSERT INTO portfolio_banks VALUES(?,?,?,?,?)",(course_id,q.id,q.ce,q.kind,json.dumps(q.answer,ensure_ascii=False)))
+  ph=portfolio_public_hash(pub) if public else None
+  c.execute("INSERT INTO portfolio_banks(course_id,item_id,ce,kind,answer,public_hash) VALUES(?,?,?,?,?,?)",(course_id,q.id,q.ce,q.kind,json.dumps(q.answer,ensure_ascii=False),ph))
  if public and set(public)!={q.id for q in x.items}:c.rollback();c.close();raise HTTPException(400,"El banco privado debe contener exactamente todas las actividades públicas de la unidad")
  c.commit();c.close();return {"ok":True,"items":len(x.items)}
 
