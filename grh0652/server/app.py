@@ -494,9 +494,17 @@ def put_portfolio_keys(course_id:str,x:PortfolioKeysIn,x_teacher_token:str|None=
 @app.put("/api/teacher/portfolio-bank/{course_id}")
 def put_portfolio_bank(course_id:str,x:RecoveryBankIn,x_teacher_token:str|None=Header(None)):
  auth(x_teacher_token);c=con();c.execute("DELETE FROM portfolio_banks WHERE course_id=?",(course_id,))
+ public={}
+ if course_id.startswith("GRH0652_UT") and course_id[-1].isdigit():
+  bank=Path(__file__).resolve().parent/"banks"/f"ut{course_id[-1]}_portfolio.json"
+  if bank.exists():public={i["id"]:i for i in json.loads(bank.read_text(encoding="utf-8")).get("items",[])}
  for q in x.items:
   if q.kind not in ("choice","tf","multi","free","order","match"):c.close();raise HTTPException(400,"Tipo de actividad no válido")
+  if public:
+   pub=public.get(q.id)
+   if not pub or pub.get("ce")!=q.ce or pub.get("kind")!=q.kind:c.close();raise HTTPException(400,f"Metadatos no coinciden con el banco público para {q.id}")
   c.execute("INSERT INTO portfolio_banks VALUES(?,?,?,?,?)",(course_id,q.id,q.ce,q.kind,json.dumps(q.answer,ensure_ascii=False)))
+ if public and set(public)!={q.id for q in x.items}:c.rollback();c.close();raise HTTPException(400,"El banco privado debe contener exactamente todas las actividades públicas de la unidad")
  c.commit();c.close();return {"ok":True,"items":len(x.items)}
 
 @app.put("/api/teacher/exam-bank/{course_id}")
