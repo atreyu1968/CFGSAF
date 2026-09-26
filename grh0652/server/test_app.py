@@ -455,3 +455,12 @@ def test_teacher_backup_is_valid_sqlite_and_requires_auth():
 
 def test_backup_validator_rejects_non_sqlite():
  v=client.post("/api/teacher/backup/validate",headers=H,files={"file":("bad.db",b"not a database","application/octet-stream")});assert v.status_code==400
+
+
+def test_restore_requires_confirmation_and_restores_valid_snapshot():
+ client.post("/api/teacher/students/pre-restore",headers=H)
+ b=client.get("/api/teacher/backup",headers=H);assert b.status_code==200
+ client.post("/api/teacher/students/post-backup",headers=H)
+ no=client.post("/api/teacher/backup/restore",headers=H,files={"file":("backup.db",b.content,"application/vnd.sqlite3")});assert no.status_code==400
+ yes=client.post("/api/teacher/backup/restore",headers={**H,"X-Restore-Confirm":"RESTAURAR"},files={"file":("backup.db",b.content,"application/vnd.sqlite3")});assert yes.status_code==200,yes.text;assert yes.json()["integrity"]=="ok"
+ db=module.con();assert db.execute("SELECT 1 FROM students WHERE student_id='pre-restore'").fetchone();assert db.execute("SELECT 1 FROM students WHERE student_id='post-backup'").fetchone() is None;db.close()
