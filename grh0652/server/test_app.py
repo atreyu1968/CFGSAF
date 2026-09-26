@@ -637,3 +637,23 @@ def test_exam_resume_preserves_version_questions_answers_and_deadline():
  assert b["deadline_at"]==a["deadline_at"]
  assert b["saved_answers"]==saved
  assert b["draft_saved_at"]
+
+
+def test_exam_integrity_survives_reload_and_cannot_be_lowered_on_submit():
+ import json
+ course="INTEGRITY-RESUME"
+ body={**module.DEFAULT,"exam_enabled":True,"exam_questions_per_ce":1}
+ assert client.put("/api/config/"+course,headers=H,json=body).status_code==200
+ db=module.con();db.execute("INSERT OR REPLACE INTO exam_banks(course_id,question_id,ce,question,options,answer,type) VALUES(?,?,?,?,?,?,?)",(course,"ir1","1.a","Pregunta",json.dumps(["A","B"]),json.dumps(0),"choice"));db.commit();db.close()
+ created=client.post("/api/teacher/students/integrity-student",headers=H);assert created.status_code==200
+ hs={"X-Student-Token":created.json()["token"]}
+ payload={"student_id":"integrity-student","course_id":course,"kind":"exam","item_id":"final","payload":{}}
+ first=client.post("/api/exam/start",headers=hs,json=payload);assert first.status_code==200,first.text
+ aid=first.json()["attempt_id"];event={"at":"2026-09-26T18:00:00+00:00","reason":"visibility_hidden"}
+ saved=client.put(f"/api/exam/{aid}/integrity",headers=hs,json={"payload":{"integrity":{"incidents":1,"incident_log":[event]}}});assert saved.status_code==200,saved.text
+ resumed=client.post("/api/exam/start",headers=hs,json=payload);assert resumed.status_code==200,resumed.text
+ assert resumed.json()["resumed"] is True and resumed.json()["saved_integrity"]["incidents"]==1 and resumed.json()["saved_integrity"]["incident_log"]==[event]
+ qid=resumed.json()["questions"][0]["id"]
+ done=client.post(f"/api/exam/{aid}/submit",headers=hs,json={"payload":{"answers":{qid:0},"integrity":{"incidents":0,"incident_log":[],"auto":False}}});assert done.status_code==200,done.text
+ db=module.con();row=db.execute("SELECT payload FROM attempts WHERE id=?",(aid,)).fetchone();db.close();stored=json.loads(row["payload"])["integrity"]
+ assert stored["incidents"]==1 and stored["incident_log"]==[event]
