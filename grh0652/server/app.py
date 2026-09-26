@@ -20,6 +20,9 @@ _defaults_seeded=False
 _private_banks_seeded=False
 PRIVATE_BANK_DIR=os.getenv("GRH_PRIVATE_BANK_DIR","").strip()
 BACKUP_REQUIRED_TABLES={"students","states","evidence","results","configs","attempts","evaluation_closures","recovery_plans","exam_banks","exam_versions","recovery_banks","portfolio_banks","recovery_results","grade_adjustments","ai_settings","ai_reviews","ai_rubrics","exam_reopen_audit"}
+SEMANTIC_KINDS={"free","text","case","calculation"}
+PORTFOLIO_KINDS={"choice","tf","multi","order","match"}|SEMANTIC_KINDS
+RECOVERY_KINDS=set(PORTFOLIO_KINDS)
 
 def con():
  global _schema_ready,_defaults_seeded,_private_banks_seeded
@@ -106,6 +109,7 @@ CREATE TABLE IF NOT EXISTS ai_rubrics(id INTEGER PRIMARY KEY AUTOINCREMENT,cours
      c.execute("INSERT OR IGNORE INTO recovery_banks(course_id,item_id,ce,kind,prompt,options,answer,feedback,pairs) VALUES(?,?,?,?,?,?,?,?,?)",(course,qid,ce,str(q.get("kind","choice")),prompt,json.dumps(opts,ensure_ascii=False),json.dumps(q["answer"],ensure_ascii=False),str(q.get("feedback","")),json.dumps(pairs,ensure_ascii=False)))
     else:
      qkind=str(q.get("kind","")).strip();pub=public.get(qid)
+     if qkind not in PORTFOLIO_KINDS:raise RuntimeError(f"Banco privado inválido {p.name}: tipo de portafolio no válido {qid}")
      if "answer" not in q or not pub or pub.get("ce")!=ce or pub.get("kind")!=qkind:raise RuntimeError(f"Banco privado inválido {p.name}: metadatos de portafolio no coinciden para {qid}")
      ph=portfolio_public_hash(pub)
      c.execute("INSERT INTO portfolio_banks(course_id,item_id,ce,kind,answer,public_hash) VALUES(?,?,?,?,?,?) ON CONFLICT(course_id,item_id) DO UPDATE SET ce=excluded.ce,kind=excluded.kind,answer=excluded.answer,public_hash=excluded.public_hash",(course,qid,ce,qkind,json.dumps(q["answer"],ensure_ascii=False),ph))
@@ -455,6 +459,7 @@ def recovery(student_id:str,course_id:str,x_student_token:str|None=Header(None))
 def put_recovery_bank(course_id:str,x:RecoveryBankIn,x_teacher_token:str|None=Header(None)):
  auth(x_teacher_token);c=con();c.execute("DELETE FROM recovery_banks WHERE course_id=?",(course_id,))
  for i in x.items:
+  if i.kind not in RECOVERY_KINDS:c.close();raise HTTPException(400,f"Tipo de recuperación no válido: {i.kind}")
   if i.kind=="match" and (not i.pairs or any(len(pair)!=2 for pair in i.pairs)):c.close();raise HTTPException(400,f"Emparejamiento incompleto: {i.id}")
   c.execute("INSERT INTO recovery_banks(course_id,item_id,ce,kind,prompt,options,answer,feedback,pairs) VALUES(?,?,?,?,?,?,?,?,?)",(course_id,i.id,i.ce,i.kind,i.prompt,json.dumps(i.options,ensure_ascii=False),json.dumps(i.answer,ensure_ascii=False),i.feedback,json.dumps(i.pairs,ensure_ascii=False)))
  c.commit();c.close();return {"items":len(x.items)}
@@ -491,7 +496,7 @@ def recovery_submit(attempt_id:int,x:SubmitAttempt,x_student_token:str|None=Head
  answers=(x.payload or {}).get("answers",{});rows=[dict(r) for r in c.execute("SELECT * FROM recovery_banks WHERE course_id=?",(a["course_id"],)) if r["ce"] in ces];by={}
  for r in rows:
   d=by.setdefault(r["ce"],{"ok":0,"n":0});d["n"]+=1;given=answers.get(r["item_id"]);expected=json.loads(r["answer"]);kind=r["kind"] or "choice"
-  semantic_kinds={"free","text","case","calculation"};score=None
+  semantic_kinds=SEMANTIC_KINDS;score=None
   if kind=="multi" and isinstance(given,list) and isinstance(expected,list):ok=sorted(given)==sorted(expected);score=100 if ok else 0
   elif kind=="order":ok=given==expected;score=100 if ok else 0
   elif kind=="match":ok=isinstance(given,list) and isinstance(expected,list) and [str(v) for v in given]==[str(v) for v in expected];score=100 if ok else 0
@@ -569,7 +574,7 @@ def put_portfolio_keys(course_id:str,x:PortfolioKeysIn,x_teacher_token:str|None=
  try:
   c.execute("DELETE FROM portfolio_banks WHERE course_id=?",(course_id,))
   for q in x.items:
-   if q.kind not in ("choice","tf","multi","free","order","match"):raise HTTPException(400,"Tipo de actividad no válido")
+   if q.kind not in PORTFOLIO_KINDS:raise HTTPException(400,"Tipo de actividad no válido")
    if course_id=="GRH0652":
     pub=public.get(q.id)
     if not pub or pub.get("ce")!=q.ce or pub.get("kind")!=q.kind:raise HTTPException(400,f"Metadatos no coinciden para {q.id}")
@@ -585,7 +590,7 @@ def put_portfolio_bank(course_id:str,x:RecoveryBankIn,x_teacher_token:str|None=H
  auth(x_teacher_token);c=con();c.execute("DELETE FROM portfolio_banks WHERE course_id=?",(course_id,))
  public=portfolio_public_map(course_id)
  for q in x.items:
-  if q.kind not in ("choice","tf","multi","free","order","match"):c.close();raise HTTPException(400,"Tipo de actividad no válido")
+  if q.kind not in PORTFOLIO_KINDS:c.close();raise HTTPException(400,"Tipo de actividad no válido")
   if public:
    pub=public.get(q.id)
    if not pub or pub.get("ce")!=q.ce or pub.get("kind")!=q.kind:c.close();raise HTTPException(400,f"Metadatos no coinciden con el banco público para {q.id}")
@@ -722,7 +727,7 @@ def evidence(x:EventIn,x_student_token:str|None=Header(None)):
     elif key["public_hash"]!=current_hash:
      c.close();raise HTTPException(409,"El banco público cambió desde la carga de claves privadas; vuelve a cargar las claves del portafolio")
    expected=json.loads(key["answer"]);given=x.response;kind=key["kind"] or "choice"
-   semantic_kinds={"free","text","case","calculation"}
+   semantic_kinds=SEMANTIC_KINDS
    if kind=="multi" and isinstance(given,list) and isinstance(expected,list):ok=sorted(given)==sorted(expected)
    elif kind in semantic_kinds:
     exact=str(given or "").strip().casefold()==str(expected or "").strip().casefold();settings=ai_settings_row(c)
