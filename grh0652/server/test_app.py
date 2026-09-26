@@ -935,7 +935,7 @@ def test_every_payroll_input_has_specific_context_help():
 
     html = (Path(__file__).resolve().parents[1] / "scorm" / "ut4" / "index.html").read_text(encoding="utf-8")
     raw = re.findall(
-        r'<input[^>]+data-(pay\\d*|rpay|rand-ec|rand-at|rand-fin)="([^"]+)"',
+        r'<input[^>]+data-(pay\d*|rpay|rand-ec|rand-at|rand-fin)="([^"]+)"',
         html,
     )
     assert len(raw) >= 106, "Payroll field inventory unexpectedly small"
