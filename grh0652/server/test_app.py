@@ -230,3 +230,29 @@ def test_private_key_provisioning_rejects_metadata_tampering_and_rolls_back():
  assert r.status_code==400
  db=module.con();after=db.execute("SELECT item_id,ce,kind,answer FROM portfolio_banks WHERE course_id='GRH0652' ORDER BY item_id").fetchall();after=[tuple(x) for x in after];db.close()
  assert after==before
+
+
+def test_ai_settings_are_teacher_only_and_key_is_never_returned():
+ body={"enabled":True,"base_url":"https://ai.example/v1","api_key":"secret-key","model":"test-model","rubric":"Acepta equivalentes","confidence":0.8,"auto_kinds":["free"]}
+ assert client.put("/api/teacher/ai-settings",json=body).status_code==401
+ r=client.put("/api/teacher/ai-settings",headers=H,json=body);assert r.status_code==200,r.text
+ d=r.json();assert d["enabled"] is True and d["api_key_set"] is True and "api_key" not in d
+ g=client.get("/api/teacher/ai-settings",headers=H);assert g.status_code==200 and "api_key" not in g.json()
+
+def test_ai_free_grading_accepts_semantic_result_and_records_review(monkeypatch):
+ body={"enabled":True,"base_url":"https://ai.example/v1","api_key":"secret-key","model":"test-model","rubric":"R","confidence":0.75,"auto_kinds":["free"]}
+ assert client.put("/api/teacher/ai-settings",headers=H,json=body).status_code==200
+ bank={"items":[{"id":"free1","ce":"1.a","kind":"free","prompt":"Define","options":[],"answer":"Contrato laboral"}]}
+ assert client.put("/api/teacher/portfolio-bank/AI",headers=H,json=bank).status_code==200
+ monkeypatch.setattr(module,"ai_grade",lambda *a,**k:{"score":90,"confidence":0.95,"verdict":"correct","feedback":"Equivalente correcto"})
+ ev={"student_id":"ai-student","course_id":"AI","kind":"portfolio","ce":"1.a","item_id":"free1","attempt":1,"response":"Acuerdo de trabajo entre empresa y trabajador","correct":False,"score":0,"payload":{}}
+ r=client.post("/api/evidence",headers=SH("ai-student"),json=ev);assert r.status_code==200,r.text
+ assert r.json()["score"]==90 and r.json()["correct"] is True
+ rows=client.get("/api/teacher/ai-reviews?course_id=AI",headers=H).json();assert rows[0]["status"]=="accepted" and "reference" not in rows[0]
+
+def test_low_confidence_ai_answer_is_not_auto_scored(monkeypatch):
+ monkeypatch.setattr(module,"ai_grade",lambda *a,**k:{"score":70,"confidence":0.3,"verdict":"partial","feedback":"Revisión necesaria"})
+ ev={"student_id":"ai-low","course_id":"AI","kind":"portfolio","ce":"1.a","item_id":"free1","attempt":1,"response":"Respuesta dudosa","payload":{}}
+ r=client.post("/api/evidence",headers=SH("ai-low"),json=ev);assert r.status_code==200,r.text
+ assert r.json()["score"] is None and r.json()["correct"] is None
+ rows=client.get("/api/teacher/ai-reviews?course_id=AI",headers=H).json();assert any(x["student_id"]=="ai-low" and x["status"]=="pending" for x in rows)
