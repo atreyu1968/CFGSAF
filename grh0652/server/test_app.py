@@ -732,6 +732,6 @@ def test_private_bootstrap_makes_readiness_accept_exam_and_recovery(tmp_path,mon
  if client.post("/api/teacher/students/readiness-student",headers=H).status_code not in (200,409):assert False
  old_origins=module.ORIGINS;monkeypatch.setattr(module,"ORIGINS",["https://example.test"])
  out=client.get("/api/teacher/readiness/"+course,headers=H);assert out.status_code==200,out.text
- d=out.json();assert d["checks"]["exam_bank"]["ok"] is True;assert d["checks"]["recovery_bank"]["ok"] is True;assert d["checks"]["portfolio_keys"]["ok"] is True;assert d["ready"] is True
+ d=out.json()\n assert d["checks"]["exam_bank"]["ok"] is True,d\n assert d["checks"]["recovery_bank"]["ok"] is True,d\n assert d["checks"]["portfolio_keys"]["ok"] is True,d\n assert d["ready"] is True,d
  assert set(d["checks"]["exam_bank"]["counts"])==set(ces) and all(d["checks"]["exam_bank"]["counts"][ce]>=3 for ce in ces)
  monkeypatch.setattr(module,"ORIGINS",old_origins);monkeypatch.setattr(module,"PRIVATE_BANK_DIR","");monkeypatch.setattr(module,"_private_banks_seeded",False)
