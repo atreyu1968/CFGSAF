@@ -462,7 +462,7 @@ def exam_start(x:AttemptIn,x_student_token:str|None=Header(None)):
  version=secrets.token_hex(8)
  created=now()
  deadline=(datetime.datetime.fromisoformat(created)+datetime.timedelta(minutes=max(1,int(cfg.get("exam_minutes",45))))).isoformat()
- cfg={**cfg,"exam_integrity_exempt":x.student_id in cfg.get("exam_exempt_students",[])}
+ cfg={**cfg,"exam_integrity_exempt":x.student_id in cfg.get("exam_exempt_students",[]),"exam_pin_required":bool(cfg.get("exam_pin"))};cfg.pop("exam_pin",None)
  snap=json.dumps(cfg,ensure_ascii=False)
  c.execute("INSERT INTO exam_versions(attempt_id,student_id,course_id,version,questions,answers,created_at,config,deadline_at) VALUES(?,?,?,?,?,?,?,?,?)",(gate["id"],x.student_id,x.course_id,version,json.dumps(public,ensure_ascii=False),json.dumps(keys),created,snap,deadline))
  c.commit();c.close();return {"attempt_id":gate["id"],"attempt":gate["attempt"],"version":version,"questions":public,"config":cfg,"deadline_at":deadline,"resumed":False}
