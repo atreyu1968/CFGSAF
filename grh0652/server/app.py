@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS recovery_plans(student_id TEXT,course_id TEXT,criteri
 CREATE TABLE IF NOT EXISTS exam_banks(course_id TEXT,question_id TEXT,ce TEXT,question TEXT,options TEXT,answer TEXT,type TEXT NOT NULL DEFAULT 'choice',PRIMARY KEY(course_id,question_id));
 CREATE TABLE IF NOT EXISTS exam_versions(attempt_id INTEGER PRIMARY KEY,student_id TEXT,course_id TEXT,version TEXT,questions TEXT,answers TEXT,created_at TEXT,config TEXT,deadline_at TEXT);
 CREATE TABLE IF NOT EXISTS recovery_banks(course_id TEXT,item_id TEXT,ce TEXT,kind TEXT,prompt TEXT,options TEXT,answer TEXT,feedback TEXT,PRIMARY KEY(course_id,item_id));
-CREATE TABLE IF NOT EXISTS portfolio_banks(course_id TEXT,item_id TEXT,ce TEXT,kind TEXT,answer TEXT,PRIMARY KEY(course_id,item_id));
+CREATE TABLE IF NOT EXISTS portfolio_banks(course_id TEXT,item_id TEXT,ce TEXT,kind TEXT,answer TEXT,public_hash TEXT,PRIMARY KEY(course_id,item_id));
 CREATE TABLE IF NOT EXISTS recovery_results(student_id TEXT,course_id TEXT,score REAL,criteria_passed TEXT,status TEXT,updated_at TEXT,PRIMARY KEY(student_id,course_id));
 CREATE TABLE IF NOT EXISTS grade_adjustments(id INTEGER PRIMARY KEY AUTOINCREMENT,student_id TEXT NOT NULL,course_id TEXT NOT NULL,scope TEXT NOT NULL,scope_key TEXT NOT NULL DEFAULT '',old_score REAL,new_score REAL NOT NULL,reason TEXT NOT NULL,created_at TEXT NOT NULL,active INTEGER NOT NULL DEFAULT 1,reversed_at TEXT,reversal_reason TEXT);\nCREATE TABLE IF NOT EXISTS ai_settings(id INTEGER PRIMARY KEY CHECK(id=1),enabled INTEGER NOT NULL DEFAULT 0,base_url TEXT,api_key TEXT,model TEXT,rubric TEXT,confidence REAL NOT NULL DEFAULT 0.75,auto_kinds TEXT,updated_at TEXT);\nCREATE TABLE IF NOT EXISTS ai_reviews(id INTEGER PRIMARY KEY AUTOINCREMENT,student_id TEXT,course_id TEXT,ce TEXT,item_id TEXT,attempt INTEGER,response TEXT,reference TEXT,score REAL,confidence REAL,verdict TEXT,feedback TEXT,status TEXT,created_at TEXT);
 CREATE TABLE IF NOT EXISTS ai_rubrics(id INTEGER PRIMARY KEY AUTOINCREMENT,course_id TEXT NOT NULL,ce TEXT NOT NULL DEFAULT '',item_id TEXT NOT NULL DEFAULT '',name TEXT NOT NULL,rubric TEXT NOT NULL,updated_at TEXT,UNIQUE(course_id,ce,item_id));\nCREATE TABLE IF NOT EXISTS exam_reopen_audit(id INTEGER PRIMARY KEY AUTOINCREMENT,source_attempt_id INTEGER NOT NULL,new_attempt_id INTEGER NOT NULL,student_id TEXT NOT NULL,course_id TEXT NOT NULL,reason TEXT NOT NULL,minutes INTEGER NOT NULL,source_status TEXT NOT NULL,source_payload TEXT,created_at TEXT NOT NULL);""")
@@ -48,6 +48,8 @@ CREATE TABLE IF NOT EXISTS ai_rubrics(id INTEGER PRIMARY KEY AUTOINCREMENT,cours
  if "type" not in bcols:c.execute("ALTER TABLE exam_banks ADD COLUMN type TEXT NOT NULL DEFAULT 'choice'")
  rcols={r["name"] for r in c.execute("PRAGMA table_info(ai_rubrics)")}
  if "criteria" not in rcols:c.execute("ALTER TABLE ai_rubrics ADD COLUMN criteria TEXT NOT NULL DEFAULT '[]'")
+ pcols={r["name"] for r in c.execute("PRAGMA table_info(portfolio_banks)")}
+ if "public_hash" not in pcols:c.execute("ALTER TABLE portfolio_banks ADD COLUMN public_hash TEXT")
  vcols={r["name"] for r in c.execute("PRAGMA table_info(ai_reviews)")}
  if "breakdown" not in vcols:c.execute("ALTER TABLE ai_reviews ADD COLUMN breakdown TEXT NOT NULL DEFAULT '[]'")
  if "source_kind" not in vcols:c.execute("ALTER TABLE ai_reviews ADD COLUMN source_kind TEXT NOT NULL DEFAULT 'portfolio'")
@@ -505,6 +507,31 @@ def recovery_submit(attempt_id:int,x:SubmitAttempt,x_student_token:str|None=Head
   status="passed" if not remaining else "pending";authoritative={"ce_passed":new_passed,"ce_total":total,"ra_passed":ra,"recovery":remaining}
  c.execute("UPDATE recovery_plans SET criteria=?,status=? WHERE student_id=? AND course_id=?",(json.dumps(authoritative["recovery"] if authoritative else [ce for ce in ces if ce not in passed]),status,a["student_id"],a["course_id"]));c.commit();c.close();return {"score":score,"by_ce":by,"criteria_passed":passed,"status":status,"result":authoritative}
 
+def portfolio_public_map(course_id:str):
+ bank_dir=Path(__file__).resolve().parent/"banks"
+ paths=[]
+ if course_id=="GRH0652":
+  paths=[bank_dir/f"ut{u}_portfolio.json" for u in range(1,5)]
+ elif course_id.startswith("GRH0652_UT") and course_id[-1:].isdigit():
+  paths=[bank_dir/f"ut{course_id[-1]}_portfolio.json"]
+ public={}
+ for p in paths:
+  if not p.exists():continue
+  for item in json.loads(p.read_text(encoding="utf-8")).get("items",[]):
+   public[item["id"]]=item
+ return public
+
+def portfolio_public_hash(item:dict):
+ payload={
+  "id":item.get("id"),
+  "ce":item.get("ce"),
+  "kind":item.get("kind"),
+  "prompt":item.get("prompt"),
+  "options":item.get("options",[]),
+ }
+ raw=json.dumps(payload,ensure_ascii=False,sort_keys=True,separators=(",",":"))
+ return hashlib.sha256(raw.encode("utf-8")).hexdigest()
+
 @app.get("/api/portfolio/{course_id}")
 def get_portfolio(course_id:str,x_student_token:str|None=Header(None)):
  student_auth(x_student_token)
@@ -518,11 +545,7 @@ def get_portfolio(course_id:str,x_student_token:str|None=Header(None)):
 
 @app.put("/api/teacher/portfolio-keys/{course_id}")
 def put_portfolio_keys(course_id:str,x:PortfolioKeysIn,x_teacher_token:str|None=Header(None)):
- auth(x_teacher_token);bank_dir=Path(__file__).resolve().parent/"banks";public={}
- for unit in ("ut1","ut2","ut3","ut4"):
-  p=bank_dir/f"{unit}_portfolio.json"
-  if p.exists():
-   for q in json.loads(p.read_text(encoding="utf-8")).get("items",[]):public[q["id"]]=q
+ auth(x_teacher_token);public=portfolio_public_map(course_id)
  if course_id=="GRH0652":
   supplied={q.id for q in x.items}
   expected=set(public)
@@ -535,7 +558,8 @@ def put_portfolio_keys(course_id:str,x:PortfolioKeysIn,x_teacher_token:str|None=
    if course_id=="GRH0652":
     pub=public.get(q.id)
     if not pub or pub.get("ce")!=q.ce or pub.get("kind")!=q.kind:raise HTTPException(400,f"Metadatos no coinciden para {q.id}")
-   c.execute("INSERT INTO portfolio_banks(course_id,item_id,ce,kind,answer) VALUES(?,?,?,?,?)",(course_id,q.id,q.ce,q.kind,json.dumps(q.answer,ensure_ascii=False)))
+   pub=public.get(q.id);ph=portfolio_public_hash(pub) if pub else None
+   c.execute("INSERT INTO portfolio_banks(course_id,item_id,ce,kind,answer,public_hash) VALUES(?,?,?,?,?,?)",(course_id,q.id,q.ce,q.kind,json.dumps(q.answer,ensure_ascii=False),ph))
   c.commit()
  except:
   c.rollback();c.close();raise
@@ -544,10 +568,7 @@ def put_portfolio_keys(course_id:str,x:PortfolioKeysIn,x_teacher_token:str|None=
 @app.put("/api/teacher/portfolio-bank/{course_id}")
 def put_portfolio_bank(course_id:str,x:RecoveryBankIn,x_teacher_token:str|None=Header(None)):
  auth(x_teacher_token);c=con();c.execute("DELETE FROM portfolio_banks WHERE course_id=?",(course_id,))
- public={}
- if course_id.startswith("GRH0652_UT") and course_id[-1].isdigit():
-  bank=Path(__file__).resolve().parent/"banks"/f"ut{course_id[-1]}_portfolio.json"
-  if bank.exists():public={i["id"]:i for i in json.loads(bank.read_text(encoding="utf-8")).get("items",[])}
+ public=portfolio_public_map(course_id)
  for q in x.items:
   if q.kind not in ("choice","tf","multi","free","order","match"):c.close();raise HTTPException(400,"Tipo de actividad no válido")
   if public:
@@ -662,7 +683,7 @@ def evidence(x:EventIn,x_student_token:str|None=Header(None)):
  require_student(x.student_id,x_student_token)
  c=con();correct=x.correct;score=x.score
  if x.kind=="portfolio":
-  key=c.execute("SELECT ce,kind,answer FROM portfolio_banks WHERE course_id=? AND item_id=?",(x.course_id,x.item_id)).fetchone()
+  key=c.execute("SELECT ce,kind,answer,public_hash FROM portfolio_banks WHERE course_id=? AND item_id=?",(x.course_id,x.item_id)).fetchone()
   document=bool((x.payload or {}).get("review_required")) and (x.payload or {}).get("activity") in ("contract-document","payroll-document")
   if not key and document:
    settings=ai_settings_row(c);rub=rubric_for(c,x.course_id,x.ce or "",x.item_id or "",settings.get("rubric") or "");grade=None
@@ -677,6 +698,13 @@ def evidence(x:EventIn,x_student_token:str|None=Header(None)):
   elif not key:c.close();raise HTTPException(409,"Actividad de portafolio no definida en el banco autoritativo")
   if key and x.ce!=key["ce"]:c.close();raise HTTPException(409,"CE de portafolio no coincide con la definición autoritativa")
   if key:
+   pub=portfolio_public_map(x.course_id).get(x.item_id or "")
+   if pub:
+    current_hash=portfolio_public_hash(pub)
+    if key["public_hash"] is None:
+     c.execute("UPDATE portfolio_banks SET public_hash=? WHERE course_id=? AND item_id=?",(current_hash,x.course_id,x.item_id))
+    elif key["public_hash"]!=current_hash:
+     c.close();raise HTTPException(409,"El banco público cambió desde la carga de claves privadas; vuelve a cargar las claves del portafolio")
    expected=json.loads(key["answer"]);given=x.response;kind=key["kind"] or "choice"
    semantic_kinds={"free","text","case","calculation"}
    if kind=="multi" and isinstance(given,list) and isinstance(expected,list):ok=sorted(given)==sorted(expected)
