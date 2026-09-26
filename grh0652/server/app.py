@@ -274,6 +274,20 @@ def health(): return {"ok":True}
 @app.get("/api/config/{course_id}")
 def get_config(course_id:str):
  c=con();d,v=config_row(c,course_id);closed=c.execute("SELECT closed_at FROM evaluation_closures WHERE course_id=?",(course_id,)).fetchone();c.close();public={k:v for k,v in d.items() if k not in ("exam_pin","exam_allowed_students","exam_exempt_students")};public["exam_pin_required"]=bool(d.get("exam_pin"));return {**public,"version":v,"evaluation_closed":bool(closed)}
+@app.get("/api/teacher/readiness/{course_id}")
+def teacher_readiness(course_id:str,x_teacher_token:str|None=Header(None)):
+ auth(x_teacher_token);c=con();cfg,_=config_row(c,course_id)
+ exam=list(c.execute("SELECT ce,COUNT(*) n FROM exam_banks WHERE course_id=? GROUP BY ce ORDER BY ce",(course_id,)));portfolio=c.execute("SELECT COUNT(*) n FROM portfolio_banks WHERE course_id=?",(course_id,)).fetchone()["n"];recovery=list(c.execute("SELECT ce,COUNT(*) n FROM recovery_banks WHERE course_id=? GROUP BY ce ORDER BY ce",(course_id,)));students=c.execute("SELECT COUNT(*) n FROM students").fetchone()["n"];c.close()
+ per=max(1,int(cfg.get("exam_questions_per_ce",3)));exam_counts={r["ce"]:r["n"] for r in exam};recovery_counts={r["ce"]:r["n"] for r in recovery}
+ expected=[]
+ if course_id.startswith("GRH0652_UT") and course_id[-1].isdigit():
+  u=course_id[-1];bank=Path(__file__).resolve().parent/"banks"/f"ut{u}_portfolio.json"
+  if bank.exists():expected=sorted({q.get("ce","") for q in json.loads(bank.read_text(encoding="utf-8")).get("items",[]) if q.get("ce")})
+ exam_ok=bool(exam_counts) and all(exam_counts.get(ce,0)>=per for ce in expected) if expected else bool(exam_counts)
+ portfolio_ok=portfolio>0;recovery_ok=bool(recovery_counts) and all(recovery_counts.get(ce,0)>0 for ce in expected) if expected else bool(recovery_counts)
+ checks={"students":{"ok":students>0,"count":students},"portfolio_keys":{"ok":portfolio_ok,"count":portfolio},"exam_bank":{"ok":exam_ok,"counts":exam_counts,"required_per_ce":per,"expected_ce":expected},"recovery_bank":{"ok":recovery_ok,"counts":recovery_counts,"expected_ce":expected},"origins":{"ok":bool(ORIGINS),"count":len(ORIGINS)}}
+ return {"course_id":course_id,"ready":all(v["ok"] for v in checks.values()),"checks":checks}
+
 @app.get("/api/teacher/config/{course_id}")
 def get_teacher_config(course_id:str,x_teacher_token:str|None=Header(None)):
  auth(x_teacher_token);c=con();d,v=config_row(c,course_id);closed=c.execute("SELECT closed_at FROM evaluation_closures WHERE course_id=?",(course_id,)).fetchone();c.close();return {**d,"version":v,"evaluation_closed":bool(closed)}
@@ -281,6 +295,10 @@ def get_teacher_config(course_id:str,x_teacher_token:str|None=Header(None)):
 def put_config(course_id:str,x:ConfigIn,x_teacher_token:str|None=Header(None)):
  auth(x_teacher_token);d=x.model_dump()
  if d["portfolio_weight"]+d["exam_weight"]!=100: raise HTTPException(400,"Los pesos deben sumar 100")
+ if d.get("exam_enabled"):
+  c0=con();counts={r["ce"]:r["n"] for r in c0.execute("SELECT ce,COUNT(*) n FROM exam_banks WHERE course_id=? GROUP BY ce",(course_id,))};c0.close()
+  per=max(1,int(d.get("exam_questions_per_ce",3)))
+  if not counts or any(n<per for n in counts.values()):raise HTTPException(409,"No puede activarse el examen: banco evaluable ausente o insuficiente para la configuración")
  if d["exam_incident_policy"] not in ("log","warn","submit"):raise HTTPException(400,"Política de incidencias no válida")
  if not 1<=d["exam_incident_limit"]<=99:raise HTTPException(400,"Límite de incidencias no válido")
  if not 1<=d["exam_minutes"]<=300:raise HTTPException(400,"Duración de examen no válida")
