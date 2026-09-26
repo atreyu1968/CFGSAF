@@ -345,7 +345,7 @@ def recovery_submit(attempt_id:int,x:SubmitAttempt,x_student_token:str|None=Head
   else:ok=given==expected
   if ok:d["ok"]+=1
  passed=[ce for ce,v in by.items() if v["n"] and v["ok"]/v["n"]>=threshold];score=round(sum(v["ok"] for v in by.values())/max(1,sum(v["n"] for v in by.values()))*100,2);status="passed" if len(passed)==len(ces) else "pending"
- c.execute("UPDATE attempts SET status='submitted',submitted_at=?,payload=? WHERE id=?",(now(),json.dumps({"answers":answers,"score":score,"by_ce":by},ensure_ascii=False),attempt_id));c.execute("INSERT OR REPLACE INTO recovery_results VALUES(?,?,?,?,?,?)",(a["student_id"],a["course_id"],score,json.dumps(passed),status,now()))
+ c.execute("UPDATE attempts SET status='submitted',submitted_at=?,payload=? WHERE id=?",(now(),json.dumps({"answers":answers,"score":score,"by_ce":by,"integrity":integrity},ensure_ascii=False),attempt_id));c.execute("INSERT OR REPLACE INTO recovery_results VALUES(?,?,?,?,?,?)",(a["student_id"],a["course_id"],score,json.dumps(passed),status,now()))
  rr=c.execute("SELECT * FROM results WHERE student_id=? AND course_id=?",(a["student_id"],a["course_id"])).fetchone()
  authoritative=None
  if rr:
@@ -453,7 +453,7 @@ def exam_submit(attempt_id:int,x:SubmitAttempt,x_student_token:str|None=Header(N
  if a["status"]!="started":c.close();raise HTTPException(409,"Examen ya entregado")
  if v["deadline_at"] and datetime.datetime.now(datetime.timezone.utc)>datetime.datetime.fromisoformat(v["deadline_at"]):
   c.execute("UPDATE attempts SET status='expired',submitted_at=? WHERE id=?",(now(),attempt_id));c.commit();c.close();raise HTTPException(410,"Tiempo de examen agotado")
- answers=(x.payload or {}).get("answers",{});keys=json.loads(v["answers"]);questions=json.loads(v["questions"]);by={};good=0
+ answers=(x.payload or {}).get("answers",{});integrity=(x.payload or {}).get("integrity",{});keys=json.loads(v["answers"]);questions=json.loads(v["questions"]);by={};good=0
  for q in questions:
   given=answers.get(q["id"]);expected=keys.get(q["id"]);ok=(sorted(given)==expected if q.get("type")=="multi" and isinstance(given,list) else given==expected);good+=int(ok);d=by.setdefault(q["ce"],{"ok":0,"n":0});d["n"]+=1;d["ok"]+=int(ok)
  score=round(good/max(1,len(questions))*100,2);c.execute("UPDATE attempts SET status='submitted',submitted_at=?,payload=? WHERE id=?",(now(),json.dumps({"answers":answers,"score":score,"by_ce":by},ensure_ascii=False),attempt_id));c.commit();c.close();return {"score":score,"by_ce":by,"answered":len(answers),"total":len(questions)}
@@ -532,10 +532,10 @@ def teacher_dashboard(course_id:str,x_teacher_token:str|None=Header(None)):
   pb={}
   for e in latest.values():
    if e["ce"]:pb.setdefault(e["ce"],[]).append(float(e["score"] or 0))
-  er=c.execute("SELECT payload FROM attempts WHERE student_id=? AND course_id=? AND kind='exam' AND status='submitted' ORDER BY attempt_no DESC LIMIT 1",(sid,course_id)).fetchone();eb=json.loads(er["payload"] or "{}").get("by_ce",{}) if er else {};cfg,_=config_row(c,course_id);pw=float(cfg["portfolio_weight"])/100;ew=float(cfg["exam_weight"])/100;cd={}
+  er=c.execute("SELECT payload,started_at,submitted_at,status FROM attempts WHERE student_id=? AND course_id=? AND kind='exam' ORDER BY attempt_no DESC LIMIT 1",(sid,course_id)).fetchone();ep=json.loads(er["payload"] or "{}") if er else {};eb=ep.get("by_ce",{});integ=ep.get("integrity",{});cfg,_=config_row(c,course_id);pw=float(cfg["portfolio_weight"])/100;ew=float(cfg["exam_weight"])/100;cd={}
   for ce in ces:
    ps=sum(pb.get(ce,[]))/len(pb[ce]) if pb.get(ce) else 0;x=eb.get(ce,{});es=float(x.get("ok",0))/max(1,int(x.get("n",0)))*100 if x.get("n",0) else 0;fv=ps*pw+es*ew;cd[ce]={"final":round(fv,1),"passed":fv>=float(cfg["ce_pass_score"]),"portfolio":round(ps,1),"exam":round(es,1)}
-  out.append({"student_id":sid,"result":official_result(c,sid,course_id,rr) if rr else None,"ce":cd,"pending_ai":pending,"recovery":{"criteria":json.loads(rp["criteria"] or "[]"),"status":rp["status"]} if rp else None})
+  out.append({"student_id":sid,"result":official_result(c,sid,course_id,rr) if rr else None,"ce":cd,"pending_ai":pending,"exam_integrity":{"incidents":int(integ.get("incidents",0) or 0),"auto":bool(integ.get("auto",False)),"status":er["status"] if er else None},"recovery":{"criteria":json.loads(rp["criteria"] or "[]"),"status":rp["status"]} if rp else None})
  c.close()
  for x in out:
   if x["result"]:x["result"]["recovery"]=json.loads(x["result"]["recovery"] or "[]")
