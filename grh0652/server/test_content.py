@@ -128,10 +128,15 @@ def test_recovery_ui_supports_all_server_item_types():
   assert "type=\"checkbox\"" in js
   assert "i.kind==='tf'" in js
   assert "value=\"true\"" in js and "value=\"false\"" in js
-  assert "i.kind==='free'" in js
+  assert "i.kind==='free'||i.kind==='text'||i.kind==='case'||i.kind==='calculation'" in js
   assert "<textarea" in js
+  assert "i.kind==='order'" in js
+  assert "recovery-order-move" in js and "rec-order-" in js
+  assert "i.kind==='match'" in js
+  assert "rec-match-" in js and "i.pairs||[]" in js
   assert "Array.from(document.querySelectorAll" in js
   assert "x.value==='true'" in js
+  assert "Completa todas las actividades de recuperación antes de entregar." in js
 
 def test_authoritative_portfolio_banks_cover_all_units():
  import json
