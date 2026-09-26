@@ -941,3 +941,20 @@ def test_every_payroll_input_has_specific_context_help():
     help_block = html[help_start:help_end]
     missing = sorted({key for key in attrs if (key + ":[") not in help_block})
     assert not missing, "Payroll fields without specific contextual help: " + ", ".join(missing)
+
+
+def test_every_contract_field_has_specific_context_help():
+    """Every UT1 contract field must expose explicit right-click guidance."""
+    from pathlib import Path
+    import re
+
+    html = (Path(__file__).resolve().parents[1] / "scorm" / "ut1" / "index.html").read_text(encoding="utf-8")
+    keys = re.findall(r'data-contract="[^"]*:([^"]+)"', html)
+    assert len(keys) >= 100, "Unexpectedly small contract field set"
+    help_start = html.index("const CONTRACT_HELP={")
+    help_end = html.index("const contractTip=", help_start)
+    help_block = html[help_start:help_end]
+    missing = sorted({key for key in keys if (key + ":[") not in help_block})
+    assert not missing, "Contract fields without specific contextual help: " + ", ".join(missing)
+    assert "contextmenu" in html
+    assert ".contract-form input,.contract-form select,.contract-form textarea" in html
