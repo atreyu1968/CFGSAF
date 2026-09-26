@@ -725,6 +725,9 @@ def test_private_bootstrap_makes_readiness_accept_exam_and_recovery(tmp_path,mon
  exam={"course_id":course,"kind":"exam","questions":[{"id":f"boot-{ce}-{n}","ce":ce,"q":f"Pregunta {ce} {n}","options":["A","B"],"answer":0,"type":"choice"} for ce in ces for n in range(3)]}
  recovery={"course_id":course,"kind":"recovery","items":[{"id":f"rec-{ce}","ce":ce,"kind":"choice","prompt":f"Recuperación {ce}","options":["A","B"],"answer":0,"feedback":"Revisar"} for ce in ces]}
  (tmp_path/"exam.json").write_text(json.dumps(exam),encoding="utf-8");(tmp_path/"recovery.json").write_text(json.dumps(recovery),encoding="utf-8")
+ monkeypatch.setattr(module,"PRIVATE_BANK_DIR","");monkeypatch.setattr(module,"_private_banks_seeded",False)
+ db=module.con()
+ db.execute("DELETE FROM exam_banks WHERE course_id=?",(course,));db.execute("DELETE FROM recovery_banks WHERE course_id=?",(course,));db.execute("DELETE FROM portfolio_banks WHERE course_id=?",(course,));db.commit();db.close()
  monkeypatch.setattr(module,"PRIVATE_BANK_DIR",str(tmp_path));monkeypatch.setattr(module,"_private_banks_seeded",False)
  db=module.con()
  for item in public["items"]:db.execute("INSERT OR REPLACE INTO portfolio_banks(course_id,item_id,ce,kind,answer) VALUES(?,?,?,?,?)",(course,item["id"],item["ce"],item.get("kind","choice"),json.dumps(0)))
