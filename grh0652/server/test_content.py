@@ -162,7 +162,7 @@ def test_all_units_render_and_submit_ordered_portfolio_items():
   assert "type==='order'" in js
   assert "data-order-index" in js
   assert "portfolio-order-move" in js
-  assert "data-dir="up"" in js and "data-dir="down"" in js
+  assert 'data-dir="up"' in js and 'data-dir="down"' in js
   assert "Number(x.dataset.orderIndex)" in js
   assert "list.insertBefore" in js
 
