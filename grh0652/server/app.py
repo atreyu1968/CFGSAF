@@ -32,7 +32,8 @@ CREATE TABLE IF NOT EXISTS exam_banks(course_id TEXT,question_id TEXT,ce TEXT,qu
 CREATE TABLE IF NOT EXISTS exam_versions(attempt_id INTEGER PRIMARY KEY,student_id TEXT,course_id TEXT,version TEXT,questions TEXT,answers TEXT,created_at TEXT,config TEXT,deadline_at TEXT);
 CREATE TABLE IF NOT EXISTS recovery_banks(course_id TEXT,item_id TEXT,ce TEXT,kind TEXT,prompt TEXT,options TEXT,answer TEXT,feedback TEXT,PRIMARY KEY(course_id,item_id));
 CREATE TABLE IF NOT EXISTS portfolio_banks(course_id TEXT,item_id TEXT,ce TEXT,kind TEXT,answer TEXT,PRIMARY KEY(course_id,item_id));
-CREATE TABLE IF NOT EXISTS recovery_results(student_id TEXT,course_id TEXT,score REAL,criteria_passed TEXT,status TEXT,updated_at TEXT,PRIMARY KEY(student_id,course_id));\nCREATE TABLE IF NOT EXISTS ai_settings(id INTEGER PRIMARY KEY CHECK(id=1),enabled INTEGER NOT NULL DEFAULT 0,base_url TEXT,api_key TEXT,model TEXT,rubric TEXT,confidence REAL NOT NULL DEFAULT 0.75,auto_kinds TEXT,updated_at TEXT);\nCREATE TABLE IF NOT EXISTS ai_reviews(id INTEGER PRIMARY KEY AUTOINCREMENT,student_id TEXT,course_id TEXT,ce TEXT,item_id TEXT,attempt INTEGER,response TEXT,reference TEXT,score REAL,confidence REAL,verdict TEXT,feedback TEXT,status TEXT,created_at TEXT);""")
+CREATE TABLE IF NOT EXISTS recovery_results(student_id TEXT,course_id TEXT,score REAL,criteria_passed TEXT,status TEXT,updated_at TEXT,PRIMARY KEY(student_id,course_id));\nCREATE TABLE IF NOT EXISTS ai_settings(id INTEGER PRIMARY KEY CHECK(id=1),enabled INTEGER NOT NULL DEFAULT 0,base_url TEXT,api_key TEXT,model TEXT,rubric TEXT,confidence REAL NOT NULL DEFAULT 0.75,auto_kinds TEXT,updated_at TEXT);\nCREATE TABLE IF NOT EXISTS ai_reviews(id INTEGER PRIMARY KEY AUTOINCREMENT,student_id TEXT,course_id TEXT,ce TEXT,item_id TEXT,attempt INTEGER,response TEXT,reference TEXT,score REAL,confidence REAL,verdict TEXT,feedback TEXT,status TEXT,created_at TEXT);
+CREATE TABLE IF NOT EXISTS ai_rubrics(id INTEGER PRIMARY KEY AUTOINCREMENT,course_id TEXT NOT NULL,ce TEXT NOT NULL DEFAULT '',item_id TEXT NOT NULL DEFAULT '',name TEXT NOT NULL,rubric TEXT NOT NULL,updated_at TEXT,UNIQUE(course_id,ce,item_id));""")
   _schema_ready=True
  cols={r["name"] for r in c.execute("PRAGMA table_info(exam_versions)")}
  if "config" not in cols:c.execute("ALTER TABLE exam_versions ADD COLUMN config TEXT")
@@ -63,6 +64,7 @@ class PortfolioKeysIn(BaseModel): items:list[PortfolioKey]
 class AISettingsIn(BaseModel):
  enabled:bool=False;base_url:str="";api_key:str|None=None;model:str="";rubric:str="";confidence:float=0.75;auto_kinds:list[str]=["free"]
 
+class AIRubricIn(BaseModel): course_id:str;ce:str="";item_id:str="";name:str="Rúbrica";rubric:str
 class AIReviewDecision(BaseModel): score:float;feedback:str="";status:str="accepted"
 class AITestIn(BaseModel): text:str="Explica brevemente qué es un contrato de trabajo."
 def ai_settings_row(c):
@@ -70,6 +72,9 @@ def ai_settings_row(c):
  if not r:return {"enabled":False,"base_url":"","api_key":"","model":"","rubric":"Valora exactitud técnica, razonamiento, completitud y claridad. No exijas coincidencia literal.","confidence":0.75,"auto_kinds":["free"]}
  d=dict(r);d["enabled"]=bool(d["enabled"]);d["auto_kinds"]=json.loads(d["auto_kinds"] or '["free"]');return d
 def ai_public(d): return {k:v for k,v in d.items() if k!="api_key"}|{"api_key_set":bool(d.get("api_key"))}
+def rubric_for(c,course_id,ce,item_id,default):
+ rows=c.execute("SELECT * FROM ai_rubrics WHERE course_id=? AND ((ce=? AND item_id=?) OR (ce=? AND item_id='') OR (ce='' AND item_id='')) ORDER BY CASE WHEN item_id<>'' THEN 3 WHEN ce<>'' THEN 2 ELSE 1 END DESC",(course_id,ce,item_id,ce)).fetchall()
+ return dict(rows[0]) if rows else {"name":"Rúbrica general","rubric":default}
 def ai_grade(settings,response,reference,context):
  base=(settings.get("base_url") or "").rstrip("/")
  if not base or not settings.get("api_key") or not settings.get("model"):raise RuntimeError("Configuración de IA incompleta")
@@ -99,6 +104,20 @@ def config_row(c,course):
  r=c.execute("SELECT config,version FROM configs WHERE course_id=?",(course,)).fetchone()
  return (json.loads(r["config"]),r["version"]) if r else (DEFAULT,0)
 
+
+@app.get("/api/teacher/ai-rubrics")
+def get_ai_rubrics(course_id:str,x_teacher_token:str|None=Header(None)):
+ auth(x_teacher_token);c=con();rows=[dict(r) for r in c.execute("SELECT * FROM ai_rubrics WHERE course_id=? ORDER BY ce,item_id",(course_id,))];c.close();return rows
+@app.put("/api/teacher/ai-rubrics")
+def put_ai_rubric(x:AIRubricIn,x_teacher_token:str|None=Header(None)):
+ auth(x_teacher_token)
+ if not x.course_id.strip() or not x.rubric.strip():raise HTTPException(400,"Curso y rúbrica son obligatorios")
+ c=con();c.execute("INSERT INTO ai_rubrics(course_id,ce,item_id,name,rubric,updated_at) VALUES(?,?,?,?,?,?) ON CONFLICT(course_id,ce,item_id) DO UPDATE SET name=excluded.name,rubric=excluded.rubric,updated_at=excluded.updated_at",(x.course_id.strip(),x.ce.strip(),x.item_id.strip(),x.name.strip() or "Rúbrica",x.rubric.strip(),now()));c.commit();r=c.execute("SELECT * FROM ai_rubrics WHERE course_id=? AND ce=? AND item_id=?",(x.course_id.strip(),x.ce.strip(),x.item_id.strip())).fetchone();c.close();return dict(r)
+@app.delete("/api/teacher/ai-rubrics/{rubric_id}")
+def delete_ai_rubric(rubric_id:int,x_teacher_token:str|None=Header(None)):
+ auth(x_teacher_token);c=con();cur=c.execute("DELETE FROM ai_rubrics WHERE id=?",(rubric_id,));c.commit();c.close()
+ if not cur.rowcount:raise HTTPException(404,"Rúbrica no encontrada")
+ return {"ok":True}
 
 @app.get("/api/teacher/ai-settings")
 def get_ai_settings(x_teacher_token:str|None=Header(None)):
@@ -234,7 +253,7 @@ def recovery_submit(attempt_id:int,x:SubmitAttempt,x_student_token:str|None=Head
    if exact:ok=True;score=100
    elif settings.get("enabled") and kind in settings.get("auto_kinds",[]):
     try:
-     grade=ai_grade(settings,given,expected,{"course_id":x.course_id,"ce":x.ce,"item_id":x.item_id,"kind":kind});review=grade["confidence"]<float(settings.get("confidence",0.75));score=None if review else grade["score"];ok=None if review else grade["score"]>=float(config_row(c,x.course_id)[0].get("ce_pass_score",50))
+     rub=rubric_for(c,x.course_id,x.ce or "",x.item_id or "",settings.get("rubric") or "");local_settings=dict(settings);local_settings["rubric"]=rub["rubric"];grade=ai_grade(local_settings,given,expected,{"course_id":x.course_id,"ce":x.ce,"item_id":x.item_id,"kind":kind,"rubric_name":rub.get("name","")});review=grade["confidence"]<float(settings.get("confidence",0.75));score=None if review else grade["score"];ok=None if review else grade["score"]>=float(config_row(c,x.course_id)[0].get("ce_pass_score",50))
      c.execute("INSERT INTO ai_reviews(student_id,course_id,ce,item_id,attempt,response,reference,score,confidence,verdict,feedback,status,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)",(x.student_id,x.course_id,x.ce,x.item_id,x.attempt,json.dumps(given,ensure_ascii=False),json.dumps(expected,ensure_ascii=False),grade["score"],grade["confidence"],grade["verdict"],grade["feedback"],"pending" if review else "accepted",now()))
     except Exception as e:ok=None;score=None;c.execute("INSERT INTO ai_reviews(student_id,course_id,ce,item_id,attempt,response,reference,score,confidence,verdict,feedback,status,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)",(x.student_id,x.course_id,x.ce,x.item_id,x.attempt,json.dumps(given,ensure_ascii=False),json.dumps(expected,ensure_ascii=False),None,0,"error",str(e)[:1200],"pending",now()))
    else:ok=False;score=0
