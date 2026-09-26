@@ -295,10 +295,6 @@ def get_teacher_config(course_id:str,x_teacher_token:str|None=Header(None)):
 def put_config(course_id:str,x:ConfigIn,x_teacher_token:str|None=Header(None)):
  auth(x_teacher_token);d=x.model_dump()
  if d["portfolio_weight"]+d["exam_weight"]!=100: raise HTTPException(400,"Los pesos deben sumar 100")
- if d.get("exam_enabled"):
-  c0=con();counts={r["ce"]:r["n"] for r in c0.execute("SELECT ce,COUNT(*) n FROM exam_banks WHERE course_id=? GROUP BY ce",(course_id,))};c0.close()
-  per=max(1,int(d.get("exam_questions_per_ce",3)))
-  if not counts or any(n<per for n in counts.values()):raise HTTPException(409,"No puede activarse el examen: banco evaluable ausente o insuficiente para la configuración")
  if d["exam_incident_policy"] not in ("log","warn","submit"):raise HTTPException(400,"Política de incidencias no válida")
  if not 1<=d["exam_incident_limit"]<=99:raise HTTPException(400,"Límite de incidencias no válido")
  if not 1<=d["exam_minutes"]<=300:raise HTTPException(400,"Duración de examen no válida")
