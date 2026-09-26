@@ -489,3 +489,16 @@ def test_all_scorm_units_include_fullscreen_infographic_viewer():
   assert "Infografía a pantalla completa" in html
   assert "dblclick" in html and "requestFullscreen" in html and "fullscreenchange" in html
   assert ".infographic-viewer" in css and "object-fit:contain" in css
+
+
+def test_default_document_rubrics_are_seeded_without_overwrite():
+ db=module.con()
+ rows=[dict(x) for x in db.execute("SELECT course_id,ce,name,criteria FROM ai_rubrics WHERE course_id IN ('GRH0652_UT1','GRH0652_UT4') ORDER BY course_id,ce")]
+ db.close()
+ found={(x["course_id"],x["ce"]):x for x in rows}
+ assert ("GRH0652_UT1","1.g") in found
+ assert ("GRH0652_UT4","4.f") in found
+ assert ("GRH0652_UT4","4.g") in found
+ for x in found.values():
+  criteria=json.loads(x["criteria"])
+  assert criteria and abs(sum(float(c["weight"]) for c in criteria)-100)<0.01
