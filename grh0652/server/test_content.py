@@ -194,6 +194,25 @@ def test_portfolio_banks_are_varied_and_orders_are_populated():
      assert len(set(item["options"]))==len(item["options"])
 
 
+def test_ra2_ra3_ra4_public_portfolio_prompts_are_contextual_not_template_fillers():
+ generic=(
+  "Selecciona las comprobaciones correctas.",
+  "Ordena las fases del procedimiento.",
+  "Ordena correctamente las fases del procedimiento.",
+  "Selecciona los elementos que deben comprobarse.",
+  "Ordena el procedimiento profesional.",
+ )
+ for unit in ("ut2","ut3","ut4"):
+  data=json.loads((ROOT/"server"/"banks"/f"{unit}_portfolio.json").read_text(encoding="utf-8"))
+  prompts=[x["prompt"] for x in data["items"]]
+  assert not any(p in generic for p in prompts),(unit,[p for p in prompts if p in generic])
+ if True:
+  ut3=json.loads((ROOT/"server"/"banks"/"ut3_portfolio.json").read_text(encoding="utf-8"))
+  assert all(not x["prompt"].startswith("En 3.") for x in ut3["items"])
+  ut4=json.loads((ROOT/"server"/"banks"/"ut4_portfolio.json").read_text(encoding="utf-8"))
+  assert all(not x["prompt"].startswith("En 4.") for x in ut4["items"])
+
+
 def test_ut4_embedded_questions_follow_official_ce_boundaries():
  html=(ROOT/"scorm"/"ut4"/"index.html").read_text(encoding="utf-8")
  assert html.count('"ce":"4.h","type":"choice"')>=12
