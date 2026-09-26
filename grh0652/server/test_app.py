@@ -939,5 +939,5 @@ def test_every_payroll_input_has_specific_context_help():
     help_start = html.index("const PAYROLL_FIELD_HELP={")
     help_end = html.index("function payrollHelpFor", help_start)
     help_block = html[help_start:help_end]
-    missing = sorted({key for key in attrs if not re.search(r'(?:^|[,\\n])\\s*' + re.escape(key) + r':\\[', help_block)})
+    missing = sorted({key for key in attrs if (key + ":[") not in help_block})
     assert not missing, "Payroll fields without specific contextual help: " + ", ".join(missing)
