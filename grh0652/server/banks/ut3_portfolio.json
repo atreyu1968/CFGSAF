@@ -16,14 +16,14 @@
       "id": "3.ap2",
       "ce": "3.a",
       "kind": "tf",
-      "prompt": "En 3.a, una gestión profesional exige conservar justificantes y comprobar la respuesta del sistema.",
+      "prompt": "Tras comunicar un movimiento a la Seguridad Social, RR. HH. debe comprobar la respuesta del sistema y conservar el justificante antes de cerrar el trámite.",
       "options": []
     },
     {
       "id": "3.ap3",
       "ce": "3.a",
       "kind": "multi",
-      "prompt": "Selecciona las comprobaciones correctas.",
+      "prompt": "Una pyme va a tramitar su primer movimiento de personal. Selecciona los datos empresariales que debe verificar.",
       "options": [
         "Identificación de empresa",
         "CCC adecuado",
@@ -35,7 +35,7 @@
       "id": "3.ap4",
       "ce": "3.a",
       "kind": "order",
-      "prompt": "Ordena las fases del procedimiento.",
+      "prompt": "Ordena la tramitación de un movimiento laboral ante la Seguridad Social desde el hecho causante hasta el justificante.",
       "options": [
         "Identificar el hecho laboral",
         "Comprobar empresa/CCC y persona",
@@ -83,14 +83,14 @@
       "id": "3.bp2",
       "ce": "3.b",
       "kind": "tf",
-      "prompt": "En 3.b, una gestión profesional exige conservar justificantes y comprobar la respuesta del sistema.",
+      "prompt": "Una base de cotización no debe darse por válida hasta identificar los conceptos computables, aplicar las reglas del periodo y conservar el cálculo que la justifica.",
       "options": []
     },
     {
       "id": "3.bp3",
       "ce": "3.b",
       "kind": "multi",
-      "prompt": "Selecciona las comprobaciones correctas.",
+      "prompt": "Antes de calcular una base de cotización, selecciona las comprobaciones correctas.",
       "options": [
         "Clasificar percepciones",
         "Integrar prorratas cuando proceda",
@@ -102,7 +102,7 @@
       "id": "3.bp4",
       "ce": "3.b",
       "kind": "order",
-      "prompt": "Ordena las fases del procedimiento.",
+      "prompt": "Ordena la construcción de una base de cotización desde la clasificación de percepciones hasta la verificación final.",
       "options": [
         "Identificar conceptos",
         "Determinar qué computa",
@@ -150,14 +150,14 @@
       "id": "3.cp2",
       "ce": "3.c",
       "kind": "tf",
-      "prompt": "En 3.c, una gestión profesional exige conservar justificantes y comprobar la respuesta del sistema.",
+      "prompt": "El cálculo de una prestación debe dejar constancia de la contingencia, el periodo, la base reguladora y la regla aplicada para poder ser revisado.",
       "options": []
     },
     {
       "id": "3.cp3",
       "ce": "3.c",
       "kind": "multi",
-      "prompt": "Selecciona las comprobaciones correctas.",
+      "prompt": "Antes de calcular una prestación económica, selecciona los elementos que deben identificarse.",
       "options": [
         "Contingencia",
         "Periodo",
@@ -169,7 +169,7 @@
       "id": "3.cp4",
       "ce": "3.c",
       "kind": "order",
-      "prompt": "Ordena las fases del procedimiento.",
+      "prompt": "Ordena el cálculo profesional de una prestación desde la contingencia hasta el resultado documentado.",
       "options": [
         "Identificar contingencia",
         "Comprobar requisitos y periodo",
@@ -217,14 +217,14 @@
       "id": "3.dp2",
       "ce": "3.d",
       "kind": "tf",
-      "prompt": "En 3.d, una gestión profesional exige conservar justificantes y comprobar la respuesta del sistema.",
+      "prompt": "Antes de tramitar un alta, baja o variación deben comprobarse la identidad, la situación de afiliación, el CCC y la fecha real del hecho.",
       "options": []
     },
     {
       "id": "3.dp3",
       "ce": "3.d",
       "kind": "multi",
-      "prompt": "Selecciona las comprobaciones correctas.",
+      "prompt": "Una persona ya afiliada comienza a trabajar en otra empresa. Selecciona las comprobaciones necesarias antes de tramitar el alta.",
       "options": [
         "Número de Seguridad Social existente",
         "Empresa y CCC",
@@ -236,7 +236,7 @@
       "id": "3.dp4",
       "ce": "3.d",
       "kind": "order",
-      "prompt": "Ordena las fases del procedimiento.",
+      "prompt": "Ordena el alta de una persona ya afiliada desde su identificación hasta la respuesta del sistema.",
       "options": [
         "Identificar persona",
         "Comprobar afiliación existente",
@@ -284,14 +284,14 @@
       "id": "3.ep2",
       "ce": "3.e",
       "kind": "tf",
-      "prompt": "En 3.e, una gestión profesional exige conservar justificantes y comprobar la respuesta del sistema.",
+      "prompt": "Un envío telemático no debe darse por finalizado hasta leer si fue aceptado o rechazado y archivar el justificante correspondiente.",
       "options": []
     },
     {
       "id": "3.ep3",
       "ce": "3.e",
       "kind": "multi",
-      "prompt": "Selecciona las comprobaciones correctas.",
+      "prompt": "Tras transmitir un movimiento por el canal autorizado, selecciona qué evidencias deben conservarse.",
       "options": [
         "Respuesta del sistema",
         "Datos transmitidos",
@@ -303,7 +303,7 @@
       "id": "3.ep4",
       "ce": "3.e",
       "kind": "order",
-      "prompt": "Ordena las fases del procedimiento.",
+      "prompt": "Ordena una comunicación telemática completa desde la preparación de datos hasta el archivo o la corrección.",
       "options": [
         "Preparar datos",
         "Transmitir por canal autorizado",
@@ -351,14 +351,14 @@
       "id": "3.fp2",
       "ce": "3.f",
       "kind": "tf",
-      "prompt": "En 3.f, una gestión profesional exige conservar justificantes y comprobar la respuesta del sistema.",
+      "prompt": "Ante un requerimiento inspector, la empresa debe aportar documentación auténtica y trazable; no es correcto recrear documentos para ocultar incidencias.",
       "options": []
     },
     {
       "id": "3.fp3",
       "ce": "3.f",
       "kind": "multi",
-      "prompt": "Selecciona las comprobaciones correctas.",
+      "prompt": "La Inspección solicita información de un periodo concreto. Selecciona qué debe revisar RR. HH. antes de responder.",
       "options": [
         "Contenido del requerimiento",
         "Periodo y plazo",
@@ -370,7 +370,7 @@
       "id": "3.fp4",
       "ce": "3.f",
       "kind": "order",
-      "prompt": "Ordena las fases del procedimiento.",
+      "prompt": "Ordena la gestión interna de un requerimiento inspector hasta su entrega y archivo.",
       "options": [
         "Registrar requerimiento",
         "Localizar expediente",
@@ -418,14 +418,14 @@
       "id": "3.gp2",
       "ce": "3.g",
       "kind": "tf",
-      "prompt": "En 3.g, una gestión profesional exige conservar justificantes y comprobar la respuesta del sistema.",
+      "prompt": "La previsión social complementaria no sustituye por sí sola las obligaciones ordinarias de Seguridad Social y debe gestionarse conforme a sus reglas específicas.",
       "options": []
     },
     {
       "id": "3.gp3",
       "ce": "3.g",
       "kind": "multi",
-      "prompt": "Selecciona las comprobaciones correctas.",
+      "prompt": "Un convenio establece aportaciones a un sistema complementario. Selecciona los datos que deben comprobarse para gestionarlas.",
       "options": [
         "Personas incluidas",
         "Instrumento y reglas",
@@ -437,7 +437,7 @@
       "id": "3.gp4",
       "ce": "3.g",
       "kind": "order",
-      "prompt": "Ordena las fases del procedimiento.",
+      "prompt": "Ordena la gestión de una aportación de previsión social complementaria desde el compromiso hasta la evidencia.",
       "options": [
         "Identificar compromiso",
         "Determinar colectivo",
@@ -485,14 +485,14 @@
       "id": "3.hp2",
       "ce": "3.h",
       "kind": "tf",
-      "prompt": "En 3.h, una gestión profesional exige conservar justificantes y comprobar la respuesta del sistema.",
+      "prompt": "Una corrección en una aplicación de Seguridad Social debe conservar trazabilidad del dato anterior, el nuevo valor, quién la realizó y por qué.",
       "options": []
     },
     {
       "id": "3.hp3",
       "ce": "3.h",
       "kind": "multi",
-      "prompt": "Selecciona las comprobaciones correctas.",
+      "prompt": "Se detecta un dato erróneo en el expediente digital. Selecciona la información que debe quedar registrada al corregirlo.",
       "options": [
         "Dato anterior y corregido",
         "Usuario responsable",
@@ -504,7 +504,7 @@
       "id": "3.hp4",
       "ce": "3.h",
       "kind": "order",
-      "prompt": "Ordena las fases del procedimiento.",
+      "prompt": "Ordena la corrección trazable de un dato en una aplicación de gestión de Seguridad Social.",
       "options": [
         "Detectar inconsistencia",
         "Validar dato correcto",
