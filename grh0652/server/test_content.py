@@ -95,3 +95,14 @@ def test_all_units_have_strict_exam_guard_and_incident_log():
 def test_teacher_has_additio_export():
  s=(ROOT/"teacher.html").read_text(encoding="utf-8")
  assert "exportAdditio" in s and "_Additio.csv" in s and "CE '+x" in s
+
+
+def test_all_units_have_offline_exam_draft_and_sync_status():
+ for ut in ("ut1","ut2","ut3","ut4"):
+  js=(ROOT/"scorm"/ut/"assets"/"scorm.js").read_text(encoding="utf-8")
+  assert "examDraftKey" in js
+  assert "localStorage.setItem(examDraftKey()" in js
+  assert "Sin conexión · pendiente" in js
+  assert "Reconectando…" in js
+  assert "addEventListener('online'" in js
+  assert "syncPendingExamDraft" in js
