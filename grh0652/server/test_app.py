@@ -445,3 +445,13 @@ def test_readiness_detects_exam_bank_capacity():
  cfg={**module.DEFAULT,"exam_enabled":True,"exam_questions_per_ce":3};assert client.put(f"/api/config/{course}",headers=H,json=cfg).status_code==200
  rd=client.get(f"/api/teacher/readiness/{course}",headers=H).json();assert rd["checks"]["exam_bank"]["ok"] is False
  cfg["exam_questions_per_ce"]=2;assert client.put(f"/api/config/{course}",headers=H,json=cfg).status_code==200
+
+
+def test_teacher_backup_is_valid_sqlite_and_requires_auth():
+ assert client.get("/api/teacher/backup").status_code==401
+ b=client.get("/api/teacher/backup",headers=H);assert b.status_code==200;assert b.content[:16]==b"SQLite format 3\x00";assert len(b.content)>100
+ v=client.post("/api/teacher/backup/validate",headers=H,files={"file":("backup.db",b.content,"application/vnd.sqlite3")});assert v.status_code==200,v.text;z=v.json();assert z["ok"] is True and z["integrity"]=="ok" and "students" in z["counts"]
+
+
+def test_backup_validator_rejects_non_sqlite():
+ v=client.post("/api/teacher/backup/validate",headers=H,files={"file":("bad.db",b"not a database","application/octet-stream")});assert v.status_code==400
