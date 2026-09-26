@@ -49,15 +49,15 @@ CREATE TABLE IF NOT EXISTS ai_rubrics(id INTEGER PRIMARY KEY AUTOINCREMENT,cours
  # Production keys must be provisioned into SQLite through the authenticated teacher endpoint.
  c.commit();return c
 
-DEFAULT={"portfolio_weight":40,"exam_weight":60,"pass_score":50,"ce_pass_percent":80,"ce_pass_score":50,"exam_enabled":False,"exam_questions_per_ce":3,"exam_minutes":45,"require_both_instruments":False,"exam_integrity_enabled":True,"exam_fullscreen_required":True,"exam_incident_limit":3,"exam_incident_policy":"submit","exam_exempt_students":[]}
+DEFAULT={"portfolio_weight":40,"exam_weight":60,"pass_score":50,"ce_pass_percent":80,"ce_pass_score":50,"exam_enabled":False,"exam_questions_per_ce":3,"exam_minutes":45,"require_both_instruments":False,"exam_integrity_enabled":True,"exam_fullscreen_required":True,"exam_incident_limit":3,"exam_incident_policy":"submit","exam_exempt_students":[],"exam_open_at":"","exam_close_at":"","exam_pin":"","exam_allowed_students":[]}
 LIMITS={"practice":3,"portfolio":2,"exam":1,"recovery":1}
 class StateIn(BaseModel): course_id:str;state:dict
 class EventIn(BaseModel):
  student_id:str;course_id:str;kind:str;ce:str|None=None;item_id:str|None=None;attempt:int|None=None;response:object|None=None;correct:bool|None=None;score:float|None=None;payload:dict|None=None
 class ResultIn(BaseModel): student_id:str;course_id:str;portfolio:float;exam:float;final:float;ce_passed:int;ce_total:int;ra_passed:bool;recovery:list[str]=[]
 class ConfigIn(BaseModel):
- portfolio_weight:int=40;exam_weight:int=60;pass_score:float=50;ce_pass_percent:int=80;ce_pass_score:float=50;exam_enabled:bool=False;exam_questions_per_ce:int=3;exam_minutes:int=45;require_both_instruments:bool=False;exam_integrity_enabled:bool=True;exam_fullscreen_required:bool=True;exam_incident_limit:int=3;exam_incident_policy:str="submit";exam_exempt_students:list[str]=[]
-class AttemptIn(BaseModel): student_id:str;course_id:str;kind:str;item_id:str;payload:dict|None=None
+ portfolio_weight:int=40;exam_weight:int=60;pass_score:float=50;ce_pass_percent:int=80;ce_pass_score:float=50;exam_enabled:bool=False;exam_questions_per_ce:int=3;exam_minutes:int=45;require_both_instruments:bool=False;exam_integrity_enabled:bool=True;exam_fullscreen_required:bool=True;exam_incident_limit:int=3;exam_incident_policy:str="submit";exam_exempt_students:list[str]=[];exam_open_at:str="";exam_close_at:str="";exam_pin:str="";exam_allowed_students:list[str]=[]
+class AttemptIn(BaseModel): student_id:str;course_id:str;kind:str;item_id:str;payload:dict|None=None;pin:str=""
 class SubmitAttempt(BaseModel): payload:dict|None=None
 class AnswerIn(BaseModel): response:object|None=None;ce:str|None=None
 class BankQuestion(BaseModel): id:str;ce:str;q:str;options:list[str]=[];answer:object;type:str='choice'
@@ -75,6 +75,18 @@ class AIReviewDecision(BaseModel): score:float;feedback:str="";status:str="accep
 class GradeAdjustmentIn(BaseModel): scope:str;scope_key:str="";new_score:float;reason:str
 class GradeReversalIn(BaseModel): reason:str
 class AITestIn(BaseModel): text:str="Explica brevemente qué es un contrato de trabajo."
+
+def exam_access(cfg,student_id,pin=""):
+ if not cfg.get("exam_enabled"):raise HTTPException(403,"Examen no activado")
+ allowed=cfg.get("exam_allowed_students") or []
+ if allowed and student_id not in allowed:raise HTTPException(403,"Alumno no autorizado para esta convocatoria")
+ try:
+  t=datetime.now(timezone.utc);oa=cfg.get("exam_open_at","");ca=cfg.get("exam_close_at","")
+  if oa and t<datetime.fromisoformat(oa.replace("Z","+00:00")):raise HTTPException(403,"El examen todavía no está abierto")
+  if ca and t>=datetime.fromisoformat(ca.replace("Z","+00:00")):raise HTTPException(403,"La convocatoria de examen ha finalizado")
+ except HTTPException:raise
+ except Exception:raise HTTPException(400,"Fechas de convocatoria no válidas")
+ if cfg.get("exam_pin") and str(pin or "")!=str(cfg["exam_pin"]):raise HTTPException(403,"PIN de examen incorrecto")
 
 def effective_adjustments(c,student_id,course_id):
  rows=c.execute("SELECT * FROM grade_adjustments WHERE student_id=? AND course_id=? AND active=1 ORDER BY id",(student_id,course_id)).fetchall();return {(r["scope"],r["scope_key"] or ""):dict(r) for r in rows}
@@ -259,6 +271,10 @@ def put_config(course_id:str,x:ConfigIn,x_teacher_token:str|None=Header(None)):
  c=con()
  if c.execute("SELECT 1 FROM evaluation_closures WHERE course_id=?",(course_id,)).fetchone(): c.close();raise HTTPException(409,"La evaluación está cerrada")
  _,v=config_row(c,course_id);v+=1;c.execute("INSERT OR REPLACE INTO configs(course_id,config,version,updated_at) VALUES(?,?,?,?)",(course_id,json.dumps(d),v,now()));c.commit();c.close();return {**d,"version":v}
+@app.post("/api/teacher/exam-close/{course_id}")
+def teacher_exam_close(course_id:str,x_teacher_token:str|None=Header(None)):
+ auth(x_teacher_token);c=con();cfg,v=config_row(c,course_id);cfg["exam_enabled"]=False;cfg["exam_close_at"]=now();v+=1;c.execute("INSERT OR REPLACE INTO configs(course_id,config,version,updated_at) VALUES(?,?,?,?)",(course_id,json.dumps(cfg),v,now()));c.commit();c.close();return {"ok":True,"closed_at":cfg["exam_close_at"],"version":v}
+
 @app.post("/api/attempts/start")
 def start_attempt(x:AttemptIn,x_student_token:str|None=Header(None)):
  require_student(x.student_id,x_student_token)
@@ -270,7 +286,9 @@ def start_attempt(x:AttemptIn,x_student_token:str|None=Header(None)):
  if n>=LIMITS[x.kind]: c.rollback();c.close();raise HTTPException(409,"Límite de intentos alcanzado")
  if x.kind=="exam":
   cfg,_=config_row(c,x.course_id)
-  if not cfg.get("exam_enabled"): c.rollback();c.close();raise HTTPException(403,"Examen no activado")
+  try:exam_access(cfg,x.student_id,x.pin)
+  except HTTPException:
+   c.rollback();c.close();raise
   if c.execute("SELECT 1 FROM evaluation_closures WHERE course_id=?",(x.course_id,)).fetchone(): c.rollback();c.close();raise HTTPException(409,"Evaluación cerrada")
  n+=1;c.execute("INSERT INTO attempts(student_id,course_id,kind,item_id,attempt_no,status,started_at,payload) VALUES(?,?,?,?,?,'started',?,?)",(x.student_id,x.course_id,x.kind,x.item_id,n,now(),json.dumps(x.payload or {},ensure_ascii=False)));aid=c.execute("SELECT last_insert_rowid() id").fetchone()["id"];c.commit();c.close();return {"id":aid,"attempt":n,"status":"started","resumed":False}
 @app.post("/api/attempts/{attempt_id}/submit")
