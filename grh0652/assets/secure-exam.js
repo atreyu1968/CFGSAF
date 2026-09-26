@@ -4,10 +4,10 @@ window.GRH_SECURE_EXAM={
  mount(opts={}){
   const start=document.getElementById(opts.startId||'startExam'),box=document.getElementById(opts.boxId||'examBox'),result=document.getElementById(opts.resultId||'examResult');
   if(!start||!box||!result||!window.EVIDENCE)return;
-  let attempt=null,questions=[],answers={},deadline=null,timer=null,saveTimer=null,finished=false,armed=false;
+  let attempt=null,questions=[],answers={},deadline=null,timer=null,saveTimer=null,finished=false,armed=false,lastIncidentAt=0;
   const integrity={incidents:0,incident_log:[],auto:false,reason:''};
   const stamp=()=>new Date().toISOString();
-  function note(reason){if(!armed||finished)return;integrity.incidents++;integrity.incident_log.push({at:stamp(),reason});renderStatus();const lim=Number(attempt?.config?.exam_incident_limit||3);if(attempt?.config?.exam_incident_policy==='submit'&&integrity.incidents>=lim)finish(true,'incident_limit')}
+  function note(reason){if(!armed||finished)return;const t=Date.now();if(t-lastIncidentAt<1200)return;lastIncidentAt=t;integrity.incidents++;integrity.incident_log.push({at:stamp(),reason});renderStatus();const lim=Number(attempt?.config?.exam_incident_limit||3);if(attempt?.config?.exam_incident_policy==='submit'&&integrity.incidents>=lim)finish(true,'incident_limit')}
   function renderStatus(){const el=document.getElementById('secureExamStatus');if(el)el.textContent='Incidencias: '+integrity.incidents+' · Respuestas: '+Object.keys(answers).length+'/'+questions.length}
   function remaining(){return deadline?Math.max(0,Math.ceil((deadline-Date.now())/1000)):0}
   function tick(){const el=document.getElementById('secureExamClock'),sec=remaining();if(el)el.textContent=Math.floor(sec/60)+':'+String(sec%60).padStart(2,'0');if(deadline&&sec<=0)finish(true,'timeout')}
