@@ -29,7 +29,7 @@ function sync(){
  if(connected&&api){try{
    api.LMSSetValue('cmi.suspend_data',raw);
    api.LMSSetValue('cmi.core.lesson_location',state.last||'inicio');
-   api.LMSSetValue('cmi.core.score.raw',String(Math.round(state.best||0)));
+   api.LMSSetValue('cmi.core.score.raw',String(Math.round(state.examTaken&&state.evaluation?state.evaluation.final:(state.best||0))));
    api.LMSSetValue('cmi.core.score.min','0');api.LMSSetValue('cmi.core.score.max','100');
    api.LMSSetValue('cmi.core.lesson_status',state.examTaken?(state.evaluation?.ra?'passed':'failed'):'incomplete');
    api.LMSSetValue('cmi.core.exit','suspend');
