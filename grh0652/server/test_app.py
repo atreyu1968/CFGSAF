@@ -518,3 +518,20 @@ def test_document_evidence_teacher_review_e2e():
  assert ev["score"]==82 and ev["correct"]==1
  ep=json.loads(ev["payload"]);assert ep["teacher_decision"]=="accepted" and ep["teacher_feedback"]
  assert z["result"]["ce"]["1.g"]["portfolio"]==82
+
+
+def test_document_portfolio_attempts_are_server_numbered_and_limited():
+ course="GRH0652_UT1";sid="doc-attempts";item="1.g-contract-c2"
+ created=client.post(f"/api/teacher/students/{sid}",headers=H);assert created.status_code==200
+ sh={"X-Student-Token":created.json()["token"]}
+ seen=[]
+ for expected in (1,2):
+  start=client.post("/api/attempts/start",headers=sh,json={"student_id":sid,"course_id":course,"kind":"portfolio","item_id":item,"payload":{"activity":"contract-document"}});assert start.status_code==200,start.text
+  z=start.json();assert z["attempt"]==expected and z["resumed"] is False
+  ev=client.post("/api/evidence",headers=sh,json={"student_id":sid,"course_id":course,"kind":"portfolio","ce":"1.g","item_id":item,"attempt":z["attempt"],"response":{"modalidad":"indefinido","jornada":"completa"},"payload":{"activity":"contract-document","review_required":True}});assert ev.status_code==200,ev.text
+  done=client.post(f"/api/attempts/{z['id']}/submit",headers=sh,json={"payload":{"activity":"contract-document","evidence_saved":True}});assert done.status_code==200,done.text
+  seen.append(z["attempt"])
+ third=client.post("/api/attempts/start",headers=sh,json={"student_id":sid,"course_id":course,"kind":"portfolio","item_id":item,"payload":{"activity":"contract-document"}})
+ assert third.status_code==409
+ db=module.con();attempts=[x["attempt"] for x in db.execute("SELECT attempt FROM evidence WHERE student_id=? AND course_id=? AND item_id=? ORDER BY id",(sid,course,item))];db.close()
+ assert attempts==seen==[1,2]
