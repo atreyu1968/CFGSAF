@@ -29,4 +29,4 @@
  let lastTap=0;document.addEventListener('touchend',e=>{const img=e.target.closest('.info-card img,.lesson-body img');if(!img)return;const n=Date.now();if(n-lastTap<450){e.preventDefault();openInfo(img);lastTap=0}else lastTap=n},{passive:false});
  document.querySelectorAll('.info-card img,.lesson-body img').forEach(img=>{img.tabIndex=0;img.title=(img.title?img.title+' · ':'')+'Doble clic para ampliar a pantalla completa';img.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();openInfo(img)}})});
 })();
-</script></body></html>
+</script><script src="../../assets/secure-exam.js"></script><script>window.GRH_SECURE_EXAM?.mount({startId:"startExam",boxId:"examBox",resultId:"examResult"});</script></body></html>
