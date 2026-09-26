@@ -192,3 +192,12 @@ def test_secure_exam_client_implements_log_warn_and_submit_policies():
  assert "policy==='submit'&&integrity.incidents>=lim" in js
  assert "exam_integrity_exempt" in js
  assert "exam_fullscreen_required" in js
+
+
+def test_secure_exam_polls_live_status_for_teacher_actions():
+ js=(ROOT/"assets"/"secure-exam.js").read_text(encoding="utf-8")
+ assert "EVIDENCE.examStatus(attempt.attempt_id)" in js
+ assert "deadline=Date.parse(st.deadline_at)" in js
+ assert "st.status!=='started'||st.teacher_finished" in js
+ assert "statusTimer=setInterval(syncStatus,5000)" in js
+ assert "clearInterval(statusTimer)" in js
