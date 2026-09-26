@@ -610,3 +610,30 @@ def test_exam_access_gates_and_active_attempt_resume():
  closed_allowed={**closed,"exam_allowed_students":["gate-ok","gate-late"]}
  assert client.put("/api/config/"+course,headers=H,json=closed_allowed).status_code==200
  assert client.post("/api/exam/start",headers=late,json=payload("gate-late","2468")).status_code==403
+
+
+def test_exam_resume_preserves_version_questions_answers_and_deadline():
+ import json
+ course="RESUME-E2E"
+ body={**module.DEFAULT,"exam_enabled":True,"exam_minutes":27,"exam_questions_per_ce":1}
+ assert client.put("/api/config/"+course,headers=H,json=body).status_code==200
+ db=module.con()
+ for qid,ce,answer in (("r1","1.a",0),("r2","1.b",1)):
+  db.execute("INSERT OR REPLACE INTO exam_banks(course_id,question_id,ce,question,options,answer,type) VALUES(?,?,?,?,?,?,?)",(course,qid,ce,"Pregunta "+qid,json.dumps(["A","B"]),json.dumps(answer),"choice"))
+ db.commit();db.close()
+ created=client.post("/api/teacher/students/resume-student",headers=H);assert created.status_code==200
+ hs={"X-Student-Token":created.json()["token"]}
+ payload={"student_id":"resume-student","course_id":course,"kind":"exam","item_id":"final","payload":{}}
+ first=client.post("/api/exam/start",headers=hs,json=payload);assert first.status_code==200,first.text
+ a=first.json();assert a["resumed"] is False
+ saved={a["questions"][0]["id"]:0}
+ sv=client.put("/api/exam/"+str(a["attempt_id"])+"/answers",headers=hs,json={"payload":{"answers":saved}});assert sv.status_code==200,sv.text
+ second=client.post("/api/exam/start",headers=hs,json=payload);assert second.status_code==200,second.text
+ b=second.json()
+ assert b["resumed"] is True
+ assert b["attempt_id"]==a["attempt_id"] and b["attempt"]==a["attempt"]
+ assert b["version"]==a["version"]
+ assert b["questions"]==a["questions"]
+ assert b["deadline_at"]==a["deadline_at"]
+ assert b["saved_answers"]==saved
+ assert b["draft_saved_at"]
