@@ -476,7 +476,7 @@ def test_all_public_portfolio_banks_have_six_items_per_ce_and_unique_ids():
 
 def test_private_portfolio_bank_must_match_public_metadata_and_coverage():
  p=module.Path(module.__file__).resolve().parent/"banks"/"ut2_portfolio.json";items=json.loads(p.read_text(encoding="utf-8"))["items"]
- private=[{"id":x["id"],"ce":x["ce"],"kind":x["kind"],"answer":True if x["kind"]=="tf" else 0} for x in items]
+ private=[{"id":x["id"],"ce":x["ce"],"kind":x["kind"],"prompt":"Clave privada","options":[],"answer":True if x["kind"]=="tf" else 0} for x in items]
  assert client.put("/api/teacher/portfolio-bank/GRH0652_UT2",headers=H,json={"items":private[:-1]}).status_code==400
  bad=[dict(x) for x in private];bad[0]["ce"]="9.z";assert client.put("/api/teacher/portfolio-bank/GRH0652_UT2",headers=H,json={"items":bad}).status_code==400
  assert client.put("/api/teacher/portfolio-bank/GRH0652_UT2",headers=H,json={"items":private}).status_code==200
