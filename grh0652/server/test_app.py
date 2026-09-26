@@ -825,3 +825,34 @@ def test_ut4_advanced_payroll_cases_are_preserved():
     assert "10:{monthly:100,basearrears:320,comparrears:80,gross:400" in html
     assert "10:'4.e'" in html
     assert "recordPayrollEvidence('4.ep-payroll-'+n" in html
+
+
+def test_ra2_ra3_exam_banks_are_distinct_and_complete():
+    """Guard the rebuilt RA2/RA3 exam banks against template-clone regressions."""
+    from pathlib import Path
+    import json
+    import re
+
+    root = Path(__file__).resolve().parents[1] / "scorm"
+    expectations = {
+        "ut2": (60, [f"2.{c}" for c in "abcdef"]),
+        "ut3": (96, [f"3.{c}" for c in "abcdefgh"]),
+    }
+    forbidden = (
+        "¿qué criterio administrativo debe prevalecer?",
+        "¿qué actuación profesional debe prevalecer?",
+    )
+    for unit, (expected_total, ces) in expectations.items():
+        html = (root / unit / "index.html").read_text(encoding="utf-8")
+        match = re.search(r"const EXAM=(\[.*?\])</script>", html, re.S)
+        assert match, f"{unit}: EXAM bank not found"
+        bank = json.loads(match.group(1))
+        assert len(bank) == expected_total
+        assert {q["ce"] for q in bank} == set(ces)
+        expected_per_ce = expected_total // len(ces)
+        for ce in ces:
+            questions = [q for q in bank if q["ce"] == ce]
+            assert len(questions) == expected_per_ce
+            assert len({q["q"] for q in questions}) == expected_per_ce
+        joined = " ".join(q["q"] for q in bank)
+        assert all(text not in joined for text in forbidden)
