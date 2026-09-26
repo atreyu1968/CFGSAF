@@ -109,7 +109,7 @@ def recompute_official(c,student_id,course_id):
   score=float(r["score"] or 0);x=adj.get(("evidence",str(r["id"])))
   if x:score=float(x["new_score"])
   pb.setdefault(r["ce"],[]).append(score)
- er=c.execute("SELECT payload FROM attempts WHERE student_id=? AND course_id=? AND kind='exam' AND status='submitted' ORDER BY attempt_no DESC LIMIT 1",(student_id,course_id)).fetchone();eb=json.loads(er["payload"] or "{}").get("by_ce",{}) if er else {};ces=[r["ce"] for r in c.execute("SELECT DISTINCT ce FROM exam_banks WHERE course_id=? AND ce IS NOT NULL AND ce<>'' ORDER BY ce",(course_id,))];pw=float(cfg["portfolio_weight"])/100;ew=float(cfg["exam_weight"])/100;detail={}
+ er=c.execute("SELECT payload FROM attempts WHERE student_id=? AND course_id=? AND kind='exam' AND status='submitted' ORDER BY attempt_no DESC LIMIT 1",(student_id,course_id)).fetchone();eb=json.loads(er["payload"] or "{}").get("by_ce",{}) if er else {};ces=sorted({r["ce"] for r in c.execute("SELECT ce FROM exam_banks WHERE course_id=? AND ce IS NOT NULL AND ce<>''",(course_id,))}|{r["ce"] for r in c.execute("SELECT DISTINCT ce FROM evidence WHERE course_id=? AND ce IS NOT NULL AND ce<>''",(course_id,))}|{r["scope_key"] for r in c.execute("SELECT scope_key FROM grade_adjustments WHERE course_id=? AND scope='ce' AND active=1 AND scope_key<>''",(course_id,) )});pw=float(cfg["portfolio_weight"])/100;ew=float(cfg["exam_weight"])/100;detail={}
  for ce in ces:
   ps=sum(pb.get(ce,[]))/len(pb[ce]) if pb.get(ce) else 0;ex=eb.get(ce,{});es=float(ex.get("ok",0))/max(1,int(ex.get("n",0)))*100 if ex.get("n",0) else 0;fv=ps*pw+es*ew;x=adj.get(("ce",ce))
   if x:fv=float(x["new_score"])
@@ -235,21 +235,7 @@ def create_student(student_id:str,x_teacher_token:str|None=Header(None)):
 
 @app.get("/api/student/dashboard/{course_id}")
 def student_dashboard(course_id:str,x_student_token:str|None=Header(None)):
- sid=student_auth(x_student_token);c=con();r=c.execute("SELECT * FROM results WHERE student_id=? AND course_id=?",(sid,course_id)).fetchone();plan=c.execute("SELECT criteria,status,created_at FROM recovery_plans WHERE student_id=? AND course_id=?",(sid,course_id)).fetchone();cfg,_=config_row(c,course_id)
- er=c.execute("SELECT payload FROM attempts WHERE student_id=? AND course_id=? AND kind='exam' AND status='submitted' ORDER BY attempt_no DESC LIMIT 1",(sid,course_id)).fetchone();exam_by=json.loads(er["payload"] or "{}").get("by_ce",{}) if er else {}
- rows=c.execute("SELECT ce,item_id,attempt,score FROM evidence WHERE student_id=? AND course_id=? AND kind='portfolio' AND ce IS NOT NULL AND score IS NOT NULL ORDER BY id",(sid,course_id)).fetchall();c.close();latest={}
- for e in rows:
-  k=(e["ce"],e["item_id"]);prev=latest.get(k)
-  if not prev or int(e["attempt"] or 0)>=int(prev["attempt"] or 0):latest[k]=dict(e)
- pb={}
- for e in latest.values():pb.setdefault(e["ce"],[]).append(float(e["score"] or 0))
- ces=sorted(set(pb)|set(exam_by));pw=float(cfg["portfolio_weight"])/100;ew=float(cfg["exam_weight"])/100;detail={}
- for ce in ces:
-  vals=pb.get(ce,[]);ps=sum(vals)/len(vals) if vals else 0;ex=exam_by.get(ce,{});es=(float(ex.get("ok",0))/max(1,int(ex.get("n",0)))*100) if ex.get("n",0) else 0;final=ps*pw+es*ew;detail[ce]={"portfolio":round(ps,2),"exam":round(es,2),"final":round(final,2),"passed":final>=float(cfg["ce_pass_score"])}
- result_data=None
- if r:
-  result_data={"portfolio":round(r["portfolio"],2),"exam":round(r["exam"],2),"final":round(r["final"],2),"ce_passed":r["ce_passed"],"ce_total":r["ce_total"],"ra_passed":bool(r["ra_passed"]),"recovery":json.loads(r["recovery"] or "[]")}
- return {"result":result_data,"ce":detail,"recovery_plan":({"criteria":json.loads(plan["criteria"] or "[]"),"status":plan["status"],"created_at":plan["created_at"]} if plan else None)}
+ sid=student_auth(x_student_token);c=con();official=recompute_official(c,sid,course_id);plan=c.execute("SELECT criteria,status,created_at FROM recovery_plans WHERE student_id=? AND course_id=?",(sid,course_id)).fetchone();c.commit();c.close();return {"result":official,"ce":official["ce"],"recovery_plan":({"criteria":json.loads(plan["criteria"] or "[]"),"status":plan["status"],"created_at":plan["created_at"]} if plan else None)}
 
 @app.get("/api/student/feedback/{course_id}")
 def student_feedback(course_id:str,x_student_token:str|None=Header(None)):
@@ -565,23 +551,11 @@ def close_eval(course_id:str,x_teacher_token:str|None=Header(None)):
  c.commit();c.close();return {"closed":True,"recovery_plans":len(rows),"config_version":v}
 @app.get("/api/teacher/dashboard/{course_id}")
 def teacher_dashboard(course_id:str,x_teacher_token:str|None=Header(None)):
- auth(x_teacher_token);c=con();students=[r["student_id"] for r in c.execute("SELECT student_id FROM students ORDER BY student_id")];ces=[r["ce"] for r in c.execute("SELECT DISTINCT ce FROM exam_banks WHERE course_id=? AND ce IS NOT NULL AND ce<>'' ORDER BY ce",(course_id,))];out=[]
+ auth(x_teacher_token);c=con();students=[r["student_id"] for r in c.execute("SELECT student_id FROM students ORDER BY student_id")];ces=set();out=[]
  for sid in students:
-  rr=c.execute("SELECT * FROM results WHERE student_id=? AND course_id=?",(sid,course_id)).fetchone();pending=c.execute("SELECT COUNT(*) n FROM ai_reviews WHERE student_id=? AND course_id=? AND status='pending'",(sid,course_id)).fetchone()["n"];rp=c.execute("SELECT criteria,status FROM recovery_plans WHERE student_id=? AND course_id=?",(sid,course_id)).fetchone();ev=c.execute("SELECT ce,item_id,attempt,score FROM evidence WHERE student_id=? AND course_id=? AND kind='portfolio' AND score IS NOT NULL",(sid,course_id)).fetchall();latest={}
-  for e in ev:
-   k=(e["ce"],e["item_id"]);p=latest.get(k)
-   if not p or int(e["attempt"] or 0)>=int(p["attempt"] or 0):latest[k]=dict(e)
-  pb={}
-  for e in latest.values():
-   if e["ce"]:pb.setdefault(e["ce"],[]).append(float(e["score"] or 0))
-  er=c.execute("SELECT payload,started_at,submitted_at,status FROM attempts WHERE student_id=? AND course_id=? AND kind='exam' ORDER BY attempt_no DESC LIMIT 1",(sid,course_id)).fetchone();ep=json.loads(er["payload"] or "{}") if er else {};eb=ep.get("by_ce",{});integ=ep.get("integrity",{});cfg,_=config_row(c,course_id);pw=float(cfg["portfolio_weight"])/100;ew=float(cfg["exam_weight"])/100;cd={}
-  for ce in ces:
-   ps=sum(pb.get(ce,[]))/len(pb[ce]) if pb.get(ce) else 0;x=eb.get(ce,{});es=float(x.get("ok",0))/max(1,int(x.get("n",0)))*100 if x.get("n",0) else 0;fv=ps*pw+es*ew;cd[ce]={"final":round(fv,1),"passed":fv>=float(cfg["ce_pass_score"]),"portfolio":round(ps,1),"exam":round(es,1)}
-  out.append({"student_id":sid,"result":official_result(c,sid,course_id,rr) if rr else None,"ce":cd,"pending_ai":pending,"exam_integrity":{"incidents":int(integ.get("incidents",0) or 0),"auto":bool(integ.get("auto",False)),"status":er["status"] if er else None},"recovery":{"criteria":json.loads(rp["criteria"] or "[]"),"status":rp["status"]} if rp else None})
- c.close()
- for x in out:
-  if x["result"]:x["result"]["recovery"]=json.loads(x["result"]["recovery"] or "[]")
- return {"course_id":course_id,"criteria":ces,"students":out}
+  official=recompute_official(c,sid,course_id);ces.update(official["ce"]);pending=c.execute("SELECT COUNT(*) n FROM ai_reviews WHERE student_id=? AND course_id=? AND status='pending'",(sid,course_id)).fetchone()["n"];rp=c.execute("SELECT criteria,status FROM recovery_plans WHERE student_id=? AND course_id=?",(sid,course_id)).fetchone();er=c.execute("SELECT payload,status FROM attempts WHERE student_id=? AND course_id=? AND kind='exam' ORDER BY attempt_no DESC LIMIT 1",(sid,course_id)).fetchone();ep=json.loads(er["payload"] or "{}") if er else {};integ=ep.get("integrity",{})
+  out.append({"student_id":sid,"result":official,"ce":official["ce"],"pending_ai":pending,"exam_integrity":{"incidents":int(integ.get("incidents",0) or 0),"auto":bool(integ.get("auto",False)),"status":er["status"] if er else None},"recovery":{"criteria":json.loads(rp["criteria"] or "[]"),"status":rp["status"]} if rp else None})
+ c.commit();c.close();return {"course_id":course_id,"criteria":sorted(ces),"students":out}
 
 @app.get("/api/teacher/exam-monitor/{course_id}")
 def teacher_exam_monitor(course_id:str,x_teacher_token:str|None=Header(None)):
@@ -626,11 +600,10 @@ def reverse_grade_adjustment(adjustment_id:int,x:GradeReversalIn,x_teacher_token
 
 @app.get("/api/teacher/student-record/{course_id}/{student_id}")
 def teacher_student_record(course_id:str,student_id:str,x_teacher_token:str|None=Header(None)):
- auth(x_teacher_token);c=con();res=c.execute("SELECT * FROM results WHERE student_id=? AND course_id=?",(student_id,course_id)).fetchone();attempts=[dict(r) for r in c.execute("SELECT id,kind,item_id,attempt_no,status,started_at,submitted_at,payload FROM attempts WHERE student_id=? AND course_id=? ORDER BY id DESC",(student_id,course_id))];evidence=[dict(r) for r in c.execute("SELECT id,kind,ce,item_id,attempt,response,correct,score,payload,created_at FROM evidence WHERE student_id=? AND course_id=? ORDER BY id DESC",(student_id,course_id))];reviews=[dict(r) for r in c.execute("SELECT id,ce,item_id,attempt,score,confidence,verdict,feedback,status,created_at,breakdown FROM ai_reviews WHERE student_id=? AND course_id=? ORDER BY id DESC",(student_id,course_id))];rec=c.execute("SELECT * FROM recovery_plans WHERE student_id=? AND course_id=?",(student_id,course_id)).fetchone();adj=[dict(r) for r in c.execute("SELECT * FROM grade_adjustments WHERE student_id=? AND course_id=? ORDER BY id DESC",(student_id,course_id))];rd=official_result(c,student_id,course_id,res) if res else None;c.close()
+ auth(x_teacher_token);c=con();res=c.execute("SELECT * FROM results WHERE student_id=? AND course_id=?",(student_id,course_id)).fetchone();attempts=[dict(r) for r in c.execute("SELECT id,kind,item_id,attempt_no,status,started_at,submitted_at,payload FROM attempts WHERE student_id=? AND course_id=? ORDER BY id DESC",(student_id,course_id))];evidence=[dict(r) for r in c.execute("SELECT id,kind,ce,item_id,attempt,response,correct,score,payload,created_at FROM evidence WHERE student_id=? AND course_id=? ORDER BY id DESC",(student_id,course_id))];reviews=[dict(r) for r in c.execute("SELECT id,ce,item_id,attempt,score,confidence,verdict,feedback,status,created_at,breakdown FROM ai_reviews WHERE student_id=? AND course_id=? ORDER BY id DESC",(student_id,course_id))];rec=c.execute("SELECT * FROM recovery_plans WHERE student_id=? AND course_id=?",(student_id,course_id)).fetchone();adj=[dict(r) for r in c.execute("SELECT * FROM grade_adjustments WHERE student_id=? AND course_id=? ORDER BY id DESC",(student_id,course_id))];rd=recompute_official(c,student_id,course_id);c.commit();c.close()
  for a in attempts:a["payload"]=json.loads(a["payload"] or "{}")
  for e in evidence:e["response"]=json.loads(e["response"]) if e["response"] else None;e["payload"]=json.loads(e["payload"] or "{}")
  for r in reviews:r["breakdown"]=json.loads(r.get("breakdown") or "[]")
- if rd:rd["recovery"]=json.loads(rd["recovery"] or "[]")
  return {"student_id":student_id,"course_id":course_id,"result":rd,"attempts":attempts,"evidence":evidence,"ai_reviews":reviews,"recovery":({**dict(rec),"criteria":json.loads(rec["criteria"] or "[]")} if rec else None),"adjustments":adj}
 @app.post("/api/teacher/grade-adjustment/{course_id}/{student_id}")
 def grade_adjustment(course_id:str,student_id:str,x:GradeAdjustmentIn,x_teacher_token:str|None=Header(None)):
