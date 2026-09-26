@@ -929,35 +929,43 @@ def test_ra4_infographic_collection_matches_ra1_design_contract():
 
 
 def test_every_payroll_input_has_specific_context_help():
-    """Every payroll calculator field must have an explicit right-click explanation."""
+    """Every field in every payroll form must expose explicit right-click guidance."""
     from pathlib import Path
     import re
 
     html = (Path(__file__).resolve().parents[1] / "scorm" / "ut4" / "index.html").read_text(encoding="utf-8")
-    attrs = re.findall(r'<input[^>]+data-(?:pay\d*|rpay)="([^"]+)"', html)
-    assert attrs, "No payroll fields detected"
+    raw = re.findall(
+        r'<input[^>]+data-(pay\\d*|rpay|rand-ec|rand-at|rand-fin)="([^"]+)"',
+        html,
+    )
+    assert len(raw) >= 106, "Payroll field inventory unexpectedly small"
+
+    families = {family for family, _ in raw}
+    assert {"pay", "rpay", "rand-ec", "rand-at", "rand-fin"} <= families
+    assert any(family.startswith("pay") and family != "pay" for family in families)
+
     help_start = html.index("const PAYROLL_FIELD_HELP={")
-    help_end = html.index("function payrollHelpFor", help_start)
-    help_block = html[help_start:help_end]
-    missing = sorted({key for key in attrs if (key + ":[") not in help_block})
-    assert not missing, "Payroll fields without specific contextual help: " + ", ".join(missing)
+    override_start = html.index("const PAYROLL_FIELD_OVERRIDES=", help_start)
+    help_block = html[help_start:override_start]
+    override_end = html.index("function payrollHelpFor", override_start)
+    override_block = html[override_start:override_end]
 
+    missing = []
+    for family, key in raw:
+        has_general_help = (key + ":[") in help_block
+        has_context_override = ("'" + family + ":" + key + "':[") in override_block
+        if not has_general_help and not has_context_override:
+            missing.append(family + ":" + key)
 
-def test_every_contract_field_has_specific_context_help():
-    """Every UT1 contract field must expose explicit right-click guidance."""
-    from pathlib import Path
-    import re
-
-    html = (Path(__file__).resolve().parents[1] / "scorm" / "ut1" / "index.html").read_text(encoding="utf-8")
-    keys = re.findall(r'data-contract="[^"]*:([^"]+)"', html)
-    assert len(keys) >= 100, "Unexpectedly small contract field set"
-    help_start = html.index("const CONTRACT_HELP={")
-    help_end = html.index("const contractTip=", help_start)
-    help_block = html[help_start:help_end]
-    missing = sorted({key for key in keys if (key + ":[") not in help_block})
-    assert not missing, "Contract fields without specific contextual help: " + ", ".join(missing)
+    assert not missing, (
+        "Payroll fields without explicit contextual help: "
+        + ", ".join(sorted(set(missing)))
+    )
     assert "contextmenu" in html
-    assert ".contract-form input,.contract-form select,.contract-form textarea" in html
+    assert ".payroll-form input" in html
+    assert "rand-ec|rand-at|rand-fin" in html
+    assert "'pay:base':[" in override_block
+    assert "'pay10:net':[" in override_block
 
 
 def test_every_contract_field_has_specific_context_help():
@@ -975,4 +983,5 @@ def test_every_contract_field_has_specific_context_help():
     help_block = html[help_start:help_end]
     missing = sorted(key for key in keys if (key + ":[") not in help_block)
     assert not missing, "Contract fields without specific contextual help: " + ", ".join(missing)
+    assert "contextmenu" in html
     assert ".contract-form input,.contract-form select,.contract-form textarea" in html
