@@ -145,7 +145,7 @@ def test_authoritative_portfolio_banks_cover_all_units():
   data=json.loads((ROOT/"server"/"banks"/f"{unit}_portfolio.json").read_text(encoding="utf-8"))
   assert len(data["items"])==n
   assert len({x["id"] for x in data["items"]})==n
-  assert all(x["ce"] and x["kind"] in {"choice","tf","multi","order","match"} for x in data["items"])
+  assert all(x["ce"] and x["kind"] in {"choice","tf","multi","order","match","free","text","case","calculation"} for x in data["items"])
 
 
 def test_all_units_have_strict_exam_guard_and_incident_log():
