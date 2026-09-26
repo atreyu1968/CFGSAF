@@ -366,11 +366,28 @@ def test_exam_draft_autosave_and_resume_same_attempt():
 
 
 def test_timeout_auto_submit_has_short_grace_but_manual_late_submit_is_rejected():
- body={**module.DEFAULT,"exam_enabled":True,"exam_minutes":30};assert client.put("/api/config/TIMEOUT",headers=H,json=body).status_code==200;db=module.con();db.execute("INSERT OR REPLACE INTO exam_banks(course_id,question_id,ce,question,options,answer,type) VALUES(?,?,?,?,?,?,?)",("TIMEOUT","tq1","1.a","q",json.dumps(["a","b"]),json.dumps(0),"choice"));db.commit();db.close()
+ body={**module.DEFAULT,"exam_enabled":True,"exam_minutes":30}
+ assert client.put("/api/config/TIMEOUT",headers=H,json=body).status_code==200
+ db=module.con();db.execute("INSERT OR REPLACE INTO exam_banks(course_id,question_id,ce,question,options,answer,type) VALUES(?,?,?,?,?,?,?)",("TIMEOUT","tq1","1.a","q",json.dumps(["a","b"]),json.dumps(0),"choice"));db.commit();db.close()
  def start(sid):
-  client.post(f"/api/teacher/students/{sid}",headers=H);db=module.con();tok=db.execute("SELECT token FROM students WHERE student_id=?",(sid,)).fetchone()["token"];db.close();sh={"X-Student-Token":tok};st=client.post("/api/exam/start",headers=sh,json={"student_id":sid,"course_id":"TIMEOUT","kind":"exam","item_id":"final","payload":{}});assert st.status_code==200,st.text;return sh,st.json()
- sh,st=start("timeout-auto");aid=st["attempt_id"];qid=st["questions"][0]["id"];db=module.con();db.execute("UPDATE exam_versions SET deadline_at=? WHERE attempt_id=?",((datetime.datetime.now(datetime.timezone.utc)-datetime.timedelta(seconds=2)).isoformat(),aid));db.commit();db.close();r=client.post(f"/api/exam/{aid}/submit",headers=sh,json={"payload":{"answers":{qid:0},"integrity":{"auto":True,"reason":"timeout"}}});assert r.status_code==200,r.text
- again=client.post(f"/api/exam/{aid}/submit",headers=sh,json={"payload":{"answers":{qid:0},"integrity":{"auto":True,"reason":"timeout"}}});assert again.status_code==409\n db=module.con();row=db.execute("SELECT status,submitted_at FROM attempts WHERE id=?",(aid,)).fetchone();db.close();assert row["status"]=="submitted" and row["submitted_at"]\n sh2,st2=start("timeout-manual");aid2=st2["attempt_id"];qid2=st2["questions"][0]["id"];db=module.con();db.execute("UPDATE exam_versions SET deadline_at=? WHERE attempt_id=?",((datetime.datetime.now(datetime.timezone.utc)-datetime.timedelta(seconds=2)).isoformat(),aid2));db.commit();db.close();r2=client.post(f"/api/exam/{aid2}/submit",headers=sh2,json={"payload":{"answers":{qid2:0},"integrity":{"auto":False}}});assert r2.status_code==410
+  client.post(f"/api/teacher/students/{sid}",headers=H)
+  db=module.con();tok=db.execute("SELECT token FROM students WHERE student_id=?",(sid,)).fetchone()["token"];db.close()
+  sh={"X-Student-Token":tok}
+  st=client.post("/api/exam/start",headers=sh,json={"student_id":sid,"course_id":"TIMEOUT","kind":"exam","item_id":"final","payload":{}})
+  assert st.status_code==200,st.text
+  return sh,st.json()
+ sh,st=start("timeout-auto");aid=st["attempt_id"];qid=st["questions"][0]["id"]
+ db=module.con();db.execute("UPDATE exam_versions SET deadline_at=? WHERE attempt_id=?",((datetime.datetime.now(datetime.timezone.utc)-datetime.timedelta(seconds=2)).isoformat(),aid));db.commit();db.close()
+ r=client.post(f"/api/exam/{aid}/submit",headers=sh,json={"payload":{"answers":{qid:0},"integrity":{"auto":True,"reason":"timeout"}}})
+ assert r.status_code==200,r.text
+ again=client.post(f"/api/exam/{aid}/submit",headers=sh,json={"payload":{"answers":{qid:0},"integrity":{"auto":True,"reason":"timeout"}}})
+ assert again.status_code==409
+ db=module.con();row=db.execute("SELECT status,submitted_at FROM attempts WHERE id=?",(aid,)).fetchone();db.close()
+ assert row["status"]=="submitted" and row["submitted_at"]
+ sh2,st2=start("timeout-manual");aid2=st2["attempt_id"];qid2=st2["questions"][0]["id"]
+ db=module.con();db.execute("UPDATE exam_versions SET deadline_at=? WHERE attempt_id=?",((datetime.datetime.now(datetime.timezone.utc)-datetime.timedelta(seconds=2)).isoformat(),aid2));db.commit();db.close()
+ r2=client.post(f"/api/exam/{aid2}/submit",headers=sh2,json={"payload":{"answers":{qid2:0},"integrity":{"auto":False}}})
+ assert r2.status_code==410
 
 
 def test_student_teacher_and_record_share_same_official_engine_after_evidence_adjustment():
