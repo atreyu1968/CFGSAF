@@ -694,3 +694,24 @@ def test_additio_export_contract_uses_official_results_and_excel_friendly_csv():
  assert rows[0]==["Alumno","CE 1.a","Portafolio","Examen","RA"]
  row=next(x for x in rows[1:] if x[0]==sid)
  assert float(row[1])==100 and float(row[2])==100 and float(row[4])==100
+
+
+def test_private_bank_bootstrap_loads_exam_and_recovery_and_is_idempotent(tmp_path,monkeypatch):
+ import json
+ exam={"course_id":"BOOT","kind":"exam","questions":[{"id":"e1","ce":"1.a","q":"Pregunta privada","options":["A","B"],"answer":0,"type":"choice"}]}
+ recovery={"course_id":"BOOT","kind":"recovery","items":[{"id":"r1","ce":"1.a","kind":"choice","prompt":"Recuperación privada","options":["A","B"],"answer":1,"feedback":"Revisa el CE"}]}
+ (tmp_path/"exam.json").write_text(json.dumps(exam),encoding="utf-8");(tmp_path/"recovery.json").write_text(json.dumps(recovery),encoding="utf-8")
+ monkeypatch.setattr(module,"PRIVATE_BANK_DIR",str(tmp_path));monkeypatch.setattr(module,"_private_banks_seeded",False)
+ db=module.con();assert db.execute("SELECT COUNT(*) n FROM exam_banks WHERE course_id='BOOT'").fetchone()["n"]==1;assert db.execute("SELECT COUNT(*) n FROM recovery_banks WHERE course_id='BOOT'").fetchone()["n"]==1;db.close()
+ module._private_banks_seeded=False
+ db=module.con();assert db.execute("SELECT COUNT(*) n FROM exam_banks WHERE course_id='BOOT'").fetchone()["n"]==1;assert db.execute("SELECT COUNT(*) n FROM recovery_banks WHERE course_id='BOOT'").fetchone()["n"]==1;db.close()
+ monkeypatch.setattr(module,"PRIVATE_BANK_DIR","");monkeypatch.setattr(module,"_private_banks_seeded",False)
+
+
+def test_private_bank_bootstrap_rejects_invalid_bank(tmp_path,monkeypatch):
+ import json,pytest
+ bad={"course_id":"BAD","kind":"exam","questions":[{"id":"","ce":"1.a","q":"x","options":[],"answer":0}]}
+ (tmp_path/"bad.json").write_text(json.dumps(bad),encoding="utf-8")
+ monkeypatch.setattr(module,"PRIVATE_BANK_DIR",str(tmp_path));monkeypatch.setattr(module,"_private_banks_seeded",False)
+ with pytest.raises(RuntimeError,match="Banco privado inválido"):module.con()
+ monkeypatch.setattr(module,"PRIVATE_BANK_DIR","");monkeypatch.setattr(module,"_private_banks_seeded",False)
