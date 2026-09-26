@@ -499,6 +499,27 @@ def test_private_portfolio_bank_must_match_public_metadata_and_coverage():
  assert client.put("/api/teacher/portfolio-bank/GRH0652_UT2",headers=H,json={"items":private}).status_code==200
 
 
+def test_portfolio_private_keys_store_public_version_hash():
+ p=module.Path(module.__file__).resolve().parent/"banks"/"ut2_portfolio.json"
+ items=json.loads(p.read_text(encoding="utf-8"))["items"]
+ private=[{"id":x["id"],"ce":x["ce"],"kind":x["kind"],"prompt":"Clave privada","options":[],"answer":True if x["kind"]=="tf" else 0} for x in items]
+ r=client.put("/api/teacher/portfolio-bank/GRH0652_UT2",headers=H,json={"items":private});assert r.status_code==200,r.text
+ db=module.con();row=db.execute("SELECT public_hash FROM portfolio_banks WHERE course_id=? AND item_id=?",("GRH0652_UT2",items[0]["id"])).fetchone();db.close()
+ assert row and row["public_hash"]==module.portfolio_public_hash(items[0])
+
+
+def test_stale_portfolio_private_key_is_rejected_before_scoring():
+ p=module.Path(module.__file__).resolve().parent/"banks"/"ut2_portfolio.json"
+ items=json.loads(p.read_text(encoding="utf-8"))["items"]
+ private=[{"id":x["id"],"ce":x["ce"],"kind":x["kind"],"prompt":"Clave privada","options":[],"answer":True if x["kind"]=="tf" else 0} for x in items]
+ assert client.put("/api/teacher/portfolio-bank/GRH0652_UT2",headers=H,json={"items":private}).status_code==200
+ item=items[0]
+ db=module.con();db.execute("UPDATE portfolio_banks SET public_hash='stale-version' WHERE course_id=? AND item_id=?",("GRH0652_UT2",item["id"]));db.commit();db.close()
+ r=client.post("/api/evidence",headers=SH("stale-bank-student"),json={"student_id":"stale-bank-student","course_id":"GRH0652_UT2","kind":"portfolio","ce":item["ce"],"item_id":item["id"],"attempt":1,"response":0})
+ assert r.status_code==409,r.text
+ assert "banco público cambió" in r.json()["detail"]
+
+
 def test_all_scorm_units_include_fullscreen_infographic_viewer():
  root=module.Path(module.__file__).resolve().parents[1]/"scorm"
  for u in range(1,5):
