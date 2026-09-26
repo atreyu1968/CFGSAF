@@ -183,3 +183,12 @@ def test_secure_exam_debounces_duplicate_browser_integrity_events():
  assert "lastIncidentAt=0" in js
  assert "t-lastIncidentAt<1200" in js
  assert "lastIncidentAt=t" in js
+
+
+def test_secure_exam_client_implements_log_warn_and_submit_policies():
+ js=(ROOT/"assets"/"secure-exam.js").read_text(encoding="utf-8")
+ assert "policy==='warn'" in js
+ assert "secureExamWarning" in js
+ assert "policy==='submit'&&integrity.incidents>=lim" in js
+ assert "exam_integrity_exempt" in js
+ assert "exam_fullscreen_required" in js
