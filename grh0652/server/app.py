@@ -479,6 +479,26 @@ def close_eval(course_id:str,x_teacher_token:str|None=Header(None)):
  rows=c.execute("SELECT student_id,recovery FROM results WHERE course_id=? AND ra_passed=0",(course_id,)).fetchall()
  for r in rows:c.execute("INSERT OR REPLACE INTO recovery_plans VALUES(?,?,?,?,?)",(r["student_id"],course_id,r["recovery"],"pending",now()))
  c.commit();c.close();return {"closed":True,"recovery_plans":len(rows),"config_version":v}
+@app.get("/api/teacher/dashboard/{course_id}")
+def teacher_dashboard(course_id:str,x_teacher_token:str|None=Header(None)):
+ auth(x_teacher_token);c=con();students=[r["student_id"] for r in c.execute("SELECT student_id FROM students ORDER BY student_id")];ces=[r["ce"] for r in c.execute("SELECT DISTINCT ce FROM exam_banks WHERE course_id=? AND ce IS NOT NULL AND ce<>'' ORDER BY ce",(course_id,))];out=[]
+ for sid in students:
+  rr=c.execute("SELECT * FROM results WHERE student_id=? AND course_id=?",(sid,course_id)).fetchone();pending=c.execute("SELECT COUNT(*) n FROM ai_reviews WHERE student_id=? AND course_id=? AND status='pending'",(sid,course_id)).fetchone()["n"];rp=c.execute("SELECT criteria,status FROM recovery_plans WHERE student_id=? AND course_id=?",(sid,course_id)).fetchone();ev=c.execute("SELECT ce,item_id,attempt,score FROM evidence WHERE student_id=? AND course_id=? AND kind='portfolio' AND score IS NOT NULL",(sid,course_id)).fetchall();latest={}
+  for e in ev:
+   k=(e["ce"],e["item_id"]);p=latest.get(k)
+   if not p or int(e["attempt"] or 0)>=int(p["attempt"] or 0):latest[k]=dict(e)
+  pb={}
+  for e in latest.values():
+   if e["ce"]:pb.setdefault(e["ce"],[]).append(float(e["score"] or 0))
+  er=c.execute("SELECT payload FROM attempts WHERE student_id=? AND course_id=? AND kind='exam' AND status='submitted' ORDER BY attempt_no DESC LIMIT 1",(sid,course_id)).fetchone();eb=json.loads(er["payload"] or "{}").get("by_ce",{}) if er else {};cfg,_=config_row(c,course_id);pw=float(cfg["portfolio_weight"])/100;ew=float(cfg["exam_weight"])/100;cd={}
+  for ce in ces:
+   ps=sum(pb.get(ce,[]))/len(pb[ce]) if pb.get(ce) else 0;x=eb.get(ce,{});es=float(x.get("ok",0))/max(1,int(x.get("n",0)))*100 if x.get("n",0) else 0;fv=ps*pw+es*ew;cd[ce]={"final":round(fv,1),"passed":fv>=float(cfg["ce_pass_score"]),"portfolio":round(ps,1),"exam":round(es,1)}
+  out.append({"student_id":sid,"result":dict(rr) if rr else None,"ce":cd,"pending_ai":pending,"recovery":{"criteria":json.loads(rp["criteria"] or "[]"),"status":rp["status"]} if rp else None})
+ c.close()
+ for x in out:
+  if x["result"]:x["result"]["recovery"]=json.loads(x["result"]["recovery"] or "[]")
+ return {"course_id":course_id,"criteria":ces,"students":out}
+
 @app.get("/api/teacher/overview")
 def overview(x_teacher_token:str|None=Header(None)):
  auth(x_teacher_token);c=con();rows=[dict(r) for r in c.execute("SELECT * FROM results ORDER BY course_id,student_id")];c.close()
