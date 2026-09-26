@@ -2,8 +2,28 @@ import re,json
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 EXPECTED={"ut1":[f"1.{x}" for x in "abcdefghi"],"ut2":[f"2.{x}" for x in "abcdef"],"ut3":[f"3.{x}" for x in "abcdefgh"],"ut4":[f"4.{x}" for x in "abcdefghij"]}
+def json_const(text,name):
+ marker="const "+name+"="
+ start=text.find(marker);assert start>=0,f"{name} no localizado"
+ start+=len(marker)
+ while start<len(text) and text[start].isspace(): start+=1
+ opener=text[start]; closer={"{":"}","[":"]"}.get(opener);assert closer,f"{name} no comienza con JSON"
+ depth=0; quoted=False; esc=False
+ for i in range(start,len(text)):
+  ch=text[i]
+  if quoted:
+   if esc: esc=False
+   elif ch=="\\": esc=True
+   elif ch=='"': quoted=False
+   continue
+  if ch=='"': quoted=True
+  elif ch==opener: depth+=1
+  elif ch==closer:
+   depth-=1
+   if depth==0:return json.loads(text[start:i+1])
+ raise AssertionError(f"fin de {name} no localizado")
 def block(text,name,next_name):
- m=re.search(r"const "+name+r"=(.*?); const "+next_name+r"=",text,re.S);assert m,f"{name} no localizado";return json.loads(m.group(1))
+ return json_const(text,name)
 def test_practice_maps_only_to_own_ce_and_has_six_each():
  for unit,ces in EXPECTED.items():
   text=(ROOT/"scorm"/unit/"index.html").read_text(encoding="utf-8");p=block(text,"PRACTICE","EXAM")
@@ -14,11 +34,7 @@ def test_practice_maps_only_to_own_ce_and_has_six_each():
 def test_exam_bank_maps_only_to_own_ce_and_has_depth():
  for unit,ces in EXPECTED.items():
   text=(ROOT/"scorm"/unit/"index.html").read_text(encoding="utf-8")
-  start=text.find("const EXAM=");assert start>=0,f"EXAM no localizado {unit}"
-  raw=text[start+len("const EXAM="):]
-  markers=[x for x in (raw.find("; const "),raw.find(";</script>")) if x>=0]
-  assert markers,f"fin EXAM no localizado {unit}"
-  bank=json.loads(raw[:min(markers)]);found={q["ce"] for q in bank}
+  bank=json_const(text,"EXAM");found={q["ce"] for q in bank}
   assert found<=set(ces),f"{unit} contiene CE ajenos: {found-set(ces)}"
   for ce in ces:assert sum(q["ce"]==ce for q in bank)>=3,f"{unit} {ce} banco insuficiente"
 def test_no_ra1_practice_navigation_in_other_units():
