@@ -281,3 +281,21 @@ def test_ai_rubric_hierarchy_item_over_ce_over_general():
  db=module.con();assert module.rubric_for(db,course,ce,item,"fallback")["rubric"]=="actividad";assert module.rubric_for(db,course,ce,"otra","fallback")["rubric"]=="criterio";assert module.rubric_for(db,course,"4.a","otra","fallback")["rubric"]=="general";db.close()
  rows=client.get("/api/teacher/ai-rubrics?course_id=RUB",headers=H);assert rows.status_code==200 and len(rows.json())==3
  rid=next(x["id"] for x in rows.json() if x["item_id"]==item);assert client.delete(f"/api/teacher/ai-rubrics/{rid}",headers=H).status_code==200
+
+
+def test_analytic_rubric_requires_100_percent_and_calculates_weighted_score(monkeypatch):
+ bad={"course_id":"ANA","ce":"4.f","name":"Nómina","criteria":[{"id":"a","name":"Bases","weight":60},{"id":"b","name":"Cuotas","weight":30}]}
+ assert client.put("/api/teacher/ai-rubrics",headers=H,json=bad).status_code==400
+ good={"course_id":"ANA","ce":"4.f","name":"Nómina","rubric":"Revisar cálculo y coherencia","criteria":[{"id":"a","name":"Bases","weight":60,"description":"Bases correctas"},{"id":"b","name":"Cuotas","weight":40,"description":"Cuotas correctas"}]}
+ r=client.put("/api/teacher/ai-rubrics",headers=H,json=good);assert r.status_code==200,r.text
+ settings={"base_url":"https://x/v1","api_key":"k","model":"m","rubric":"R","criteria":good["criteria"]}
+ class Resp:
+  def raise_for_status(self):pass
+  def json(self):return {"choices":[{"message":{"content":json.dumps({"score":1,"confidence":.9,"verdict":"partial","feedback":"F","criteria":[{"id":"a","score":100,"feedback":"ok"},{"id":"b","score":50,"feedback":"parcial"}]})}}]}
+ class Dummy:
+  def __init__(self,*a,**k):pass
+  def __enter__(self):return self
+  def __exit__(self,*a):pass
+  def post(self,*a,**k):return Resp()
+ monkeypatch.setattr(module.httpx,"Client",Dummy);g=module.ai_grade(settings,"respuesta","referencia",{})
+ assert g["score"]==80 and len(g["criteria"])==2 and g["criteria"][0]["weight"]==60
