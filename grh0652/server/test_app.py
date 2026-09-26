@@ -300,3 +300,13 @@ def test_analytic_rubric_requires_100_percent_and_calculates_weighted_score(monk
   def post(self,*a,**k):return Resp()
  monkeypatch.setattr(module.httpx,"Client",Dummy);g=module.ai_grade(settings,"respuesta","referencia",{})
  assert g["score"]==80 and len(g["criteria"])==2 and g["criteria"][0]["weight"]==60
+
+
+def test_student_feedback_is_private_and_hides_reference():
+ db=module.con();db.execute("INSERT INTO ai_reviews(student_id,course_id,ce,item_id,attempt,response,reference,score,confidence,verdict,feedback,status,created_at,breakdown) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)",("fb-student","FB","4.f","n1",1,'"respuesta"','"SECRETO"',80,.9,"correct","Buen trabajo","accepted",module.now(),json.dumps([{"id":"a","name":"Bases","weight":60,"score":90,"feedback":"Bien"},{"id":"b","name":"Cuotas","weight":40,"score":65,"feedback":"Revisar"}])));db.commit();db.close()
+ client.post("/api/teacher/students/fb-student",headers=H)
+ # Replace generated token with one we can retrieve only for this test by direct DB read.
+ db=module.con();tok=db.execute("SELECT token FROM students WHERE student_id='fb-student'").fetchone()["token"];db.close()
+ r=client.get("/api/student/feedback/FB",headers={"X-Student-Token":tok});assert r.status_code==200,r.text
+ d=r.json()[0];assert d["score"]==80 and len(d["breakdown"])==2 and "reference" not in d and "response" not in d
+ assert client.get("/api/student/feedback/FB").status_code==401
