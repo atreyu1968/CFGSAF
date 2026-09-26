@@ -549,7 +549,7 @@ def exam_start(x:AttemptIn,x_student_token:str|None=Header(None)):
  c=con();active=c.execute("SELECT id,attempt_no,payload FROM attempts WHERE student_id=? AND course_id=? AND kind='exam' AND item_id=? AND status='started' ORDER BY attempt_no DESC LIMIT 1",(x.student_id,x.course_id,x.item_id)).fetchone()
  if active:
   old=c.execute("SELECT * FROM exam_versions WHERE attempt_id=?",(active["id"],)).fetchone()
-  if old:c.close();ap=json.loads(active["payload"] or "{}");return {"attempt_id":active["id"],"attempt":active["attempt_no"],"version":old["version"],"questions":json.loads(old["questions"]),"config":json.loads(old["config"]) if old["config"] else {},"deadline_at":old["deadline_at"],"saved_answers":ap.get("draft_answers",{}),"draft_saved_at":ap.get("draft_saved_at"),"resumed":True}
+  if old:c.close();ap=json.loads(active["payload"] or "{}");return {"attempt_id":active["id"],"attempt":active["attempt_no"],"version":old["version"],"questions":json.loads(old["questions"]),"config":json.loads(old["config"]) if old["config"] else {},"deadline_at":old["deadline_at"],"saved_answers":ap.get("draft_answers",{}),"draft_saved_at":ap.get("draft_saved_at"),"saved_integrity":ap.get("draft_integrity",{"incidents":0,"incident_log":[]}),"resumed":True}
  cfg,_=config_row(c,x.course_id)
  if not cfg.get("exam_enabled"):c.close();raise HTTPException(403,"Examen no activado")
  if c.execute("SELECT 1 FROM evaluation_closures WHERE course_id=?",(x.course_id,)).fetchone():c.close();raise HTTPException(409,"Evaluación cerrada")
@@ -576,7 +576,7 @@ def exam_start(x:AttemptIn,x_student_token:str|None=Header(None)):
  cfg={**cfg,"exam_integrity_exempt":x.student_id in cfg.get("exam_exempt_students",[]),"exam_pin_required":bool(cfg.get("exam_pin"))};cfg.pop("exam_pin",None)
  snap=json.dumps(cfg,ensure_ascii=False)
  c.execute("INSERT INTO exam_versions(attempt_id,student_id,course_id,version,questions,answers,created_at,config,deadline_at) VALUES(?,?,?,?,?,?,?,?,?)",(gate["id"],x.student_id,x.course_id,version,json.dumps(public,ensure_ascii=False),json.dumps(keys),created,snap,deadline))
- c.commit();c.close();return {"attempt_id":gate["id"],"attempt":gate["attempt"],"version":version,"questions":public,"config":cfg,"deadline_at":deadline,"saved_answers":{},"draft_saved_at":None,"resumed":False}
+ c.commit();c.close();return {"attempt_id":gate["id"],"attempt":gate["attempt"],"version":version,"questions":public,"config":cfg,"deadline_at":deadline,"saved_answers":{},"draft_saved_at":None,"saved_integrity":{"incidents":0,"incident_log":[]},"resumed":False}
 
 @app.put("/api/exam/{attempt_id}/answers")
 def exam_save_answers(attempt_id:int,x:SubmitAttempt,x_student_token:str|None=Header(None)):
@@ -586,6 +586,19 @@ def exam_save_answers(attempt_id:int,x:SubmitAttempt,x_student_token:str|None=He
  if a["status"]!="started":c.close();raise HTTPException(409,"El examen ya no está activo")
  if v["deadline_at"] and datetime.datetime.now(datetime.timezone.utc)>=datetime.datetime.fromisoformat(v["deadline_at"]):c.close();raise HTTPException(410,"Tiempo de examen agotado")
  p=json.loads(a["payload"] or "{}");p["draft_answers"]=(x.payload or {}).get("answers",{});p["draft_saved_at"]=now();c.execute("UPDATE attempts SET payload=? WHERE id=?",(json.dumps(p,ensure_ascii=False),attempt_id));c.commit();c.close();return {"ok":True,"saved_at":p["draft_saved_at"],"count":len(p["draft_answers"])}
+
+@app.put("/api/exam/{attempt_id}/integrity")
+def exam_save_integrity(attempt_id:int,x:SubmitAttempt,x_student_token:str|None=Header(None)):
+ c=con();a=c.execute("SELECT student_id,status,payload FROM attempts WHERE id=? AND kind='exam'",(attempt_id,)).fetchone()
+ if not a:c.close();raise HTTPException(404,"Examen no encontrado")
+ require_student(a["student_id"],x_student_token,c)
+ if a["status"]!="started":c.close();raise HTTPException(409,"El examen ya no está activo")
+ p=json.loads(a["payload"] or "{}");incoming=(x.payload or {}).get("integrity",{});old=p.get("draft_integrity",{});oldlog=old.get("incident_log",[]) if isinstance(old,dict) else [];newlog=incoming.get("incident_log",[]) if isinstance(incoming,dict) else []
+ merged=[];seen=set()
+ for ev in oldlog+newlog:
+  key=(str(ev.get("at","")),str(ev.get("reason",""))) if isinstance(ev,dict) else ("",str(ev))
+  if key not in seen:seen.add(key);merged.append(ev)
+ p["draft_integrity"]={"incidents":len(merged),"incident_log":merged};p["integrity_saved_at"]=now();c.execute("UPDATE attempts SET payload=? WHERE id=?",(json.dumps(p,ensure_ascii=False),attempt_id));c.commit();c.close();return {"ok":True,"integrity":p["draft_integrity"],"saved_at":p["integrity_saved_at"]}
 
 @app.get("/api/exam/{attempt_id}/status")
 def exam_live_status(attempt_id:int,x_student_token:str|None=Header(None)):
@@ -599,7 +612,7 @@ def exam_submit(attempt_id:int,x:SubmitAttempt,x_student_token:str|None=Header(N
  if not v or not a:c.close();raise HTTPException(404,"Examen no encontrado")
  require_student(a["student_id"],x_student_token)
  if a["status"]!="started":c.close();raise HTTPException(409,"Examen ya entregado")
- payload=x.payload or {};answers=payload.get("answers",{});integrity=payload.get("integrity",{});deadline=datetime.datetime.fromisoformat(v["deadline_at"]) if v["deadline_at"] else None;tnow=datetime.datetime.now(datetime.timezone.utc)
+ payload=x.payload or {};answers=payload.get("answers",{});integrity=payload.get("integrity",{});ap=json.loads(a["payload"] or "{}");saved_integrity=ap.get("draft_integrity",{});integrity["incident_log"]=saved_integrity.get("incident_log",integrity.get("incident_log",[]));integrity["incidents"]=max(int(integrity.get("incidents",0) or 0),int(saved_integrity.get("incidents",0) or 0));deadline=datetime.datetime.fromisoformat(v["deadline_at"]) if v["deadline_at"] else None;tnow=datetime.datetime.now(datetime.timezone.utc)
  if deadline and tnow>deadline:
   grace=15;is_timeout=bool(integrity.get("auto")) and integrity.get("reason")=="timeout"
   if not is_timeout or (tnow-deadline).total_seconds()>grace:
