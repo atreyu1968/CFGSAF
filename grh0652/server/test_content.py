@@ -83,3 +83,15 @@ def test_authoritative_portfolio_banks_cover_all_units():
   assert len(data["items"])==n
   assert len({x["id"] for x in data["items"]})==n
   assert all(x["ce"] and x["kind"] in {"choice","tf","multi","order","match"} for x in data["items"])
+
+
+def test_all_units_have_strict_exam_guard_and_incident_log():
+ for u in ("ut1","ut2","ut3","ut4"):
+  s=(ROOT/"scorm"/u/"assets"/"scorm.js").read_text(encoding="utf-8")
+  assert "function examGuard(" in s
+  assert "fullscreen_exit" in s and "tab_hidden" in s and "window_blur" in s
+  assert "incident_log" in s and "examIncidentLog" in s
+
+def test_teacher_has_additio_export():
+ s=(ROOT/"teacher.html").read_text(encoding="utf-8")
+ assert "exportAdditio" in s and "_Additio.csv" in s and "CE '+x" in s
