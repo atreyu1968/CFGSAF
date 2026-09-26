@@ -143,3 +143,19 @@ def test_ut4_embedded_questions_follow_official_ce_boundaries():
  assert '"id":"4eqx7","ce":"4.e"' in html and "Finiquito:" in html
  assert '"id":"4gqx3","ce":"4.g"' in html and "fecha de presentación" in html
  assert '"id":"4gq7","ce":"4.g"' not in html
+
+
+def test_ut4_interactive_practice_matches_official_ra4_ce():
+ html=(ROOT/"scorm"/"ut4"/"index.html").read_text(encoding="utf-8")
+ expected={
+  "4.e":"Elaborar nóminas y calcular sus conceptos",
+  "4.f":"Analizar y calcular aportaciones a la Seguridad Social",
+  "4.g":"Identificar formularios y plazos de declaración-liquidación",
+  "4.h":"Confeccionar declaraciones-liquidaciones",
+ }
+ for ce,title in expected.items():
+  assert title in html
+  prefix=ce.replace(".","\\.")
+  assert len(re.findall(r'"id":"'+prefix+r'p[1-6]"',html))==6
+ assert "4.g · Recibo salarial y documentos de cotización" not in html
+ assert "4.h · Plazos de pago y presentación" not in html
