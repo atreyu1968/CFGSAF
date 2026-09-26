@@ -265,15 +265,22 @@ function stablePortfolioOrder(q){
  if(rows.length>1&&rows.every((x,i)=>x.index===i))[rows[0],rows[1]]=[rows[1],rows[0]];
  return rows
 }
+function stableMatchOptions(q,rowIndex){
+ const rows=(q.pairs||[]).map((p,index)=>({text:p[1],index}));
+ let seed=rowIndex+1;for(const ch of String(q.id||''))seed=((seed*33)+ch.charCodeAt(0))>>>0;
+ for(let i=rows.length-1;i>0;i--){seed=(Math.imul(seed,1103515245)+12345)>>>0;const j=seed%(i+1);[rows[i],rows[j]]=[rows[j],rows[i]]}
+ return rows
+}
 function portfolioHTML(ce,q,i){
  const id=q.id,type=q.kind||q.type;let body='';
  if(type==='choice'||type==='multi')body=(q.options||[]).map((o,j)=>`<label class="option"><input type="${type==='multi'?'checkbox':'radio'}" name="ex-${id}" value="${j}"> ${safe(o)}</label>`).join('');
  else if(type==='tf')body=`<label class="option"><input type="radio" name="ex-${id}" value="true"> Verdadero</label><label class="option"><input type="radio" name="ex-${id}" value="false"> Falso</label>`;
  else if(type==='order')body=`<ol class="portfolio-order" id="order-${id}">${stablePortfolioOrder(q).map(x=>`<li data-order-index="${x.index}"><span>${safe(x.text)}</span><span class="order-controls"><button type="button" class="btn secondary portfolio-order-move" data-dir="up" aria-label="Subir elemento">↑</button><button type="button" class="btn secondary portfolio-order-move" data-dir="down" aria-label="Bajar elemento">↓</button></span></li>`).join('')}</ol><p class="muted">Ordena los pasos con las flechas antes de entregar.</p>`;
+ else if(type==='match'){const pairs=q.pairs||[];body=pairs.length?pairs.map((p,j)=>`<div class="match-row"><b>${safe(p[0])}</b><select id="pmatch-${id}-${j}"><option value="">Selecciona…</option>${stableMatchOptions(q,j).map(x=>`<option value="${x.index}">${safe(x.text)}</option>`).join('')}</select></div>`).join(''):`<div class="feedback bad">Actividad de emparejamiento sin pares configurados.</div>`}
  else body=`<textarea id="free-${id}" rows="4" placeholder="Escribe tu respuesta"></textarea>`;
  return `<article class="exercise" id="card-${id}"><div class="type">Portfolio ${i+1} · ${safe(type)}</div><h3>${safe(q.prompt||q.q)}</h3>${body}<button class="btn primary check-ex" data-ce="${ce}" data-id="${id}" type="button">Entregar</button><div class="feedback hidden" id="fb-${id}"></div></article>`;
 }
-function portfolioAnswer(q){const id=q.id,type=q.kind||q.type;if(type==='choice'){const x=$(`input[name="ex-${id}"]:checked`);return x?Number(x.value):null}if(type==='tf'){const x=$(`input[name="ex-${id}"]:checked`);return x?(x.value==='true'):null}if(type==='multi'){const a=$(`input[name="ex-${id}"]:checked`).map(x=>Number(x.value));return a.length?a:null}if(type==='order'){const a=$(`#order-${id} [data-order-index]`).map(x=>Number(x.dataset.orderIndex));return a.length?a:null}const x=document.getElementById('free-'+id);return x&&x.value.trim()?x.value.trim():null}
+function portfolioAnswer(q){const id=q.id,type=q.kind||q.type;if(type==='choice'){const x=$(`input[name="ex-${id}"]:checked`);return x?Number(x.value):null}if(type==='tf'){const x=$(`input[name="ex-${id}"]:checked`);return x?(x.value==='true'):null}if(type==='multi'){const a=$(`input[name="ex-${id}"]:checked`).map(x=>Number(x.value));return a.length?a:null}if(type==='order'){const a=$(`#order-${id} [data-order-index]`).map(x=>Number(x.dataset.orderIndex));return a.length?a:null}if(type==='match'){const pairs=q.pairs||[];if(!pairs.length)return null;const a=pairs.map((p,j)=>document.getElementById(`pmatch-${id}-${j}`)?.value??'');return a.some(v=>v==='')?null:a.map(Number)}const x=document.getElementById('free-'+id);return x&&x.value.trim()?x.value.trim():null}
 function installPortfolioRules(){
  document.querySelectorAll('.nav-group').forEach(x=>{if(x.textContent.trim()==='Práctica por CE')x.textContent='Portafolio de Actividades'});
  const mh=document.querySelector('#practica-home h1');if(mh)mh.textContent='Portafolio de Actividades · evaluación por criterios';
