@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS evaluation_closures(course_id TEXT PRIMARY KEY,closed
 CREATE TABLE IF NOT EXISTS recovery_plans(student_id TEXT,course_id TEXT,criteria TEXT,status TEXT,created_at TEXT,PRIMARY KEY(student_id,course_id));
 CREATE TABLE IF NOT EXISTS exam_banks(course_id TEXT,question_id TEXT,ce TEXT,question TEXT,options TEXT,answer TEXT,type TEXT NOT NULL DEFAULT 'choice',PRIMARY KEY(course_id,question_id));
 CREATE TABLE IF NOT EXISTS exam_versions(attempt_id INTEGER PRIMARY KEY,student_id TEXT,course_id TEXT,version TEXT,questions TEXT,answers TEXT,created_at TEXT,config TEXT,deadline_at TEXT);
-CREATE TABLE IF NOT EXISTS recovery_banks(course_id TEXT,item_id TEXT,ce TEXT,kind TEXT,prompt TEXT,options TEXT,answer TEXT,feedback TEXT,PRIMARY KEY(course_id,item_id));
+CREATE TABLE IF NOT EXISTS recovery_banks(course_id TEXT,item_id TEXT,ce TEXT,kind TEXT,prompt TEXT,options TEXT,answer TEXT,feedback TEXT,pairs TEXT NOT NULL DEFAULT '[]',PRIMARY KEY(course_id,item_id));
 CREATE TABLE IF NOT EXISTS portfolio_banks(course_id TEXT,item_id TEXT,ce TEXT,kind TEXT,answer TEXT,public_hash TEXT,PRIMARY KEY(course_id,item_id));
 CREATE TABLE IF NOT EXISTS recovery_results(student_id TEXT,course_id TEXT,score REAL,criteria_passed TEXT,status TEXT,updated_at TEXT,PRIMARY KEY(student_id,course_id));
 CREATE TABLE IF NOT EXISTS grade_adjustments(id INTEGER PRIMARY KEY AUTOINCREMENT,student_id TEXT NOT NULL,course_id TEXT NOT NULL,scope TEXT NOT NULL,scope_key TEXT NOT NULL DEFAULT '',old_score REAL,new_score REAL NOT NULL,reason TEXT NOT NULL,created_at TEXT NOT NULL,active INTEGER NOT NULL DEFAULT 1,reversed_at TEXT,reversal_reason TEXT);\nCREATE TABLE IF NOT EXISTS ai_settings(id INTEGER PRIMARY KEY CHECK(id=1),enabled INTEGER NOT NULL DEFAULT 0,base_url TEXT,api_key TEXT,model TEXT,rubric TEXT,confidence REAL NOT NULL DEFAULT 0.75,auto_kinds TEXT,updated_at TEXT);\nCREATE TABLE IF NOT EXISTS ai_reviews(id INTEGER PRIMARY KEY AUTOINCREMENT,student_id TEXT,course_id TEXT,ce TEXT,item_id TEXT,attempt INTEGER,response TEXT,reference TEXT,score REAL,confidence REAL,verdict TEXT,feedback TEXT,status TEXT,created_at TEXT);
@@ -46,6 +46,8 @@ CREATE TABLE IF NOT EXISTS ai_rubrics(id INTEGER PRIMARY KEY AUTOINCREMENT,cours
  if "deadline_at" not in cols:c.execute("ALTER TABLE exam_versions ADD COLUMN deadline_at TEXT")
  bcols={r["name"] for r in c.execute("PRAGMA table_info(exam_banks)")}
  if "type" not in bcols:c.execute("ALTER TABLE exam_banks ADD COLUMN type TEXT NOT NULL DEFAULT 'choice'")
+ rbcols={r["name"] for r in c.execute("PRAGMA table_info(recovery_banks)")}
+ if "pairs" not in rbcols:c.execute("ALTER TABLE recovery_banks ADD COLUMN pairs TEXT NOT NULL DEFAULT '[]'")
  rcols={r["name"] for r in c.execute("PRAGMA table_info(ai_rubrics)")}
  if "criteria" not in rcols:c.execute("ALTER TABLE ai_rubrics ADD COLUMN criteria TEXT NOT NULL DEFAULT '[]'")
  pcols={r["name"] for r in c.execute("PRAGMA table_info(portfolio_banks)")}
@@ -98,9 +100,10 @@ CREATE TABLE IF NOT EXISTS ai_rubrics(id INTEGER PRIMARY KEY AUTOINCREMENT,cours
      if not prompt or "answer" not in q or not isinstance(opts,list):raise RuntimeError(f"Banco privado inválido {p.name}: pregunta incompleta {qid}")
      c.execute("INSERT OR IGNORE INTO exam_banks(course_id,question_id,ce,question,options,answer,type) VALUES(?,?,?,?,?,?,?)",(course,qid,ce,prompt,json.dumps(opts,ensure_ascii=False),json.dumps(q["answer"],ensure_ascii=False),str(q.get("type","choice"))))
     elif kind=="recovery":
-     prompt=str(q.get("prompt","")).strip();opts=q.get("options",[])
-     if not prompt or "answer" not in q or not isinstance(opts,list):raise RuntimeError(f"Banco privado inválido {p.name}: recuperación incompleta {qid}")
-     c.execute("INSERT OR IGNORE INTO recovery_banks(course_id,item_id,ce,kind,prompt,options,answer,feedback) VALUES(?,?,?,?,?,?,?,?)",(course,qid,ce,str(q.get("kind","choice")),prompt,json.dumps(opts,ensure_ascii=False),json.dumps(q["answer"],ensure_ascii=False),str(q.get("feedback",""))))
+     prompt=str(q.get("prompt","")).strip();opts=q.get("options",[]);pairs=q.get("pairs",[])
+     if not prompt or "answer" not in q or not isinstance(opts,list) or not isinstance(pairs,list):raise RuntimeError(f"Banco privado inválido {p.name}: recuperación incompleta {qid}")
+     if str(q.get("kind","choice"))=="match" and (not pairs or any(not isinstance(pair,list) or len(pair)!=2 for pair in pairs)):raise RuntimeError(f"Banco privado inválido {p.name}: emparejamiento incompleto {qid}")
+     c.execute("INSERT OR IGNORE INTO recovery_banks(course_id,item_id,ce,kind,prompt,options,answer,feedback,pairs) VALUES(?,?,?,?,?,?,?,?,?)",(course,qid,ce,str(q.get("kind","choice")),prompt,json.dumps(opts,ensure_ascii=False),json.dumps(q["answer"],ensure_ascii=False),str(q.get("feedback","")),json.dumps(pairs,ensure_ascii=False)))
     else:
      qkind=str(q.get("kind","")).strip();pub=public.get(qid)
      if "answer" not in q or not pub or pub.get("ce")!=ce or pub.get("kind")!=qkind:raise RuntimeError(f"Banco privado inválido {p.name}: metadatos de portafolio no coinciden para {qid}")
@@ -123,7 +126,7 @@ class SubmitAttempt(BaseModel): payload:dict|None=None
 class AnswerIn(BaseModel): response:object|None=None;ce:str|None=None
 class BankQuestion(BaseModel): id:str;ce:str;q:str;options:list[str]=[];answer:object;type:str='choice'
 class BankIn(BaseModel): questions:list[BankQuestion]
-class RecoveryItem(BaseModel): id:str;ce:str;kind:str='choice';prompt:str;options:list[str]=[];answer:object|None=None;feedback:str=''
+class RecoveryItem(BaseModel): id:str;ce:str;kind:str='choice';prompt:str;options:list[str]=[];pairs:list[list[str]]=[];answer:object|None=None;feedback:str=''
 class RecoveryBankIn(BaseModel): items:list[RecoveryItem]
 class PortfolioKey(BaseModel): id:str;ce:str;kind:str;answer:object
 class PortfolioKeysIn(BaseModel): items:list[PortfolioKey]
@@ -451,7 +454,9 @@ def recovery(student_id:str,course_id:str,x_student_token:str|None=Header(None))
 @app.put("/api/teacher/recovery-bank/{course_id}")
 def put_recovery_bank(course_id:str,x:RecoveryBankIn,x_teacher_token:str|None=Header(None)):
  auth(x_teacher_token);c=con();c.execute("DELETE FROM recovery_banks WHERE course_id=?",(course_id,))
- for i in x.items:c.execute("INSERT INTO recovery_banks VALUES(?,?,?,?,?,?,?,?)",(course_id,i.id,i.ce,i.kind,i.prompt,json.dumps(i.options,ensure_ascii=False),json.dumps(i.answer,ensure_ascii=False),i.feedback))
+ for i in x.items:
+  if i.kind=="match" and (not i.pairs or any(len(pair)!=2 for pair in i.pairs)):c.close();raise HTTPException(400,f"Emparejamiento incompleto: {i.id}")
+  c.execute("INSERT INTO recovery_banks(course_id,item_id,ce,kind,prompt,options,answer,feedback,pairs) VALUES(?,?,?,?,?,?,?,?,?)",(course_id,i.id,i.ce,i.kind,i.prompt,json.dumps(i.options,ensure_ascii=False),json.dumps(i.answer,ensure_ascii=False),i.feedback,json.dumps(i.pairs,ensure_ascii=False)))
  c.commit();c.close();return {"items":len(x.items)}
 
 @app.get("/api/recovery/{student_id}/{course_id}/content")
@@ -459,8 +464,9 @@ def recovery_content(student_id:str,course_id:str,x_student_token:str|None=Heade
  require_student(student_id,x_student_token)
  c=con();p=c.execute("SELECT criteria,status FROM recovery_plans WHERE student_id=? AND course_id=?",(student_id,course_id)).fetchone()
  if not p:c.close();return {"plan":None}
- ces=json.loads(p["criteria"] or "[]");rows=[dict(r) for r in c.execute("SELECT item_id,ce,kind,prompt,options,feedback FROM recovery_banks WHERE course_id=? ORDER BY ce,item_id",(course_id,)) if r["ce"] in ces];c.close()
- for r in rows:r["options"]=json.loads(r["options"] or "[]")
+ ces=json.loads(p["criteria"] or "[]");rows=[dict(r) for r in c.execute("SELECT item_id,ce,kind,prompt,options,feedback,pairs FROM recovery_banks WHERE course_id=? ORDER BY ce,item_id",(course_id,)) if r["ce"] in ces];c.close()
+ for r in rows:
+  r["options"]=json.loads(r["options"] or "[]");r["pairs"]=json.loads(r["pairs"] or "[]")
  return {"plan":{"criteria":ces,"status":p["status"],"items":rows}}
 
 @app.post("/api/recovery/start")
