@@ -153,4 +153,15 @@ document.addEventListener('contextmenu',e=>{
 const closePayrollTip=e=>{if(!e.target.closest?.('.payroll-help'))payrollTip.hidden=true};
 document.addEventListener('click',closePayrollTip);document.addEventListener('keydown',e=>{if(e.key==='Escape')payrollTip.hidden=true});window.addEventListener('scroll',()=>payrollTip.hidden=true,true);window.addEventListener('resize',()=>payrollTip.hidden=true);
 
+</script><script>
+(function(){
+ const viewer=document.createElement('div');viewer.className='infographic-viewer';viewer.setAttribute('role','dialog');viewer.setAttribute('aria-modal','true');viewer.setAttribute('aria-label','Infografía a pantalla completa');viewer.innerHTML='<button type="button" aria-label="Cerrar infografía">✕ Cerrar</button><img alt=""><span class="hint">Esc o doble clic para cerrar</span>';document.body.appendChild(viewer);
+ const big=viewer.querySelector('img'),closeBtn=viewer.querySelector('button');let source=null;
+ async function openInfo(img){source=img;big.src=img.currentSrc||img.src;big.alt=img.alt||'Infografía';viewer.classList.add('open');document.body.style.overflow='hidden';try{if(viewer.requestFullscreen&&!document.fullscreenElement)await viewer.requestFullscreen()}catch(e){}closeBtn.focus()}
+ async function closeInfo(){try{if(document.fullscreenElement===viewer&&document.exitFullscreen)await document.exitFullscreen()}catch(e){}viewer.classList.remove('open');document.body.style.overflow='';if(source)source.focus?.();source=null}
+ document.addEventListener('dblclick',e=>{const img=e.target.closest('.info-card img,.lesson-body img');if(img){e.preventDefault();openInfo(img)}else if(viewer.classList.contains('open'))closeInfo()});
+ closeBtn.addEventListener('click',closeInfo);viewer.addEventListener('dblclick',e=>{if(e.target!==closeBtn)closeInfo()});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&viewer.classList.contains('open'))closeInfo()});document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement&&viewer.classList.contains('open')){viewer.classList.remove('open');document.body.style.overflow='';if(source)source.focus?.();source=null}});
+ let lastTap=0;document.addEventListener('touchend',e=>{const img=e.target.closest('.info-card img,.lesson-body img');if(!img)return;const n=Date.now();if(n-lastTap<450){e.preventDefault();openInfo(img);lastTap=0}else lastTap=n},{passive:false});
+ document.querySelectorAll('.info-card img,.lesson-body img').forEach(img=>{img.tabIndex=0;img.title=(img.title?img.title+' · ':'')+'Doble clic para ampliar a pantalla completa';img.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();openInfo(img)}})});
+})();
 </script></body></html>
