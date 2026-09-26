@@ -744,6 +744,34 @@ def test_private_bank_bootstrap_loads_exam_and_recovery_and_is_idempotent(tmp_pa
  monkeypatch.setattr(module,"PRIVATE_BANK_DIR","");monkeypatch.setattr(module,"_private_banks_seeded",False)
 
 
+def test_private_portfolio_bootstrap_validates_public_bank_and_refreshes_hash(tmp_path,monkeypatch):
+ import json
+ course="GRH0652_UT2"
+ public=json.loads((module.Path(module.__file__).resolve().parent/"banks"/"ut2_portfolio.json").read_text(encoding="utf-8"))["items"]
+ def answer_for(item):
+  kind=item.get("kind")
+  if kind=="tf":return True
+  if kind in ("multi","order","match"):return [0]
+  if kind=="free":return "modelo"
+  return 0
+ private={"course_id":course,"kind":"portfolio","items":[{"id":x["id"],"ce":x["ce"],"kind":x["kind"],"answer":answer_for(x)} for x in public]}
+ (tmp_path/"portfolio-ut2.json").write_text(json.dumps(private),encoding="utf-8")
+ db=module.con();db.execute("DELETE FROM portfolio_banks WHERE course_id=?",(course,));db.commit();db.close()
+ monkeypatch.setattr(module,"PRIVATE_BANK_DIR",str(tmp_path));monkeypatch.setattr(module,"_private_banks_seeded",False)
+ db=module.con();rows=[dict(x) for x in db.execute("SELECT item_id,public_hash FROM portfolio_banks WHERE course_id=? ORDER BY item_id",(course,))];db.close()
+ assert len(rows)==len(public)
+ by_id={x["id"]:x for x in public}
+ assert all(r["public_hash"]==module.portfolio_public_hash(by_id[r["item_id"]]) for r in rows)
+ first=public[0]
+ db=module.con();db.execute("UPDATE portfolio_banks SET answer=?,public_hash='stale' WHERE course_id=? AND item_id=?",(json.dumps("wrong"),course,first["id"]));db.commit();db.close()
+ module._private_banks_seeded=False
+ db=module.con();row=db.execute("SELECT answer,public_hash FROM portfolio_banks WHERE course_id=? AND item_id=?",(course,first["id"])).fetchone();db.close()
+ expected=next(x["answer"] for x in private["items"] if x["id"]==first["id"])
+ assert json.loads(row["answer"])==expected
+ assert row["public_hash"]==module.portfolio_public_hash(first)
+ monkeypatch.setattr(module,"PRIVATE_BANK_DIR","");monkeypatch.setattr(module,"_private_banks_seeded",False)
+
+
 def test_private_bank_bootstrap_rejects_invalid_bank(tmp_path,monkeypatch):
  import json,pytest
  bad={"course_id":"BAD","kind":"exam","questions":[{"id":"","ce":"1.a","q":"x","options":[],"answer":0}]}
