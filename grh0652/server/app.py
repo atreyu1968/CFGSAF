@@ -83,8 +83,6 @@ CREATE TABLE IF NOT EXISTS ai_rubrics(id INTEGER PRIMARY KEY AUTOINCREMENT,cours
    except Exception as e:raise RuntimeError(f"Banco privado inválido {p.name}: {e}")
    course=str(d.get("course_id","")).strip();kind=str(d.get("kind","")).strip();items=d.get("questions" if kind=="exam" else "items")
    if not course or kind not in ("exam","recovery") or not isinstance(items,list) or not items:raise RuntimeError(f"Banco privado inválido {p.name}: course_id/kind/items")
-   table="exam_banks" if kind=="exam" else "recovery_banks";existing=c.execute(f"SELECT COUNT(*) n FROM {table} WHERE course_id=?",(course,)).fetchone()["n"]
-   if existing:continue
    seen=set()
    for q in items:
     qid=str(q.get("id","")).strip();ce=str(q.get("ce","")).strip()
@@ -93,11 +91,11 @@ CREATE TABLE IF NOT EXISTS ai_rubrics(id INTEGER PRIMARY KEY AUTOINCREMENT,cours
     if kind=="exam":
      prompt=str(q.get("q","")).strip();opts=q.get("options",[])
      if not prompt or "answer" not in q or not isinstance(opts,list):raise RuntimeError(f"Banco privado inválido {p.name}: pregunta incompleta {qid}")
-     c.execute("INSERT INTO exam_banks(course_id,question_id,ce,question,options,answer,type) VALUES(?,?,?,?,?,?,?)",(course,qid,ce,prompt,json.dumps(opts,ensure_ascii=False),json.dumps(q["answer"],ensure_ascii=False),str(q.get("type","choice"))))
+     c.execute("INSERT OR IGNORE INTO exam_banks(course_id,question_id,ce,question,options,answer,type) VALUES(?,?,?,?,?,?,?)",(course,qid,ce,prompt,json.dumps(opts,ensure_ascii=False),json.dumps(q["answer"],ensure_ascii=False),str(q.get("type","choice"))))
     else:
      prompt=str(q.get("prompt","")).strip();opts=q.get("options",[])
      if not prompt or "answer" not in q or not isinstance(opts,list):raise RuntimeError(f"Banco privado inválido {p.name}: recuperación incompleta {qid}")
-     c.execute("INSERT INTO recovery_banks(course_id,item_id,ce,kind,prompt,options,answer,feedback) VALUES(?,?,?,?,?,?,?,?)",(course,qid,ce,str(q.get("kind","choice")),prompt,json.dumps(opts,ensure_ascii=False),json.dumps(q["answer"],ensure_ascii=False),str(q.get("feedback",""))))
+     c.execute("INSERT OR IGNORE INTO recovery_banks(course_id,item_id,ce,kind,prompt,options,answer,feedback) VALUES(?,?,?,?,?,?,?,?)",(course,qid,ce,str(q.get("kind","choice")),prompt,json.dumps(opts,ensure_ascii=False),json.dumps(q["answer"],ensure_ascii=False),str(q.get("feedback",""))))
   _private_banks_seeded=True
  c.commit();return c
 
