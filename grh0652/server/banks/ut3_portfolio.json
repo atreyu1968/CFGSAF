@@ -58,26 +58,16 @@
     {
       "id": "3.ap6",
       "ce": "3.a",
-      "kind": "choice",
-      "prompt": "¿Qué evidencia acredita un trámite empresarial ante Seguridad Social?",
-      "options": [
-        "Datos de origen, decisión, fechas, documentos y justificantes",
-        "Solo el resultado",
-        "Una nota sin fecha",
-        "Nada si el sistema aceptó"
-      ]
+      "kind": "case",
+      "prompt": "Una empresa comunica por primera vez un movimiento de personal a la Seguridad Social. Explica qué evidencias conservarías para demostrar qué se transmitió, cuándo y cuál fue la respuesta del sistema.",
+      "options": []
     },
     {
       "id": "3.bp1",
       "ce": "3.b",
-      "kind": "choice",
-      "prompt": "Antes de aplicar tipos para obtener cuotas, ¿qué debe calcularse y verificarse?",
-      "options": [
-        "Analizar datos y fuente aplicable antes de actuar",
-        "Copiar un expediente anterior",
-        "Enviar y revisar después",
-        "Elegir la opción más rápida"
-      ]
+      "kind": "calculation",
+      "prompt": "Base de cotización del supuesto: 2.000 €. Tipo didáctico de contingencias comunes a cargo de la persona trabajadora: 4,70 %. Calcula la cuota (€).",
+      "options": []
     },
     {
       "id": "3.bp2",
@@ -137,14 +127,9 @@
     {
       "id": "3.cp1",
       "ce": "3.c",
-      "kind": "choice",
-      "prompt": "Ante una situación protegida, ¿qué debe identificar primero el técnico?",
-      "options": [
-        "Analizar datos y fuente aplicable antes de actuar",
-        "Copiar un expediente anterior",
-        "Enviar y revisar después",
-        "Elegir la opción más rápida"
-      ]
+      "kind": "calculation",
+      "prompt": "IT por enfermedad común en un supuesto didáctico: base reguladora diaria 60 € y 5 días cubiertos al 60 %. Calcula la prestación correspondiente a esos cinco días (€).",
+      "options": []
     },
     {
       "id": "3.cp2",
@@ -259,14 +244,9 @@
     {
       "id": "3.dp6",
       "ce": "3.d",
-      "kind": "choice",
-      "prompt": "¿Qué documentación acredita correctamente un alta, baja o variación?",
-      "options": [
-        "Datos de origen, decisión, fechas, documentos y justificantes",
-        "Solo el resultado",
-        "Una nota sin fecha",
-        "Nada si el sistema aceptó"
-      ]
+      "kind": "case",
+      "prompt": "Una persona ya afiliada comienza a trabajar en una nueva empresa. Explica qué documentación y justificantes deben quedar en el expediente para acreditar correctamente el alta.",
+      "options": []
     },
     {
       "id": "3.ep1",
@@ -326,14 +306,9 @@
     {
       "id": "3.ep6",
       "ce": "3.e",
-      "kind": "choice",
-      "prompt": "¿Qué evidencia demuestra el resultado de una comunicación?",
-      "options": [
-        "Datos de origen, decisión, fechas, documentos y justificantes",
-        "Solo el resultado",
-        "Una nota sin fecha",
-        "Nada si el sistema aceptó"
-      ]
+      "kind": "case",
+      "prompt": "Tras una comunicación telemática, el sistema devuelve una advertencia. Explica qué evidencias conservarías y qué comprobaciones harías antes de dar el trámite por finalizado.",
+      "options": []
     },
     {
       "id": "3.fp1",
@@ -393,26 +368,16 @@
     {
       "id": "3.fp6",
       "ce": "3.f",
-      "kind": "choice",
-      "prompt": "¿Qué organización documental facilita una actuación inspectora?",
-      "options": [
-        "Datos de origen, decisión, fechas, documentos y justificantes",
-        "Solo el resultado",
-        "Una nota sin fecha",
-        "Nada si el sistema aceptó"
-      ]
+      "kind": "case",
+      "prompt": "La Inspección solicita documentación de un periodo concreto. Explica cómo organizarías el expediente y la respuesta para que la información entregada sea auténtica, completa y trazable.",
+      "options": []
     },
     {
       "id": "3.gp1",
       "ce": "3.g",
-      "kind": "choice",
-      "prompt": "Un convenio prevé aportaciones a previsión social complementaria. ¿Qué debe comprobarse?",
-      "options": [
-        "Analizar datos y fuente aplicable antes de actuar",
-        "Copiar un expediente anterior",
-        "Enviar y revisar después",
-        "Elegir la opción más rápida"
-      ]
+      "kind": "case",
+      "prompt": "Un convenio prevé aportaciones empresariales a un sistema de previsión social complementaria. Explica qué extremos comprobarías antes de informar a la plantilla y registrar las aportaciones.",
+      "options": []
     },
     {
       "id": "3.gp2",
@@ -527,14 +492,9 @@
     {
       "id": "3.hp6",
       "ce": "3.h",
-      "kind": "choice",
-      "prompt": "¿Qué campos mínimos hacen auditable un expediente digital?",
-      "options": [
-        "Datos de origen, decisión, fechas, documentos y justificantes",
-        "Solo el resultado",
-        "Una nota sin fecha",
-        "Nada si el sistema aceptó"
-      ]
+      "kind": "case",
+      "prompt": "Debes corregir un dato de afiliación en una aplicación de gestión. Explica qué información debe conservar el historial para que la rectificación sea auditable meses después.",
+      "options": []
     }
   ]
 }
