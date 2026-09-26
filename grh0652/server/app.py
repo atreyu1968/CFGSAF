@@ -268,7 +268,10 @@ def student_feedback(course_id:str,x_student_token:str|None=Header(None)):
 def health(): return {"ok":True}
 @app.get("/api/config/{course_id}")
 def get_config(course_id:str):
- c=con();d,v=config_row(c,course_id);closed=c.execute("SELECT closed_at FROM evaluation_closures WHERE course_id=?",(course_id,)).fetchone();c.close();return {**d,"version":v,"evaluation_closed":bool(closed)}
+ c=con();d,v=config_row(c,course_id);closed=c.execute("SELECT closed_at FROM evaluation_closures WHERE course_id=?",(course_id,)).fetchone();c.close();public={k:v for k,v in d.items() if k not in ("exam_pin","exam_allowed_students","exam_exempt_students")};public["exam_pin_required"]=bool(d.get("exam_pin"));return {**public,"version":v,"evaluation_closed":bool(closed)}
+@app.get("/api/teacher/config/{course_id}")
+def get_teacher_config(course_id:str,x_teacher_token:str|None=Header(None)):
+ auth(x_teacher_token);c=con();d,v=config_row(c,course_id);closed=c.execute("SELECT closed_at FROM evaluation_closures WHERE course_id=?",(course_id,)).fetchone();c.close();return {**d,"version":v,"evaluation_closed":bool(closed)}
 @app.put("/api/config/{course_id}")
 def put_config(course_id:str,x:ConfigIn,x_teacher_token:str|None=Header(None)):
  auth(x_teacher_token);d=x.model_dump()
