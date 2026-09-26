@@ -507,21 +507,22 @@ def evidence(x:EventIn,x_student_token:str|None=Header(None)):
   if not key:c.close();raise HTTPException(409,"Actividad de portafolio no definida en el banco autoritativo")
   if x.ce!=key["ce"]:c.close();raise HTTPException(409,"CE de portafolio no coincide con la definición autoritativa")
   expected=json.loads(key["answer"]);given=x.response;kind=key["kind"] or "choice"
+  semantic_kinds={"free","text","case","calculation"}
   if kind=="multi" and isinstance(given,list) and isinstance(expected,list):ok=sorted(given)==sorted(expected)
-  elif kind=="free":
+  elif kind in semantic_kinds:
    exact=str(given or "").strip().casefold()==str(expected or "").strip().casefold();settings=ai_settings_row(c)
    if exact:ok=True;score=100
    elif settings.get("enabled") and kind in settings.get("auto_kinds",[]):
     try:
-     grade=ai_grade(settings,given,expected,{"course_id":x.course_id,"ce":x.ce,"item_id":x.item_id,"kind":kind});review=grade["confidence"]<float(settings.get("confidence",0.75));score=None if review else grade["score"];ok=None if review else grade["score"]>=float(config_row(c,x.course_id)[0].get("ce_pass_score",50))
-     c.execute("INSERT INTO ai_reviews(student_id,course_id,ce,item_id,attempt,response,reference,score,confidence,verdict,feedback,status,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)",(x.student_id,x.course_id,x.ce,x.item_id,x.attempt,json.dumps(given,ensure_ascii=False),json.dumps(expected,ensure_ascii=False),grade["score"],grade["confidence"],grade["verdict"],grade["feedback"],"pending" if review else "accepted",now()))
-    except Exception as e:ok=None;score=None;c.execute("INSERT INTO ai_reviews(student_id,course_id,ce,item_id,attempt,response,reference,score,confidence,verdict,feedback,status,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)",(x.student_id,x.course_id,x.ce,x.item_id,x.attempt,json.dumps(given,ensure_ascii=False),json.dumps(expected,ensure_ascii=False),None,0,"error",str(e)[:1200],"pending",now()))
+     rub=rubric_for(c,x.course_id,x.ce or "",x.item_id or "",settings.get("rubric") or "");local_settings=dict(settings);local_settings["rubric"]=rub["rubric"];local_settings["criteria"]=rub.get("criteria",[]);grade=ai_grade(local_settings,given,expected,{"course_id":x.course_id,"ce":x.ce,"item_id":x.item_id,"kind":kind,"rubric_name":rub.get("name","")});review=grade["confidence"]<float(settings.get("confidence",0.75));score=None if review else grade["score"];ok=None if review else grade["score"]>=float(config_row(c,x.course_id)[0].get("ce_pass_score",50))
+     c.execute("INSERT INTO ai_reviews(student_id,course_id,ce,item_id,attempt,response,reference,score,confidence,verdict,feedback,status,created_at,breakdown) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)",(x.student_id,x.course_id,x.ce,x.item_id,x.attempt,json.dumps(given,ensure_ascii=False),json.dumps(expected,ensure_ascii=False),grade["score"],grade["confidence"],grade["verdict"],grade["feedback"],"pending" if review else "accepted",now(),json.dumps(grade.get("criteria",[]),ensure_ascii=False)))
+    except Exception as e:ok=None;score=None;c.execute("INSERT INTO ai_reviews(student_id,course_id,ce,item_id,attempt,response,reference,score,confidence,verdict,feedback,status,created_at,breakdown) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)",(x.student_id,x.course_id,x.ce,x.item_id,x.attempt,json.dumps(given,ensure_ascii=False),json.dumps(expected,ensure_ascii=False),None,0,"error",str(e)[:1200],"pending",now(),"[]"))
    else:ok=False;score=0
   elif kind=="order":ok=given==expected
   elif kind=="match":ok=isinstance(given,list) and isinstance(expected,list) and [str(v) for v in given]==[str(v) for v in expected]
   else:ok=given==expected
   correct=ok
-  if kind!="free":score=100 if ok else 0
+  if kind not in semantic_kinds:score=100 if ok else 0
  c.execute("INSERT INTO evidence(student_id,course_id,kind,ce,item_id,attempt,response,correct,score,payload,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)",(x.student_id,x.course_id,x.kind,x.ce,x.item_id,x.attempt,json.dumps(x.response,ensure_ascii=False),None if correct is None else int(correct),score,json.dumps(x.payload or {},ensure_ascii=False),now()));c.commit();c.close();return {"ok":True,"correct":correct,"score":score}
 @app.post("/api/result")
 def result(x:ResultIn,x_student_token:str|None=Header(None)):
