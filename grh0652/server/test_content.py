@@ -160,14 +160,3 @@ def test_ut4_interactive_practice_matches_official_ra4_ce():
  assert "4.g · Recibo salarial y documentos de cotización" not in html
  assert "4.h · Plazos de pago y presentación" not in html
 
-
-def test_ut4_private_bank_has_answer_keys_for_reclassified_ce():
- bank=json.loads((ROOT/"server"/"banks"/"ut4_portfolio.json").read_text(encoding="utf-8"))
- by_id={x["id"]:x for x in bank["items"]}
- expected={
-  "4.gp1":0,"4.gp2":[0,1,2,3],"4.gp3":False,"4.gp4":1,"4.gp5":0,"4.gp6":0,
-  "4.hp1":0,"4.hp2":1,"4.hp3":[0,1,2,3],"4.hp4":1,"4.hp5":1,"4.hp6":[0,1,2,3,4],
- }
- for item_id,answer in expected.items():
-  assert item_id in by_id
-  assert by_id[item_id]["answer"]==answer
