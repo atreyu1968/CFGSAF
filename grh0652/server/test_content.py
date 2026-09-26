@@ -176,3 +176,10 @@ def test_secure_exam_client_has_integrity_and_persistence_guards():
  js=(ROOT/"assets"/"secure-exam.js").read_text(encoding="utf-8")
  for required in ("EVIDENCE.startExam","EVIDENCE.saveExamAnswers","EVIDENCE.submitExam","visibilitychange","window.addEventListener('blur'","fullscreenchange","beforeunload","incident_limit","timeout"):
   assert required in js
+
+
+def test_secure_exam_debounces_duplicate_browser_integrity_events():
+ js=(ROOT/"assets"/"secure-exam.js").read_text(encoding="utf-8")
+ assert "lastIncidentAt=0" in js
+ assert "t-lastIncidentAt<1200" in js
+ assert "lastIncidentAt=t" in js
