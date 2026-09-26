@@ -1,3 +1,4 @@
+import csv,io
 import os,json,sqlite3,datetime,secrets,tempfile,shutil,hashlib
 import httpx
 from pathlib import Path
@@ -706,6 +707,16 @@ def teacher_dashboard(course_id:str,x_teacher_token:str|None=Header(None)):
   official=recompute_official(c,sid,course_id);ces.update(official["ce"]);pending=c.execute("SELECT COUNT(*) n FROM ai_reviews WHERE student_id=? AND course_id=? AND status='pending'",(sid,course_id)).fetchone()["n"];rp=c.execute("SELECT criteria,status FROM recovery_plans WHERE student_id=? AND course_id=?",(sid,course_id)).fetchone();er=c.execute("SELECT payload,status FROM attempts WHERE student_id=? AND course_id=? AND kind='exam' ORDER BY attempt_no DESC LIMIT 1",(sid,course_id)).fetchone();ep=json.loads(er["payload"] or "{}") if er else {};integ=ep.get("integrity",{})
   out.append({"student_id":sid,"result":official,"ce":official["ce"],"pending_ai":pending,"exam_integrity":{"incidents":int(integ.get("incidents",0) or 0),"auto":bool(integ.get("auto",False)),"status":er["status"] if er else None},"recovery":{"criteria":json.loads(rp["criteria"] or "[]"),"status":rp["status"]} if rp else None})
  c.commit();c.close();return {"course_id":course_id,"criteria":sorted(ces),"students":out}
+
+@app.get("/api/teacher/export-additio/{course_id}")
+def export_additio(course_id:str,x_teacher_token:str|None=Header(None)):
+ auth(x_teacher_token);c=con();students=[r["student_id"] for r in c.execute("SELECT student_id FROM students ORDER BY student_id")];rows=[];ces=set()
+ for sid in students:
+  official=recompute_official(c,sid,course_id);ces.update(official["ce"]);rows.append((sid,official))
+ c.commit();c.close();criteria=sorted(ces);buf=io.StringIO(newline="");w=csv.writer(buf,delimiter=";",quoting=csv.QUOTE_ALL,lineterminator="\r\n");w.writerow(["Alumno",*[f"CE {ce}" for ce in criteria],"Portafolio","Examen","RA"])
+ for sid,o in rows:w.writerow([sid,*[o["ce"].get(ce,{}).get("final","") for ce in criteria],o.get("portfolio",""),o.get("exam",""),o.get("final","")])
+ from fastapi.responses import Response
+ data="\ufeff"+buf.getvalue();return Response(content=data,media_type="text/csv; charset=utf-8",headers={"Content-Disposition":f'attachment; filename="{course_id}_Additio.csv"'})
 
 @app.get("/api/teacher/exam-monitor/{course_id}")
 def teacher_exam_monitor(course_id:str,x_teacher_token:str|None=Header(None)):
