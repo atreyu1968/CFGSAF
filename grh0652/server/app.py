@@ -285,7 +285,7 @@ def teacher_backup(x_teacher_token:str|None=Header(None)):
 @app.post("/api/teacher/backup/validate")
 async def teacher_validate_backup(file:UploadFile=File(...),x_teacher_token:str|None=Header(None)):
  auth(x_teacher_token);data=await file.read()
- if len(data)<100 or data[:16]!=b"SQLite format 3\\x00":raise HTTPException(400,"El archivo no es una copia SQLite válida")
+ if len(data)<100 or data[:16]!=b"SQLite format 3\x00":raise HTTPException(400,"El archivo no es una copia SQLite válida")
  p=tempfile.NamedTemporaryFile(suffix=".db",delete=False);p.write(data);p.close()
  try:
   c=sqlite3.connect(p.name);tables={r[0] for r in c.execute("SELECT name FROM sqlite_master WHERE type='table'")};required={"students","states","evidence","results","configs","attempts","exam_banks","exam_versions"};missing=sorted(required-tables)
@@ -305,7 +305,7 @@ def teacher_readiness(course_id:str,x_teacher_token:str|None=Header(None)):
  if course_id.startswith("GRH0652_UT") and course_id[-1].isdigit():
   u=course_id[-1];bank=Path(__file__).resolve().parent/"banks"/f"ut{u}_portfolio.json"
   if bank.exists():expected=sorted({q.get("ce","") for q in json.loads(bank.read_text(encoding="utf-8")).get("items",[]) if q.get("ce")})
- exam_ok=bool(exam_counts) and all(exam_counts.get(ce,0)>=per for ce in expected) if expected else bool(exam_counts)
+ exam_ok=bool(exam_counts) and all(exam_counts.get(ce,0)>=per for ce in expected) if expected else bool(exam_counts) and all(n>=per for n in exam_counts.values())
  portfolio_ok=portfolio>0;recovery_ok=bool(recovery_counts) and all(recovery_counts.get(ce,0)>0 for ce in expected) if expected else bool(recovery_counts)
  checks={"students":{"ok":students>0,"count":students},"portfolio_keys":{"ok":portfolio_ok,"count":portfolio},"exam_bank":{"ok":exam_ok,"counts":exam_counts,"required_per_ce":per,"expected_ce":expected},"recovery_bank":{"ok":recovery_ok,"counts":recovery_counts,"expected_ce":expected},"origins":{"ok":bool(ORIGINS),"count":len(ORIGINS)}}
  return {"course_id":course_id,"ready":all(v["ok"] for v in checks.values()),"checks":checks}
