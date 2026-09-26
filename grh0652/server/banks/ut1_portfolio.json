@@ -43,7 +43,25 @@
       "ce": "1.a",
       "kind": "match",
       "prompt": "Relaciona cada fuente con su función principal.",
-      "options": []
+      "options": [],
+      "pairs": [
+        [
+          "Estatuto de los Trabajadores",
+          "Regulación legal básica de la relación laboral"
+        ],
+        [
+          "Convenio colectivo",
+          "Concreta condiciones para un sector, territorio o empresa"
+        ],
+        [
+          "Contrato de trabajo",
+          "Formaliza las condiciones individuales dentro de los límites legales"
+        ],
+        [
+          "Constitución Española",
+          "Reconoce derechos fundamentales y el derecho al trabajo"
+        ]
+      ]
     },
     {
       "id": "1a6",
@@ -81,7 +99,25 @@
       "ce": "1.b",
       "kind": "match",
       "prompt": "Relaciona cada fase con la actuación que mejor la representa.",
-      "options": []
+      "options": [],
+      "pairs": [
+        [
+          "Análisis",
+          "Comprobar necesidad, puesto, convenio y requisitos"
+        ],
+        [
+          "Formalización",
+          "Cumplimentar y firmar el contrato"
+        ],
+        [
+          "Comunicación",
+          "Remitir datos a los organismos competentes"
+        ],
+        [
+          "Archivo",
+          "Conservar contrato, justificantes y anexos"
+        ]
+      ]
     },
     {
       "id": "1b4",
@@ -119,7 +155,25 @@
       "ce": "1.c",
       "kind": "match",
       "prompt": "Relaciona organismo y función habitual.",
-      "options": []
+      "options": [],
+      "pairs": [
+        [
+          "TGSS",
+          "Afiliación, altas, bajas y cotización"
+        ],
+        [
+          "SEPE",
+          "Comunicación de contratos y gestión de empleo"
+        ],
+        [
+          "INSS",
+          "Reconocimiento y gestión de numerosas prestaciones económicas"
+        ],
+        [
+          "Servicio Canario de Empleo",
+          "Políticas y programas de empleo en Canarias"
+        ]
+      ]
     },
     {
       "id": "1c2",
@@ -224,7 +278,25 @@
       "ce": "1.d",
       "kind": "match",
       "prompt": "Relaciona modalidad y rasgo principal.",
-      "options": []
+      "options": [],
+      "pairs": [
+        [
+          "Indefinido",
+          "No tiene fecha de fin predeterminada por una causa temporal"
+        ],
+        [
+          "Temporal por circunstancias",
+          "Exige una causa temporal concreta y su conexión con la duración"
+        ],
+        [
+          "Sustitución",
+          "Cubre una ausencia o reducción con causa legal en los supuestos previstos"
+        ],
+        [
+          "Formación en alternancia",
+          "Compatibiliza actividad laboral retribuida y proceso formativo"
+        ]
+      ]
     },
     {
       "id": "1d6",
@@ -346,7 +418,25 @@
       "ce": "1.f",
       "kind": "match",
       "prompt": "Relaciona ámbito del convenio y pregunta de comprobación.",
-      "options": []
+      "options": [],
+      "pairs": [
+        [
+          "Funcional",
+          "¿Qué actividad o sector cubre?"
+        ],
+        [
+          "Territorial",
+          "¿En qué ámbito geográfico se aplica?"
+        ],
+        [
+          "Personal",
+          "¿A qué personas o colectivos afecta?"
+        ],
+        [
+          "Temporal",
+          "¿Está vigente o prorrogado en la fecha del caso?"
+        ]
+      ]
     },
     {
       "id": "1f5",
@@ -377,7 +467,25 @@
       "ce": "1.g",
       "kind": "match",
       "prompt": "Relaciona documento y finalidad.",
-      "options": []
+      "options": [],
+      "pairs": [
+        [
+          "Contrato",
+          "Formaliza la relación y sus condiciones"
+        ],
+        [
+          "Anexo",
+          "Recoge pactos o información complementaria cuando proceda"
+        ],
+        [
+          "Justificante de comunicación",
+          "Acredita el envío o registro ante el organismo"
+        ],
+        [
+          "Expediente laboral",
+          "Agrupa y conserva la documentación de la persona"
+        ]
+      ]
     },
     {
       "id": "1g2",
@@ -477,7 +585,25 @@
       "ce": "1.h",
       "kind": "match",
       "prompt": "Relaciona comunicación y canal habitual.",
-      "options": []
+      "options": [],
+      "pairs": [
+        [
+          "Contrato al SEPE",
+          "Sistema de comunicación del SEPE"
+        ],
+        [
+          "Alta en Seguridad Social",
+          "Sistema habilitado por TGSS"
+        ],
+        [
+          "Comunicación a la persona trabajadora",
+          "Documento, correo corporativo o medio formal según el caso"
+        ],
+        [
+          "Archivo de justificantes",
+          "Repositorio documental seguro"
+        ]
+      ]
     },
     {
       "id": "1h6",
@@ -527,7 +653,25 @@
       "ce": "1.i",
       "kind": "match",
       "prompt": "Relaciona función digital y objetivo.",
-      "options": []
+      "options": [],
+      "pairs": [
+        [
+          "Plantilla parametrizada",
+          "Reducir tareas repetitivas manteniendo datos correctos"
+        ],
+        [
+          "Historial de cambios",
+          "Conservar trazabilidad"
+        ],
+        [
+          "Permisos de usuario",
+          "Limitar accesos a datos sensibles"
+        ],
+        [
+          "Exportación PDF",
+          "Generar una versión estable para firma o archivo cuando proceda"
+        ]
+      ]
     },
     {
       "id": "1i5",
