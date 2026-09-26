@@ -480,3 +480,12 @@ def test_private_portfolio_bank_must_match_public_metadata_and_coverage():
  assert client.put("/api/teacher/portfolio-bank/GRH0652_UT2",headers=H,json={"items":private[:-1]}).status_code==400
  bad=[dict(x) for x in private];bad[0]["ce"]="9.z";assert client.put("/api/teacher/portfolio-bank/GRH0652_UT2",headers=H,json={"items":bad}).status_code==400
  assert client.put("/api/teacher/portfolio-bank/GRH0652_UT2",headers=H,json={"items":private}).status_code==200
+
+
+def test_all_scorm_units_include_fullscreen_infographic_viewer():
+ root=module.Path(module.__file__).resolve().parents[1]/"scorm"
+ for u in range(1,5):
+  html=(root/f"ut{u}"/"index.html").read_text(encoding="utf-8");css=(root/f"ut{u}"/"assets"/"style.css").read_text(encoding="utf-8")
+  assert "Infografía a pantalla completa" in html
+  assert "dblclick" in html and "requestFullscreen" in html and "fullscreenchange" in html
+  assert ".infographic-viewer" in css and "object-fit:contain" in css
