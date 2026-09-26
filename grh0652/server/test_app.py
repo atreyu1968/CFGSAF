@@ -926,3 +926,18 @@ def test_ra4_infographic_collection_matches_ra1_design_contract():
             assert marker in svg
     assert "dblclick" in html
     assert "requestFullscreen" in html
+
+
+def test_every_payroll_input_has_specific_context_help():
+    """Every payroll calculator field must have an explicit right-click explanation."""
+    from pathlib import Path
+    import re
+
+    html = (Path(__file__).resolve().parents[1] / "scorm" / "ut4" / "index.html").read_text(encoding="utf-8")
+    attrs = re.findall(r'<input[^>]+data-(?:pay\d*|rpay)="([^"]+)"', html)
+    assert attrs, "No payroll fields detected"
+    help_start = html.index("const PAYROLL_FIELD_HELP={")
+    help_end = html.index("function payrollHelpFor", help_start)
+    help_block = html[help_start:help_end]
+    missing = sorted({key for key in attrs if not re.search(r'(?:^|[,\\n])\\s*' + re.escape(key) + r':\\[', help_block)})
+    assert not missing, "Payroll fields without specific contextual help: " + ", ".join(missing)
