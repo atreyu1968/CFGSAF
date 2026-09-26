@@ -268,6 +268,18 @@ def test_ai_settings_are_teacher_only_and_key_is_never_returned():
  d=r.json();assert d["enabled"] is True and d["api_key_set"] is True and "api_key" not in d
  g=client.get("/api/teacher/ai-settings",headers=H);assert g.status_code==200 and "api_key" not in g.json()
 
+def test_semantic_portfolio_without_ai_waits_for_teacher_review():
+ body={"enabled":False,"base_url":"","model":"","rubric":"","confidence":0.75,"auto_kinds":["free","text","case","calculation"]}
+ assert client.put("/api/teacher/ai-settings",headers=H,json=body).status_code==200
+ bank={"items":[{"id":"case-manual","ce":"2.a","kind":"case","prompt":"Razona el caso","options":[],"answer":"Debe identificar la norma y justificar el procedimiento."}]}
+ assert client.put("/api/teacher/portfolio-bank/MANUALREVIEW",headers=H,json=bank).status_code==200
+ r=client.post("/api/evidence",headers=SH("manual-review"),json={"student_id":"manual-review","course_id":"MANUALREVIEW","kind":"portfolio","ce":"2.a","item_id":"case-manual","attempt":1,"response":"Analizaría primero los hechos y después la norma aplicable.","payload":{}})
+ assert r.status_code==200,r.text
+ assert r.json()["score"] is None and r.json()["correct"] is None
+ rows=client.get("/api/teacher/ai-reviews?course_id=MANUALREVIEW",headers=H).json()
+ assert any(x["student_id"]=="manual-review" and x["status"]=="pending" and x["source_kind"]=="portfolio" for x in rows)
+
+
 def test_ai_free_grading_accepts_semantic_result_and_records_review(monkeypatch):
  body={"enabled":True,"base_url":"https://ai.example/v1","api_key":"secret-key","model":"test-model","rubric":"R","confidence":0.75,"auto_kinds":["free"]}
  assert client.put("/api/teacher/ai-settings",headers=H,json=body).status_code==200
@@ -430,6 +442,21 @@ def test_semantic_kinds_use_ai_only_when_enabled_and_objective_kinds_stay_determ
  def fake(settings,response,reference,context):
   called.append(context["kind"]);return {"score":82.0,"confidence":.95,"verdict":"correct","feedback":"Equivalente","criteria":[]}
  monkeypatch.setattr(module,"ai_grade",fake);db=module.con();db.execute("INSERT OR REPLACE INTO ai_settings(id,enabled,base_url,api_key,model,rubric,confidence,auto_kinds,updated_at) VALUES(1,1,'x','k','m','r',.75,?,?)",(json.dumps(["case","calculation","text","free"]),module.now()));db.commit();db.close();r=client.post("/api/evidence",headers=sh,json={"student_id":"semantic-student","course_id":"SEMANTIC","kind":"portfolio","ce":"1.a","item_id":"case1","attempt":1,"response":"Otra formulación correcta"});assert r.status_code==200,r.text;assert r.json()["score"]==82 and called==["case"];r2=client.post("/api/evidence",headers=sh,json={"student_id":"semantic-student","course_id":"SEMANTIC","kind":"portfolio","ce":"1.a","item_id":"choice1","attempt":1,"response":"B"});assert r2.status_code==200 and r2.json()["score"]==0 and called==["case"]
+
+
+def test_semantic_recovery_without_ai_waits_for_teacher_review():
+ body={"enabled":False,"base_url":"","model":"","rubric":"","confidence":0.75,"auto_kinds":["case"]}
+ assert client.put("/api/teacher/ai-settings",headers=H,json=body).status_code==200
+ course="RECMANUAL";sid="rec-manual"
+ client.post("/api/teacher/students/"+sid,headers=H)
+ db=module.con();tok=db.execute("SELECT token FROM students WHERE student_id=?",(sid,)).fetchone()["token"];db.execute("INSERT OR REPLACE INTO recovery_plans VALUES(?,?,?,?,?)",(sid,course,json.dumps(["3.a"]),"pending",module.now()));db.commit();db.close()
+ assert client.put("/api/teacher/recovery-bank/"+course,headers=H,json={"items":[{"id":"rcase","ce":"3.a","kind":"case","prompt":"Explica la actuación","options":[],"answer":"Comprobar datos, tramitar y conservar justificante."}]}).status_code==200
+ sh={"X-Student-Token":tok};st=client.post("/api/recovery/start",headers=sh,json={"student_id":sid,"course_id":course,"kind":"recovery","item_id":"recovery-final","payload":{}});assert st.status_code==200,st.text
+ r=client.post(f"/api/recovery/{st.json()['id']}/submit",headers=sh,json={"payload":{"answers":{"rcase":"Primero verificaría los datos y luego haría el trámite."}}})
+ assert r.status_code==200,r.text
+ assert r.json()["status"]=="review" and r.json()["criteria_passed"]==[]
+ rows=client.get("/api/teacher/ai-reviews?course_id="+course,headers=H).json()
+ assert any(x["student_id"]==sid and x["status"]=="pending" and x["source_kind"]=="recovery" for x in rows)
 
 
 def test_recovery_semantic_case_uses_ai_and_low_confidence_stays_review(monkeypatch):
