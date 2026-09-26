@@ -50,3 +50,11 @@ def test_public_portfolio_requires_student_and_never_exposes_keys():
   ids.add(item["id"])
   unit=int(item["ce"].split(".")[0]);counts[unit]+=1
  assert counts==expected
+
+
+def test_student_session_resolves_identity_only_from_token():
+ alice=issue("session-alice");bob=issue("session-bob")
+ a=client.get("/api/student/session",headers=alice);assert a.status_code==200 and a.json()["student_id"]=="session-alice"
+ b=client.get("/api/student/session",headers=bob);assert b.status_code==200 and b.json()["student_id"]=="session-bob"
+ assert client.get("/api/student/session").status_code==401
+ assert client.get("/api/student/session",headers={"X-Student-Token":"invalid"}).status_code==401
