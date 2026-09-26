@@ -118,10 +118,15 @@ def test_recovery_uses_configured_ce_threshold_and_closes_passed_plan():
   {"id":"r1","ce":"x","kind":"choice","prompt":"A","options":["A","B"],"answer":0},
   {"id":"r2","ce":"x","kind":"tf","prompt":"B","options":[],"answer":True},
   {"id":"r3","ce":"x","kind":"multi","prompt":"C","options":["A","B","C"],"answer":[0,2]},
-  {"id":"r4","ce":"x","kind":"free","prompt":"D","options":[],"answer":"Respuesta"}]}
+  {"id":"r4","ce":"x","kind":"free","prompt":"D","options":[],"answer":"Respuesta"},
+  {"id":"r5","ce":"x","kind":"order","prompt":"Ordena","options":["Primero","Segundo","Tercero"],"answer":[0,1,2]},
+  {"id":"r6","ce":"x","kind":"match","prompt":"Relaciona","options":[],"pairs":[["Empresa","CCC"],["Persona","NUSS"]],"answer":[0,1]}]}
  assert client.put("/api/teacher/recovery-bank/REC",headers=H,json=bank).status_code==200
+ content=client.get("/api/recovery/rec/REC/content",headers=SH("rec"));assert content.status_code==200,content.text
+ public_match=next(x for x in content.json()["plan"]["items"] if x["item_id"]=="r6")
+ assert public_match["pairs"]==[["Empresa","CCC"],["Persona","NUSS"]] and "answer" not in public_match
  s=client.post("/api/recovery/start",headers=SH("rec"),json={"student_id":"rec","course_id":"REC","kind":"recovery","item_id":"ignored","payload":{}});assert s.status_code==200
- answers={"r1":0,"r2":True,"r3":[2,0],"r4":" respuesta "}
+ answers={"r1":0,"r2":True,"r3":[2,0],"r4":" respuesta ","r5":[0,1,2],"r6":[0,1]}
  done=client.post(f"/api/recovery/{s.json()['id']}/submit",headers=SH("rec"),json={"payload":{"answers":answers}});assert done.status_code==200, done.text
  assert done.json()["status"]=="passed"
  assert done.json()["result"]=={"ce_passed":1,"ce_total":1,"ra_passed":False,"recovery":[]}
@@ -129,6 +134,13 @@ def test_recovery_uses_configured_ce_threshold_and_closes_passed_plan():
  assert rr["ce_passed"]==1 and rr["ce_total"]==1 and rr["recovery"]=="[]"
  assert rp["criteria"]=="[]" and rp["status"]=="passed"
  assert client.post("/api/recovery/start",headers=SH("rec"),json={"student_id":"rec","course_id":"REC","kind":"recovery","item_id":"ignored","payload":{}}).status_code==409
+
+def test_recovery_match_requires_structured_pairs():
+ bad={"items":[{"id":"m1","ce":"1.a","kind":"match","prompt":"Relaciona","options":[],"answer":[0,1]}]}
+ r=client.put("/api/teacher/recovery-bank/BADMATCH",headers=H,json=bad)
+ assert r.status_code==400,r.text
+ assert "Emparejamiento incompleto" in r.json()["detail"]
+
 
 def test_result_ignores_client_claims_and_recomputes_from_server_evidence():
  cfg={"portfolio_weight":40,"exam_weight":60,"pass_score":50,"ce_pass_percent":80,"ce_pass_score":50,"exam_enabled":True,"exam_questions_per_ce":1,"exam_minutes":45,"require_both_instruments":False}
