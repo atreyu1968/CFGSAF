@@ -16,14 +16,14 @@
       "id": "2.ap2",
       "ce": "2.a",
       "kind": "tf",
-      "prompt": "Que debe identificarse la condición afectada, su origen y el procedimiento aplicable antes de comunicar el cambio.",
+      "prompt": "Antes de comunicar una modificación de condiciones, RR. HH. debe identificar qué condición cambia, de dónde procede y qué procedimiento resulta aplicable.",
       "options": []
     },
     {
       "id": "2.ap3",
       "ce": "2.a",
       "kind": "multi",
-      "prompt": "Selecciona las comprobaciones correctas para este caso.",
+      "prompt": "Un hotel pretende sustituir el turno fijo por turnos rotatorios. Selecciona qué datos debe revisar RR. HH. antes de tramitar la modificación.",
       "options": [
         "Contrato y convenio aplicables",
         "Condición actual y cambio propuesto",
@@ -35,7 +35,7 @@
       "id": "2.ap4",
       "ce": "2.a",
       "kind": "order",
-      "prompt": "Ordena correctamente las fases del procedimiento.",
+      "prompt": "Ordena el análisis profesional de una modificación de condiciones antes de comunicarla.",
       "options": [
         "Reconstruir la condición vigente",
         "Consultar norma y convenio",
@@ -90,7 +90,7 @@
       "id": "2.bp3",
       "ce": "2.b",
       "kind": "multi",
-      "prompt": "Selecciona las comprobaciones correctas para este caso.",
+      "prompt": "Al preparar el finiquito de una baja el día 20, selecciona los datos que deben comprobarse para calcular correctamente las vacaciones pendientes.",
       "options": [
         "Fecha efectiva de baja",
         "Vacaciones generadas",
@@ -102,7 +102,7 @@
       "id": "2.bp4",
       "ce": "2.b",
       "kind": "order",
-      "prompt": "Ordena correctamente las fases del procedimiento.",
+      "prompt": "Ordena el cierre económico de una extinción laboral desde la fecha de baja hasta la verificación final.",
       "options": [
         "Fijar fecha de extinción",
         "Calcular salario pendiente",
@@ -157,7 +157,7 @@
       "id": "2.cp3",
       "ce": "2.c",
       "kind": "multi",
-      "prompt": "Selecciona las comprobaciones correctas para este caso.",
+      "prompt": "Una persona lleva meses realizando funciones superiores. Selecciona las comprobaciones necesarias para analizar la movilidad funcional.",
       "options": [
         "Funciones realmente encomendadas",
         "Clasificación del convenio",
@@ -169,7 +169,7 @@
       "id": "2.cp4",
       "ce": "2.c",
       "kind": "order",
-      "prompt": "Ordena correctamente las fases del procedimiento.",
+      "prompt": "Ordena la revisión de una movilidad funcional antes de documentar la decisión.",
       "options": [
         "Describir funciones nuevas",
         "Compararlas con clasificación profesional",
@@ -224,7 +224,7 @@
       "id": "2.dp3",
       "ce": "2.d",
       "kind": "multi",
-      "prompt": "Selecciona las comprobaciones correctas para este caso.",
+      "prompt": "La empresa estudia mover a una persona a otro centro. Selecciona los datos que permiten distinguir y tramitar correctamente la movilidad geográfica.",
       "options": [
         "Centro de origen y destino",
         "Duración prevista",
@@ -236,7 +236,7 @@
       "id": "2.dp4",
       "ce": "2.d",
       "kind": "order",
-      "prompt": "Ordena correctamente las fases del procedimiento.",
+      "prompt": "Ordena la tramitación administrativa de un cambio de centro con posible traslado o desplazamiento.",
       "options": [
         "Identificar cambio de centro",
         "Determinar si es traslado o desplazamiento",
@@ -291,7 +291,7 @@
       "id": "2.ep3",
       "ce": "2.e",
       "kind": "multi",
-      "prompt": "Selecciona las comprobaciones correctas para este caso.",
+      "prompt": "Ante una suspensión temporal del contrato, selecciona la información que RR. HH. debe controlar durante todo el expediente.",
       "options": [
         "Causa exacta de suspensión",
         "Fecha de inicio y periodo",
@@ -303,7 +303,7 @@
       "id": "2.ep4",
       "ce": "2.e",
       "kind": "order",
-      "prompt": "Ordena correctamente las fases del procedimiento.",
+      "prompt": "Ordena el ciclo administrativo de una suspensión desde su inicio hasta la reincorporación.",
       "options": [
         "Registrar la causa y fechas",
         "Aplicar efectos administrativos y económicos",
@@ -358,7 +358,7 @@
       "id": "2.fp3",
       "ce": "2.f",
       "kind": "multi",
-      "prompt": "Selecciona las comprobaciones correctas para este caso.",
+      "prompt": "Una persona solicita excedencia. Selecciona las comprobaciones necesarias antes de responder.",
       "options": [
         "Modalidad solicitada",
         "Requisitos y duración",
@@ -370,7 +370,7 @@
       "id": "2.fp4",
       "ce": "2.f",
       "kind": "order",
-      "prompt": "Ordena correctamente las fases del procedimiento.",
+      "prompt": "Ordena la gestión de una excedencia desde la solicitud hasta el control del reingreso.",
       "options": [
         "Registrar solicitud",
         "Identificar modalidad y requisitos",
