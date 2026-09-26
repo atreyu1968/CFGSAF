@@ -386,15 +386,17 @@ async def teacher_restore_backup(file:UploadFile=File(...),confirm:str=Header(""
 @app.get("/api/teacher/readiness/{course_id}")
 def teacher_readiness(course_id:str,x_teacher_token:str|None=Header(None)):
  auth(x_teacher_token);c=con();cfg,_=config_row(c,course_id)
- exam=list(c.execute("SELECT ce,COUNT(*) n FROM exam_banks WHERE course_id=? GROUP BY ce ORDER BY ce",(course_id,)));portfolio=c.execute("SELECT COUNT(*) n FROM portfolio_banks WHERE course_id=?",(course_id,)).fetchone()["n"];recovery=list(c.execute("SELECT ce,COUNT(*) n FROM recovery_banks WHERE course_id=? GROUP BY ce ORDER BY ce",(course_id,)));students=c.execute("SELECT COUNT(*) n FROM students").fetchone()["n"];c.close()
+ exam=list(c.execute("SELECT ce,COUNT(*) n FROM exam_banks WHERE course_id=? GROUP BY ce ORDER BY ce",(course_id,)));portfolio_rows=[dict(r) for r in c.execute("SELECT item_id,ce,kind,public_hash FROM portfolio_banks WHERE course_id=? ORDER BY item_id",(course_id,))];recovery=list(c.execute("SELECT ce,COUNT(*) n FROM recovery_banks WHERE course_id=? GROUP BY ce ORDER BY ce",(course_id,)));students=c.execute("SELECT COUNT(*) n FROM students").fetchone()["n"];c.close()
  per=max(1,int(cfg.get("exam_questions_per_ce",3)));exam_counts={r["ce"]:r["n"] for r in exam};recovery_counts={r["ce"]:r["n"] for r in recovery}
- expected=[]
- if course_id.startswith("GRH0652_UT") and course_id[-1].isdigit():
-  u=course_id[-1];bank=Path(__file__).resolve().parent/"banks"/f"ut{u}_portfolio.json"
-  if bank.exists():expected=sorted({q.get("ce","") for q in json.loads(bank.read_text(encoding="utf-8")).get("items",[]) if q.get("ce")})
+ public=portfolio_public_map(course_id);expected=sorted({q.get("ce","") for q in public.values() if q.get("ce")})
  exam_ok=bool(exam_counts) and all(exam_counts.get(ce,0)>=per for ce in expected) if expected else bool(exam_counts) and all(n>=per for n in exam_counts.values())
- portfolio_ok=portfolio>0;recovery_ok=bool(recovery_counts) and all(recovery_counts.get(ce,0)>0 for ce in expected) if expected else bool(recovery_counts)
- checks={"students":{"ok":students>0,"count":students},"portfolio_keys":{"ok":portfolio_ok,"count":portfolio},"exam_bank":{"ok":exam_ok,"counts":exam_counts,"required_per_ce":per,"expected_ce":expected},"recovery_bank":{"ok":recovery_ok,"counts":recovery_counts,"expected_ce":expected},"origins":{"ok":bool(ORIGINS),"count":len(ORIGINS)}}
+ recovery_ok=bool(recovery_counts) and all(recovery_counts.get(ce,0)>0 for ce in expected) if expected else bool(recovery_counts)
+ keyed={r["item_id"]:r for r in portfolio_rows};public_ids=set(public);loaded_ids=set(keyed)
+ missing=sorted(public_ids-loaded_ids);extra=sorted(loaded_ids-public_ids) if public else []
+ stale=sorted(i for i in public_ids&loaded_ids if keyed[i].get("public_hash")!=portfolio_public_hash(public[i]))
+ metadata_mismatch=sorted(i for i in public_ids&loaded_ids if keyed[i].get("ce")!=public[i].get("ce") or keyed[i].get("kind")!=public[i].get("kind"))
+ portfolio_ok=(not missing and not extra and not stale and not metadata_mismatch and bool(public_ids)) if public else bool(portfolio_rows)
+ checks={"students":{"ok":students>0,"count":students},"portfolio_keys":{"ok":portfolio_ok,"count":len(portfolio_rows),"expected_count":len(public_ids) if public else None,"missing":missing,"extra":extra,"stale":stale,"metadata_mismatch":metadata_mismatch},"exam_bank":{"ok":exam_ok,"counts":exam_counts,"required_per_ce":per,"expected_ce":expected},"recovery_bank":{"ok":recovery_ok,"counts":recovery_counts,"expected_ce":expected},"origins":{"ok":bool(ORIGINS),"count":len(ORIGINS)}}
  return {"course_id":course_id,"ready":all(v["ok"] for v in checks.values()),"checks":checks}
 
 @app.get("/api/teacher/config/{course_id}")
