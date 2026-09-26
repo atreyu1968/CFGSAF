@@ -877,3 +877,24 @@ def test_ra2_infographic_collection_matches_ra1_design_contract():
         assert '#17365d' in svg
         assert '#168c9e' in svg
         assert 'font-family="Arial"' in svg
+
+
+def test_ra3_infographic_collection_matches_ra1_design_contract():
+    """RA3 must keep the complete 13-slide, 16:9 RA1-derived infographic set."""
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1] / "scorm" / "ut3"
+    html = (root / "index.html").read_text(encoding="utf-8")
+    files = sorted((root / "assets" / "infografias").glob("*.svg"))
+    assert len(files) == 13
+    assert html.count("assets/infografias/") == 13
+    assert "01_mapa_ut3.svg" in html
+    assert "13_claves_ut3.svg" in html
+    for path in files:
+        svg = path.read_text(encoding="utf-8")
+        assert 'width="1200" height="675"' in svg
+        assert 'viewBox="0 0 1200 675"' in svg
+        assert '#f4f7f9' in svg
+        assert '#17365d' in svg
+        assert '#168c9e' in svg
+        assert 'font-family="Arial"' in svg
