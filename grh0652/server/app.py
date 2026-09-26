@@ -83,9 +83,9 @@ def exam_access(cfg,student_id,pin=""):
  allowed=cfg.get("exam_allowed_students") or []
  if allowed and student_id not in allowed:raise HTTPException(403,"Alumno no autorizado para esta convocatoria")
  try:
-  t=datetime.now(timezone.utc);oa=cfg.get("exam_open_at","");ca=cfg.get("exam_close_at","")
-  if oa and t<datetime.fromisoformat(oa.replace("Z","+00:00")):raise HTTPException(403,"El examen todavía no está abierto")
-  if ca and t>=datetime.fromisoformat(ca.replace("Z","+00:00")):raise HTTPException(403,"La convocatoria de examen ha finalizado")
+  t=datetime.datetime.now(datetime.timezone.utc);oa=cfg.get("exam_open_at","");ca=cfg.get("exam_close_at","")
+  if oa and t<datetime.datetime.fromisoformat(oa.replace("Z","+00:00")):raise HTTPException(403,"El examen todavía no está abierto")
+  if ca and t>=datetime.datetime.fromisoformat(ca.replace("Z","+00:00")):raise HTTPException(403,"La convocatoria de examen ha finalizado")
  except HTTPException:raise
  except Exception:raise HTTPException(400,"Fechas de convocatoria no válidas")
  if cfg.get("exam_pin") and str(pin or "")!=str(cfg["exam_pin"]):raise HTTPException(403,"PIN de examen incorrecto")
@@ -536,8 +536,8 @@ def evidence(x:EventIn,x_student_token:str|None=Header(None)):
    elif settings.get("enabled") and kind in settings.get("auto_kinds",[]):
     try:
      rub=rubric_for(c,x.course_id,x.ce or "",x.item_id or "",settings.get("rubric") or "");local_settings=dict(settings);local_settings["rubric"]=rub["rubric"];local_settings["criteria"]=rub.get("criteria",[]);grade=ai_grade(local_settings,given,expected,{"course_id":x.course_id,"ce":x.ce,"item_id":x.item_id,"kind":kind,"rubric_name":rub.get("name","")});review=grade["confidence"]<float(settings.get("confidence",0.75));score=None if review else grade["score"];ok=None if review else grade["score"]>=float(config_row(c,x.course_id)[0].get("ce_pass_score",50))
-     c.execute("INSERT INTO ai_reviews(student_id,course_id,ce,item_id,attempt,response,reference,score,confidence,verdict,feedback,status,created_at,breakdown) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)",(x.student_id,x.course_id,x.ce,x.item_id,x.attempt,json.dumps(given,ensure_ascii=False),json.dumps(expected,ensure_ascii=False),grade["score"],grade["confidence"],grade["verdict"],grade["feedback"],"pending" if review else "accepted",now(),json.dumps(grade.get("criteria",[]),ensure_ascii=False),"recovery"))
-    except Exception as e:ok=None;score=None;c.execute("INSERT INTO ai_reviews(student_id,course_id,ce,item_id,attempt,response,reference,score,confidence,verdict,feedback,status,created_at,breakdown) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)",(x.student_id,x.course_id,x.ce,x.item_id,x.attempt,json.dumps(given,ensure_ascii=False),json.dumps(expected,ensure_ascii=False),None,0,"error",str(e)[:1200],"pending",now(),"[]","recovery"))
+     c.execute("INSERT INTO ai_reviews(student_id,course_id,ce,item_id,attempt,response,reference,score,confidence,verdict,feedback,status,created_at,breakdown,source_kind) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",(x.student_id,x.course_id,x.ce,x.item_id,x.attempt,json.dumps(given,ensure_ascii=False),json.dumps(expected,ensure_ascii=False),grade["score"],grade["confidence"],grade["verdict"],grade["feedback"],"pending" if review else "accepted",now(),json.dumps(grade.get("criteria",[]),ensure_ascii=False),"portfolio"))
+    except Exception as e:ok=None;score=None;c.execute("INSERT INTO ai_reviews(student_id,course_id,ce,item_id,attempt,response,reference,score,confidence,verdict,feedback,status,created_at,breakdown,source_kind) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",(x.student_id,x.course_id,x.ce,x.item_id,x.attempt,json.dumps(given,ensure_ascii=False),json.dumps(expected,ensure_ascii=False),None,0,"error",str(e)[:1200],"pending",now(),"[]","portfolio"))
    else:ok=False;score=0
   elif kind=="order":ok=given==expected
   elif kind=="match":ok=isinstance(given,list) and isinstance(expected,list) and [str(v) for v in given]==[str(v) for v in expected]
