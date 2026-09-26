@@ -43,6 +43,26 @@ def test_no_ra1_practice_navigation_in_other_units():
   nav=text[:text.find('<div class="content">')]
   assert 'data-target="pract-1' not in nav
 
+def test_practice_screen_markup_matches_own_ra():
+ for unit,ces in EXPECTED.items():
+  html=(ROOT/"scorm"/unit/"index.html").read_text(encoding="utf-8")
+  practice_start=html.index('<section class="screen" id="practica-home">')
+  auto_start=html.index('id="autoevaluacion"',practice_start)
+  practice_block=html[practice_start:auto_start]
+  expected_total=len(ces)*6
+  assert f">{expected_total} actividades<" in practice_block or f"{expected_total} actividades" in practice_block
+  for ce in ces:
+   key=ce.replace(".","")
+   assert f'id="pract-{key}"' in practice_block
+   assert f'data-ce="{ce}"' in practice_block
+   assert f'id="ex-{key}"' in practice_block
+   assert f'id="homeprog-{key}"' in practice_block
+  foreign_prefixes={x.split(".")[0] for x in sum(EXPECTED.values(),[]) if x not in ces}
+  for prefix in foreign_prefixes:
+   assert f'data-ce="{prefix}.' not in practice_block
+   assert f'id="pract-{prefix}' not in practice_block
+
+
 def test_exam_and_self_assessment_are_separate_in_player():
  for unit in EXPECTED:
   js=(ROOT/"scorm"/unit/"assets"/"scorm.js").read_text(encoding="utf-8")
