@@ -74,6 +74,7 @@ class AIRubricIn(BaseModel): course_id:str;ce:str="";item_id:str="";name:str="R�
 class AIReviewDecision(BaseModel): score:float;feedback:str="";status:str="accepted"
 class GradeAdjustmentIn(BaseModel): scope:str;scope_key:str="";new_score:float;reason:str
 class GradeReversalIn(BaseModel): reason:str
+class ExamTimeExtensionIn(BaseModel): minutes:int;reason:str=""
 class AITestIn(BaseModel): text:str="Explica brevemente qué es un contrato de trabajo."
 
 def exam_access(cfg,student_id,pin=""):
@@ -572,7 +573,16 @@ def teacher_exam_monitor(course_id:str,x_teacher_token:str|None=Header(None)):
    try:remaining=max(0,int((datetime.datetime.fromisoformat(r["deadline_at"])-t).total_seconds()))
    except Exception:pass
   out.append({"attempt_id":r["id"],"student_id":r["student_id"],"attempt":r["attempt_no"],"status":r["status"],"started_at":r["started_at"],"submitted_at":r["submitted_at"],"deadline_at":r["deadline_at"],"remaining_seconds":remaining,"incidents":int(ig.get("incidents",0) or 0),"auto":bool(ig.get("auto",False))})
- c.close();return {"course_id":course_id,"now":t.isoformat(),"attempts":out}
+ summary={"total":len(out),"active":sum(x["status"]=="started" for x in out),"submitted":sum(x["status"]=="submitted" for x in out),"with_incidents":sum(x["incidents"]>0 for x in out)};c.close();return {"course_id":course_id,"now":t.isoformat(),"summary":summary,"attempts":out}
+
+@app.post("/api/teacher/exam-monitor/{attempt_id}/extend")
+def teacher_extend_exam(attempt_id:int,x:ExamTimeExtensionIn,x_teacher_token:str|None=Header(None)):
+ auth(x_teacher_token)
+ if not 1<=x.minutes<=180:raise HTTPException(400,"La ampliación debe estar entre 1 y 180 minutos")
+ c=con();r=c.execute("SELECT a.status,v.deadline_at,v.config FROM attempts a JOIN exam_versions v ON v.attempt_id=a.id WHERE a.id=? AND a.kind='exam'",(attempt_id,)).fetchone()
+ if not r:c.close();raise HTTPException(404,"Intento de examen no encontrado")
+ if r["status"]!="started":c.close();raise HTTPException(409,"El examen ya no está en curso")
+ base=datetime.datetime.fromisoformat(r["deadline_at"]) if r["deadline_at"] else datetime.datetime.now(datetime.timezone.utc);new=base+datetime.timedelta(minutes=x.minutes);cfg=json.loads(r["config"] or "{}");ext=cfg.setdefault("teacher_time_extensions",[]);ext.append({"minutes":x.minutes,"reason":x.reason.strip(),"at":now()});c.execute("UPDATE exam_versions SET deadline_at=?,config=? WHERE attempt_id=?",(new.isoformat(),json.dumps(cfg,ensure_ascii=False),attempt_id));c.commit();c.close();return {"ok":True,"attempt_id":attempt_id,"deadline_at":new.isoformat(),"added_minutes":x.minutes}
 
 @app.post("/api/teacher/exam-monitor/{attempt_id}/finish")
 def teacher_finish_exam(attempt_id:int,x_teacher_token:str|None=Header(None)):
