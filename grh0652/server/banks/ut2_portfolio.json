@@ -4,372 +4,402 @@
       "id": "2.ap1",
       "ce": "2.a",
       "kind": "choice",
-      "prompt": "Caso: debes gestionar normativa. ¿Cuál es el primer paso profesional?",
+      "prompt": "Un hotel cambia de forma estable el turno fijo de recepción por turnos rotatorios. Antes de tramitarlo, ¿qué debe determinar RR. HH.?",
       "options": [
-        "Identificar el supuesto y comprobar la fuente vigente",
-        "Usar una plantilla antigua",
-        "Comunicar sin revisar el expediente",
-        "Archivar antes de decidir"
+        "Analizar los datos y la fuente aplicable antes de actuar",
+        "Copiar el expediente anterior sin comprobarlo",
+        "Ejecutar el trámite y revisar después",
+        "Elegir la opción que tarde menos"
       ]
     },
     {
       "id": "2.ap2",
       "ce": "2.a",
       "kind": "tf",
-      "prompt": "En procedimiento, la trazabilidad documental forma parte de una gestión correcta.",
+      "prompt": "Que debe identificarse la condición afectada, su origen y el procedimiento aplicable antes de comunicar el cambio.",
       "options": []
     },
     {
       "id": "2.ap3",
       "ce": "2.a",
       "kind": "multi",
-      "prompt": "Selecciona las comprobaciones necesarias para fuente aplicable.",
+      "prompt": "Selecciona las comprobaciones correctas para este caso.",
       "options": [
-        "Normativa/convenio vigente",
-        "Fecha y hechos del expediente",
-        "Evidencia de comunicación",
-        "Una plantilla sin verificar"
+        "Contrato y convenio aplicables",
+        "Condición actual y cambio propuesto",
+        "Personas y fechas afectadas",
+        "Una carta antigua de otra empresa"
       ]
     },
     {
       "id": "2.ap4",
       "ce": "2.a",
       "kind": "order",
-      "prompt": "Ordena el procedimiento profesional.",
-      "options": []
+      "prompt": "Ordena correctamente las fases del procedimiento.",
+      "options": [
+        "Reconstruir la condición vigente",
+        "Consultar norma y convenio",
+        "Clasificar jurídicamente el cambio",
+        "Preparar y acreditar la comunicación"
+      ]
     },
     {
       "id": "2.ap5",
       "ce": "2.a",
       "kind": "choice",
-      "prompt": "¿Qué error compromete más el expediente?",
+      "prompt": "La empresa quiere aplicar mañana un cambio permanente sin haber identificado su encaje ni procedimiento. ¿Qué debe hacerse?",
       "options": [
-        "No poder acreditar la fecha o el contenido comunicado",
-        "Registrar responsable",
-        "Conservar justificante",
-        "Comprobar el convenio"
+        "Detener, comprobar y corregir antes de continuar",
+        "Ignorarlo si el sistema permite seguir",
+        "Borrar el expediente",
+        "Copiar los datos de otra persona"
       ]
     },
     {
       "id": "2.ap6",
       "ce": "2.a",
       "kind": "choice",
-      "prompt": "Al cerrar un caso de normativa, ¿qué debe quedar registrado?",
+      "prompt": "¿Qué conjunto documental permite auditar una modificación laboral?",
       "options": [
-        "Hechos, fuente, cálculos, comunicaciones y documentos",
+        "Datos de origen, decisiones, fechas, documentos y justificantes",
         "Solo el resultado final",
-        "Solo la plantilla utilizada",
-        "Únicamente un correo informal"
+        "Una nota sin fecha",
+        "Ninguna si el trámite terminó"
       ]
     },
     {
       "id": "2.bp1",
       "ce": "2.b",
       "kind": "choice",
-      "prompt": "Caso: debes gestionar finiquito. ¿Cuál es el primer paso profesional?",
+      "prompt": "Una relación laboral termina el día 20. ¿Qué dato debes comprobar antes de calcular vacaciones pendientes?",
       "options": [
-        "Identificar el supuesto y comprobar la fuente vigente",
-        "Usar una plantilla antigua",
-        "Comunicar sin revisar el expediente",
-        "Archivar antes de decidir"
+        "Analizar los datos y la fuente aplicable antes de actuar",
+        "Copiar el expediente anterior sin comprobarlo",
+        "Ejecutar el trámite y revisar después",
+        "Elegir la opción que tarde menos"
       ]
     },
     {
       "id": "2.bp2",
       "ce": "2.b",
       "kind": "tf",
-      "prompt": "En vacaciones pendientes, la trazabilidad documental forma parte de una gestión correcta.",
+      "prompt": "Finiquito e indemnización son conceptos distintos y la indemnización depende de la causa de extinción.",
       "options": []
     },
     {
       "id": "2.bp3",
       "ce": "2.b",
       "kind": "multi",
-      "prompt": "Selecciona las comprobaciones necesarias para indemnización.",
+      "prompt": "Selecciona las comprobaciones correctas para este caso.",
       "options": [
-        "Normativa/convenio vigente",
-        "Fecha y hechos del expediente",
-        "Evidencia de comunicación",
-        "Una plantilla sin verificar"
+        "Fecha efectiva de baja",
+        "Vacaciones generadas",
+        "Vacaciones disfrutadas",
+        "El líquido de una nómina ajena"
       ]
     },
     {
       "id": "2.bp4",
       "ce": "2.b",
       "kind": "order",
-      "prompt": "Ordena el procedimiento profesional.",
-      "options": []
+      "prompt": "Ordena correctamente las fases del procedimiento.",
+      "options": [
+        "Fijar fecha de extinción",
+        "Calcular salario pendiente",
+        "Calcular pagas y vacaciones pendientes",
+        "Añadir, si procede, indemnización y verificar"
+      ]
     },
     {
       "id": "2.bp5",
       "ce": "2.b",
       "kind": "choice",
-      "prompt": "¿Qué error compromete más el expediente?",
+      "prompt": "El finiquito se calcula sin revisar vacaciones ya disfrutadas. ¿Cuál es el problema?",
       "options": [
-        "No poder acreditar la fecha o el contenido comunicado",
-        "Registrar responsable",
-        "Conservar justificante",
-        "Comprobar el convenio"
+        "Detener, comprobar y corregir antes de continuar",
+        "Ignorarlo si el sistema permite seguir",
+        "Borrar el expediente",
+        "Copiar los datos de otra persona"
       ]
     },
     {
       "id": "2.bp6",
       "ce": "2.b",
       "kind": "choice",
-      "prompt": "Al cerrar un caso de finiquito, ¿qué debe quedar registrado?",
+      "prompt": "¿Qué desglose hace reproducible un finiquito?",
       "options": [
-        "Hechos, fuente, cálculos, comunicaciones y documentos",
+        "Datos de origen, decisiones, fechas, documentos y justificantes",
         "Solo el resultado final",
-        "Solo la plantilla utilizada",
-        "Únicamente un correo informal"
+        "Una nota sin fecha",
+        "Ninguna si el trámite terminó"
       ]
     },
     {
       "id": "2.cp1",
       "ce": "2.c",
       "kind": "choice",
-      "prompt": "Caso: debes gestionar carta. ¿Cuál es el primer paso profesional?",
+      "prompt": "Una empresa asigna durante meses funciones superiores a una trabajadora. ¿Qué debe revisar primero RR. HH.?",
       "options": [
-        "Identificar el supuesto y comprobar la fuente vigente",
-        "Usar una plantilla antigua",
-        "Comunicar sin revisar el expediente",
-        "Archivar antes de decidir"
+        "Analizar los datos y la fuente aplicable antes de actuar",
+        "Copiar el expediente anterior sin comprobarlo",
+        "Ejecutar el trámite y revisar después",
+        "Elegir la opción que tarde menos"
       ]
     },
     {
       "id": "2.cp2",
       "ce": "2.c",
       "kind": "tf",
-      "prompt": "En expediente, la trazabilidad documental forma parte de una gestión correcta.",
+      "prompt": "El nombre interno del puesto basta para decidir si una movilidad funcional es correcta.",
       "options": []
     },
     {
       "id": "2.cp3",
       "ce": "2.c",
       "kind": "multi",
-      "prompt": "Selecciona las comprobaciones necesarias para documentación.",
+      "prompt": "Selecciona las comprobaciones correctas para este caso.",
       "options": [
-        "Normativa/convenio vigente",
-        "Fecha y hechos del expediente",
-        "Evidencia de comunicación",
-        "Una plantilla sin verificar"
+        "Funciones realmente encomendadas",
+        "Clasificación del convenio",
+        "Titulación/habilitación necesaria",
+        "Color del uniforme"
       ]
     },
     {
       "id": "2.cp4",
       "ce": "2.c",
       "kind": "order",
-      "prompt": "Ordena el procedimiento profesional.",
-      "options": []
+      "prompt": "Ordena correctamente las fases del procedimiento.",
+      "options": [
+        "Describir funciones nuevas",
+        "Compararlas con clasificación profesional",
+        "Revisar límites y efectos retributivos",
+        "Documentar la decisión"
+      ]
     },
     {
       "id": "2.cp5",
       "ce": "2.c",
       "kind": "choice",
-      "prompt": "¿Qué error compromete más el expediente?",
+      "prompt": "Se ordena una tarea que exige habilitación que la persona no posee. ¿Qué procede?",
       "options": [
-        "No poder acreditar la fecha o el contenido comunicado",
-        "Registrar responsable",
-        "Conservar justificante",
-        "Comprobar el convenio"
+        "Detener, comprobar y corregir antes de continuar",
+        "Ignorarlo si el sistema permite seguir",
+        "Borrar el expediente",
+        "Copiar los datos de otra persona"
       ]
     },
     {
       "id": "2.cp6",
       "ce": "2.c",
       "kind": "choice",
-      "prompt": "Al cerrar un caso de carta, ¿qué debe quedar registrado?",
+      "prompt": "¿Qué evidencia demuestra que se analizó correctamente una movilidad funcional?",
       "options": [
-        "Hechos, fuente, cálculos, comunicaciones y documentos",
+        "Datos de origen, decisiones, fechas, documentos y justificantes",
         "Solo el resultado final",
-        "Solo la plantilla utilizada",
-        "Únicamente un correo informal"
+        "Una nota sin fecha",
+        "Ninguna si el trámite terminó"
       ]
     },
     {
       "id": "2.dp1",
       "ce": "2.d",
       "kind": "choice",
-      "prompt": "Caso: debes gestionar canal oficial. ¿Cuál es el primer paso profesional?",
+      "prompt": "Una empresa traslada de forma estable a una persona a un centro en otra isla. ¿Qué debe distinguirse antes de tramitar?",
       "options": [
-        "Identificar el supuesto y comprobar la fuente vigente",
-        "Usar una plantilla antigua",
-        "Comunicar sin revisar el expediente",
-        "Archivar antes de decidir"
+        "Analizar los datos y la fuente aplicable antes de actuar",
+        "Copiar el expediente anterior sin comprobarlo",
+        "Ejecutar el trámite y revisar después",
+        "Elegir la opción que tarde menos"
       ]
     },
     {
       "id": "2.dp2",
       "ce": "2.d",
       "kind": "tf",
-      "prompt": "En acuse, la trazabilidad documental forma parte de una gestión correcta.",
+      "prompt": "Un cambio de mesa dentro del mismo centro equivale siempre a movilidad geográfica.",
       "options": []
     },
     {
       "id": "2.dp3",
       "ce": "2.d",
       "kind": "multi",
-      "prompt": "Selecciona las comprobaciones necesarias para comunicación.",
+      "prompt": "Selecciona las comprobaciones correctas para este caso.",
       "options": [
-        "Normativa/convenio vigente",
-        "Fecha y hechos del expediente",
-        "Evidencia de comunicación",
-        "Una plantilla sin verificar"
+        "Centro de origen y destino",
+        "Duración prevista",
+        "Causa y fecha",
+        "Marca del ordenador"
       ]
     },
     {
       "id": "2.dp4",
       "ce": "2.d",
       "kind": "order",
-      "prompt": "Ordena el procedimiento profesional.",
-      "options": []
+      "prompt": "Ordena correctamente las fases del procedimiento.",
+      "options": [
+        "Identificar cambio de centro",
+        "Determinar si es traslado o desplazamiento",
+        "Revisar procedimiento y compensaciones",
+        "Comunicar y conservar evidencia"
+      ]
     },
     {
       "id": "2.dp5",
       "ce": "2.d",
       "kind": "choice",
-      "prompt": "¿Qué error compromete más el expediente?",
+      "prompt": "La comunicación no indica destino ni fecha de efectos. ¿Por qué debe detenerse?",
       "options": [
-        "No poder acreditar la fecha o el contenido comunicado",
-        "Registrar responsable",
-        "Conservar justificante",
-        "Comprobar el convenio"
+        "Detener, comprobar y corregir antes de continuar",
+        "Ignorarlo si el sistema permite seguir",
+        "Borrar el expediente",
+        "Copiar los datos de otra persona"
       ]
     },
     {
       "id": "2.dp6",
       "ce": "2.d",
       "kind": "choice",
-      "prompt": "Al cerrar un caso de canal oficial, ¿qué debe quedar registrado?",
+      "prompt": "¿Qué datos mínimos permiten auditar una movilidad geográfica?",
       "options": [
-        "Hechos, fuente, cálculos, comunicaciones y documentos",
+        "Datos de origen, decisiones, fechas, documentos y justificantes",
         "Solo el resultado final",
-        "Solo la plantilla utilizada",
-        "Únicamente un correo informal"
+        "Una nota sin fecha",
+        "Ninguna si el trámite terminó"
       ]
     },
     {
       "id": "2.ep1",
       "ce": "2.e",
       "kind": "choice",
-      "prompt": "Caso: debes gestionar información a la persona trabajadora. ¿Cuál es el primer paso profesional?",
+      "prompt": "Una persona inicia una incapacidad temporal. ¿Cómo debe tratar RR. HH. el contrato?",
       "options": [
-        "Identificar el supuesto y comprobar la fuente vigente",
-        "Usar una plantilla antigua",
-        "Comunicar sin revisar el expediente",
-        "Archivar antes de decidir"
+        "Analizar los datos y la fuente aplicable antes de actuar",
+        "Copiar el expediente anterior sin comprobarlo",
+        "Ejecutar el trámite y revisar después",
+        "Elegir la opción que tarde menos"
       ]
     },
     {
       "id": "2.ep2",
       "ce": "2.e",
       "kind": "tf",
-      "prompt": "En fecha de efectos, la trazabilidad documental forma parte de una gestión correcta.",
+      "prompt": "Una suspensión implica necesariamente extinguir el contrato y firmar otro al volver.",
       "options": []
     },
     {
       "id": "2.ep3",
       "ce": "2.e",
       "kind": "multi",
-      "prompt": "Selecciona las comprobaciones necesarias para trazabilidad.",
+      "prompt": "Selecciona las comprobaciones correctas para este caso.",
       "options": [
-        "Normativa/convenio vigente",
-        "Fecha y hechos del expediente",
-        "Evidencia de comunicación",
-        "Una plantilla sin verificar"
+        "Causa exacta de suspensión",
+        "Fecha de inicio y periodo",
+        "Efectos en nómina/cotización",
+        "Una baja definitiva automática"
       ]
     },
     {
       "id": "2.ep4",
       "ce": "2.e",
       "kind": "order",
-      "prompt": "Ordena el procedimiento profesional.",
-      "options": []
+      "prompt": "Ordena correctamente las fases del procedimiento.",
+      "options": [
+        "Registrar la causa y fechas",
+        "Aplicar efectos administrativos y económicos",
+        "Controlar cambios durante el periodo",
+        "Gestionar la reincorporación"
+      ]
     },
     {
       "id": "2.ep5",
       "ce": "2.e",
       "kind": "choice",
-      "prompt": "¿Qué error compromete más el expediente?",
+      "prompt": "Se tramita como baja definitiva una suspensión temporal. ¿Qué error se está cometiendo?",
       "options": [
-        "No poder acreditar la fecha o el contenido comunicado",
-        "Registrar responsable",
-        "Conservar justificante",
-        "Comprobar el convenio"
+        "Detener, comprobar y corregir antes de continuar",
+        "Ignorarlo si el sistema permite seguir",
+        "Borrar el expediente",
+        "Copiar los datos de otra persona"
       ]
     },
     {
       "id": "2.ep6",
       "ce": "2.e",
       "kind": "choice",
-      "prompt": "Al cerrar un caso de información a la persona trabajadora, ¿qué debe quedar registrado?",
+      "prompt": "¿Qué registro permite seguir una suspensión desde inicio hasta reincorporación?",
       "options": [
-        "Hechos, fuente, cálculos, comunicaciones y documentos",
+        "Datos de origen, decisiones, fechas, documentos y justificantes",
         "Solo el resultado final",
-        "Solo la plantilla utilizada",
-        "Únicamente un correo informal"
+        "Una nota sin fecha",
+        "Ninguna si el trámite terminó"
       ]
     },
     {
       "id": "2.fp1",
       "ce": "2.f",
       "kind": "choice",
-      "prompt": "Caso: debes gestionar registro digital. ¿Cuál es el primer paso profesional?",
+      "prompt": "Dos personas piden un año de excedencia por causas distintas. ¿Qué debe hacer RR. HH.?",
       "options": [
-        "Identificar el supuesto y comprobar la fuente vigente",
-        "Usar una plantilla antigua",
-        "Comunicar sin revisar el expediente",
-        "Archivar antes de decidir"
+        "Analizar los datos y la fuente aplicable antes de actuar",
+        "Copiar el expediente anterior sin comprobarlo",
+        "Ejecutar el trámite y revisar después",
+        "Elegir la opción que tarde menos"
       ]
     },
     {
       "id": "2.fp2",
       "ce": "2.f",
       "kind": "tf",
-      "prompt": "En archivo, la trazabilidad documental forma parte de una gestión correcta.",
+      "prompt": "Todas las excedencias generan exactamente el mismo derecho de reserva de puesto.",
       "options": []
     },
     {
       "id": "2.fp3",
       "ce": "2.f",
       "kind": "multi",
-      "prompt": "Selecciona las comprobaciones necesarias para protección de datos.",
+      "prompt": "Selecciona las comprobaciones correctas para este caso.",
       "options": [
-        "Normativa/convenio vigente",
-        "Fecha y hechos del expediente",
-        "Evidencia de comunicación",
-        "Una plantilla sin verificar"
+        "Modalidad solicitada",
+        "Requisitos y duración",
+        "Convenio aplicable",
+        "Una respuesta estándar sin revisar"
       ]
     },
     {
       "id": "2.fp4",
       "ce": "2.f",
       "kind": "order",
-      "prompt": "Ordena el procedimiento profesional.",
-      "options": []
+      "prompt": "Ordena correctamente las fases del procedimiento.",
+      "options": [
+        "Registrar solicitud",
+        "Identificar modalidad y requisitos",
+        "Resolver indicando efectos y fechas",
+        "Controlar vencimiento/reincorporación"
+      ]
     },
     {
       "id": "2.fp5",
       "ce": "2.f",
       "kind": "choice",
-      "prompt": "¿Qué error compromete más el expediente?",
+      "prompt": "La resolución promete reserva de puesto sin comprobar la modalidad. ¿Qué falla?",
       "options": [
-        "No poder acreditar la fecha o el contenido comunicado",
-        "Registrar responsable",
-        "Conservar justificante",
-        "Comprobar el convenio"
+        "Detener, comprobar y corregir antes de continuar",
+        "Ignorarlo si el sistema permite seguir",
+        "Borrar el expediente",
+        "Copiar los datos de otra persona"
       ]
     },
     {
       "id": "2.fp6",
       "ce": "2.f",
       "kind": "choice",
-      "prompt": "Al cerrar un caso de registro digital, ¿qué debe quedar registrado?",
+      "prompt": "¿Qué elementos debe contener el expediente de excedencia?",
       "options": [
-        "Hechos, fuente, cálculos, comunicaciones y documentos",
+        "Datos de origen, decisiones, fechas, documentos y justificantes",
         "Solo el resultado final",
-        "Solo la plantilla utilizada",
-        "Únicamente un correo informal"
+        "Una nota sin fecha",
+        "Ninguna si el trámite terminó"
       ]
     }
   ]
