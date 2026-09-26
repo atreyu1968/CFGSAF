@@ -155,6 +155,18 @@ def test_teacher_has_additio_export():
  assert "exportAdditio" in s and "_Additio.csv" in s and "/api/teacher/export-additio/" in s and "X-Teacher-Token" in s
 
 
+def test_all_units_render_and_submit_ordered_portfolio_items():
+ for ut in ("ut1","ut2","ut3","ut4"):
+  js=(ROOT/"scorm"/ut/"assets"/"scorm.js").read_text(encoding="utf-8")
+  assert "function stablePortfolioOrder(q)" in js
+  assert "type==='order'" in js
+  assert "data-order-index" in js
+  assert "portfolio-order-move" in js
+  assert "data-dir="up"" in js and "data-dir="down"" in js
+  assert "Number(x.dataset.orderIndex)" in js
+  assert "list.insertBefore" in js
+
+
 def test_all_units_have_offline_exam_draft_and_sync_status():
  for ut in ("ut1","ut2","ut3","ut4"):
   js=(ROOT/"scorm"/ut/"assets"/"scorm.js").read_text(encoding="utf-8")
