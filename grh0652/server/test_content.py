@@ -94,7 +94,7 @@ def test_all_units_have_strict_exam_guard_and_incident_log():
 
 def test_teacher_has_additio_export():
  s=(ROOT/"teacher.html").read_text(encoding="utf-8")
- assert "exportAdditio" in s and "_Additio.csv" in s and "CE '+x" in s
+ assert "exportAdditio" in s and "_Additio.csv" in s and "/api/teacher/export-additio/" in s and "X-Teacher-Token" in s
 
 
 def test_all_units_have_offline_exam_draft_and_sync_status():
