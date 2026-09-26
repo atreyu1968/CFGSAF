@@ -120,7 +120,8 @@ def get_ai_reviews(course_id:str|None=None,x_teacher_token:str|None=Header(None)
  for r in rows:
   r["response"]=json.loads(r["response"]) if r["response"] else None;r.pop("reference",None)
  return rows
-\n@app.post("/api/teacher/students/{student_id}")
+
+@app.post("/api/teacher/students/{student_id}")
 def create_student(student_id:str,x_teacher_token:str|None=Header(None)):
  auth(x_teacher_token);token=secrets.token_urlsafe(32);c=con();c.execute("INSERT OR REPLACE INTO students(student_id,token,created_at) VALUES(?,?,?)",(student_id,token,now()));c.commit();c.close();return {"student_id":student_id,"token":token}
 
