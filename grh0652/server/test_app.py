@@ -759,3 +759,25 @@ def test_backup_validation_accepts_current_complete_database():
  assert checked.status_code==200,checked.text
  d=checked.json();assert d["ok"] is True and d["integrity"]=="ok"
  assert set(module.BACKUP_REQUIRED_TABLES)<=set(d["counts"])
+
+
+def test_backup_restore_roundtrip_recovers_student_private_bank_and_evidence():
+ import json
+ sid="backup-roundtrip-student";course="BACKUP-ROUNDTRIP"
+ created=client.post("/api/teacher/students/"+sid,headers=H);assert created.status_code in (200,409),created.text
+ db=module.con()
+ db.execute("INSERT OR REPLACE INTO exam_banks(course_id,question_id,ce,question,options,answer,type) VALUES(?,?,?,?,?,?,?)",(course,"q1","1.a","Original",json.dumps(["A","B"]),json.dumps(1),"choice"))
+ db.execute("DELETE FROM evidence WHERE student_id=? AND course_id=?",(sid,course))
+ db.execute("INSERT INTO evidence(student_id,course_id,kind,ce,item_id,attempt,response,correct,score,payload,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)",(sid,course,"portfolio","1.a","ev1",1,"respuesta",1,87.5,json.dumps({"marker":"original"}),"2026-09-26T18:00:00+00:00"))
+ db.commit();db.close()
+ backup=client.get("/api/teacher/backup",headers=H);assert backup.status_code==200,backup.text
+ db=module.con();db.execute("DELETE FROM students WHERE student_id=?",(sid,));db.execute("UPDATE exam_banks SET question='ALTERADA',answer=? WHERE course_id=? AND question_id=?",(json.dumps(0),course,"q1"));db.execute("DELETE FROM evidence WHERE student_id=? AND course_id=?",(sid,course));db.commit();db.close()
+ restored=client.post("/api/teacher/backup/restore",headers={**H,"X-Restore-Confirm":"RESTAURAR"},files={"file":("roundtrip.db",backup.content,"application/vnd.sqlite3")});assert restored.status_code==200,restored.text
+ assert restored.json()["ok"] is True and restored.json()["integrity"]=="ok"
+ db=module.con()
+ student=db.execute("SELECT student_id FROM students WHERE student_id=?",(sid,)).fetchone()
+ bank=db.execute("SELECT question,answer FROM exam_banks WHERE course_id=? AND question_id=?",(course,"q1")).fetchone()
+ ev=db.execute("SELECT score,payload FROM evidence WHERE student_id=? AND course_id=?",(sid,course)).fetchone();db.close()
+ assert student["student_id"]==sid
+ assert bank["question"]=="Original" and json.loads(bank["answer"])==1
+ assert ev["score"]==87.5 and json.loads(ev["payload"])["marker"]=="original"
