@@ -781,3 +781,29 @@ def test_backup_restore_roundtrip_recovers_student_private_bank_and_evidence():
  assert student["student_id"]==sid
  assert bank["question"]=="Original" and json.loads(bank["answer"])==1
  assert ev["score"]==87.5 and json.loads(ev["payload"])["marker"]=="original"
+
+
+def test_full_student_to_teacher_evaluation_cycle_e2e():
+ import csv,io
+ course="E2E-FULL-CYCLE";sid="e2e-full-student"
+ created=client.post("/api/teacher/students/"+sid,headers=H);assert created.status_code==200,created.text
+ hs={"X-Student-Token":created.json()["token"]}
+ cfg={**module.DEFAULT,"exam_enabled":True,"exam_questions_per_ce":1,"portfolio_weight":50,"exam_weight":50,"ce_pass_percent":100,"require_both_instruments":True}
+ assert client.put("/api/config/"+course,headers=H,json=cfg).status_code==200
+ bank={"questions":[{"id":"q1","ce":"1.a","q":"Seleccione la opción correcta","options":["Incorrecta","Correcta"],"answer":1,"type":"choice"}]}
+ assert client.put("/api/teacher/exam-bank/"+course,headers=H,json=bank).status_code==200
+ keys={"items":[{"id":"p1","ce":"1.a","kind":"choice","answer":"OK"}]}
+ assert client.put("/api/teacher/portfolio-keys/"+course,headers=H,json=keys).status_code==200
+ ev=client.post("/api/evidence",headers=hs,json={"student_id":sid,"course_id":course,"kind":"portfolio","ce":"1.a","item_id":"p1","attempt":1,"response":"OK"});assert ev.status_code==200 and ev.json()["score"]==100,ev.text
+ start=client.post("/api/exam/start",headers=hs,json={"student_id":sid,"course_id":course,"kind":"exam","item_id":"final","payload":{}});assert start.status_code==200,start.text
+ sd=start.json();q=sd["questions"][0];correct_index=q["options"].index("Correcta")
+ submitted=client.post(f"/api/exam/{sd['attempt_id']}/submit",headers=hs,json={"payload":{"answers":{q["id"]:correct_index},"integrity":{"incidents":0,"incident_log":[]}}});assert submitted.status_code==200 and submitted.json()["score"]==100,submitted.text
+ result=client.post("/api/result",headers=hs,json={"student_id":sid,"course_id":course,"portfolio":0,"exam":0,"final":0,"ce_passed":0,"ce_total":0,"ra_passed":False,"recovery":[]});assert result.status_code==200,result.text
+ rd=result.json();assert rd["portfolio"]==100 and rd["exam"]==100 and rd["final"]==100 and rd["ra_passed"] is True
+ dash=client.get("/api/teacher/dashboard/"+course,headers=H);assert dash.status_code==200,dash.text
+ row=next(x for x in dash.json()["students"] if x["student_id"]==sid);assert row["result"]["final"]==100 and row["ce"]["1.a"]["final"]==100
+ record=client.get(f"/api/teacher/student-record/{course}/{sid}",headers=H);assert record.status_code==200,record.text
+ rec=record.json();assert rec["result"]["final"]==100;assert any(x["kind"]=="portfolio" and x["score"]==100 for x in rec["evidence"]);assert any(x["kind"]=="exam" and x["status"]=="submitted" for x in rec["attempts"])
+ exported=client.get("/api/teacher/export-additio/"+course,headers=H);assert exported.status_code==200,exported.text
+ rows=list(csv.reader(io.StringIO(exported.content.decode("utf-8-sig"),newline=""),delimiter=";"));hdr=rows[0];erow=next(x for x in rows[1:] if x[0]==sid)
+ assert hdr==["Alumno","CE 1.a","Portafolio","Examen","RA"];assert [float(x) for x in erow[1:]]==[100,100,100,100]
