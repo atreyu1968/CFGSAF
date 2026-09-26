@@ -507,7 +507,7 @@ def teacher_dashboard(course_id:str,x_teacher_token:str|None=Header(None)):
   er=c.execute("SELECT payload FROM attempts WHERE student_id=? AND course_id=? AND kind='exam' AND status='submitted' ORDER BY attempt_no DESC LIMIT 1",(sid,course_id)).fetchone();eb=json.loads(er["payload"] or "{}").get("by_ce",{}) if er else {};cfg,_=config_row(c,course_id);pw=float(cfg["portfolio_weight"])/100;ew=float(cfg["exam_weight"])/100;cd={}
   for ce in ces:
    ps=sum(pb.get(ce,[]))/len(pb[ce]) if pb.get(ce) else 0;x=eb.get(ce,{});es=float(x.get("ok",0))/max(1,int(x.get("n",0)))*100 if x.get("n",0) else 0;fv=ps*pw+es*ew;cd[ce]={"final":round(fv,1),"passed":fv>=float(cfg["ce_pass_score"]),"portfolio":round(ps,1),"exam":round(es,1)}
-  out.append({"student_id":sid,"result":dict(rr) if rr else None,"ce":cd,"pending_ai":pending,"recovery":{"criteria":json.loads(rp["criteria"] or "[]"),"status":rp["status"]} if rp else None})
+  out.append({"student_id":sid,"result":official_result(c,sid,course_id,rr) if rr else None,"ce":cd,"pending_ai":pending,"recovery":{"criteria":json.loads(rp["criteria"] or "[]"),"status":rp["status"]} if rp else None})
  c.close()
  for x in out:
   if x["result"]:x["result"]["recovery"]=json.loads(x["result"]["recovery"] or "[]")
@@ -529,11 +529,10 @@ def reverse_grade_adjustment(adjustment_id:int,x:GradeReversalIn,x_teacher_token
 
 @app.get("/api/teacher/student-record/{course_id}/{student_id}")
 def teacher_student_record(course_id:str,student_id:str,x_teacher_token:str|None=Header(None)):
- auth(x_teacher_token);c=con();res=c.execute("SELECT * FROM results WHERE student_id=? AND course_id=?",(student_id,course_id)).fetchone();attempts=[dict(r) for r in c.execute("SELECT id,kind,item_id,attempt_no,status,started_at,submitted_at,payload FROM attempts WHERE student_id=? AND course_id=? ORDER BY id DESC",(student_id,course_id))];evidence=[dict(r) for r in c.execute("SELECT id,kind,ce,item_id,attempt,response,correct,score,payload,created_at FROM evidence WHERE student_id=? AND course_id=? ORDER BY id DESC",(student_id,course_id))];reviews=[dict(r) for r in c.execute("SELECT id,ce,item_id,attempt,score,confidence,verdict,feedback,status,created_at,breakdown FROM ai_reviews WHERE student_id=? AND course_id=? ORDER BY id DESC",(student_id,course_id))];rec=c.execute("SELECT * FROM recovery_plans WHERE student_id=? AND course_id=?",(student_id,course_id)).fetchone();adj=[dict(r) for r in c.execute("SELECT * FROM grade_adjustments WHERE student_id=? AND course_id=? ORDER BY id DESC",(student_id,course_id))];c.close()
+ auth(x_teacher_token);c=con();res=c.execute("SELECT * FROM results WHERE student_id=? AND course_id=?",(student_id,course_id)).fetchone();attempts=[dict(r) for r in c.execute("SELECT id,kind,item_id,attempt_no,status,started_at,submitted_at,payload FROM attempts WHERE student_id=? AND course_id=? ORDER BY id DESC",(student_id,course_id))];evidence=[dict(r) for r in c.execute("SELECT id,kind,ce,item_id,attempt,response,correct,score,payload,created_at FROM evidence WHERE student_id=? AND course_id=? ORDER BY id DESC",(student_id,course_id))];reviews=[dict(r) for r in c.execute("SELECT id,ce,item_id,attempt,score,confidence,verdict,feedback,status,created_at,breakdown FROM ai_reviews WHERE student_id=? AND course_id=? ORDER BY id DESC",(student_id,course_id))];rec=c.execute("SELECT * FROM recovery_plans WHERE student_id=? AND course_id=?",(student_id,course_id)).fetchone();adj=[dict(r) for r in c.execute("SELECT * FROM grade_adjustments WHERE student_id=? AND course_id=? ORDER BY id DESC",(student_id,course_id))];rd=official_result(c,student_id,course_id,res) if res else None;c.close()
  for a in attempts:a["payload"]=json.loads(a["payload"] or "{}")
  for e in evidence:e["response"]=json.loads(e["response"]) if e["response"] else None;e["payload"]=json.loads(e["payload"] or "{}")
  for r in reviews:r["breakdown"]=json.loads(r.get("breakdown") or "[]")
- rd=official_result(c,student_id,course_id,res) if res else None
  if rd:rd["recovery"]=json.loads(rd["recovery"] or "[]")
  return {"student_id":student_id,"course_id":course_id,"result":rd,"attempts":attempts,"evidence":evidence,"ai_reviews":reviews,"recovery":({**dict(rec),"criteria":json.loads(rec["criteria"] or "[]")} if rec else None),"adjustments":adj}
 @app.post("/api/teacher/grade-adjustment/{course_id}/{student_id}")
