@@ -106,3 +106,14 @@ def test_all_units_have_offline_exam_draft_and_sync_status():
   assert "Reconectando…" in js
   assert "addEventListener('online'" in js
   assert "syncPendingExamDraft" in js
+
+
+def test_theory_is_not_schematic_in_ra2_ra3_ra4():
+ minimum={"ut2":220,"ut3":220,"ut4":200}
+ for unit,floor in minimum.items():
+  html=(ROOT/"scorm"/unit/"index.html").read_text(encoding="utf-8")
+  blocks=re.findall(r'<section class="screen" id="teoria-\d+">(.*?)(?=<section class="screen"|$)',html,re.S)
+  assert len(blocks)>=11
+  for i,b in enumerate(blocks,1):
+   plain=re.sub(r'<[^>]+>',' ',b);words=re.findall(r'\b[\wÁÉÍÓÚÜÑáéíóúüñ]+\b',plain)
+   assert len(words)>=floor,f"{unit} teoria-{i} demasiado esquemática: {len(words)} palabras"
