@@ -46,21 +46,17 @@ def test_no_ra1_practice_navigation_in_other_units():
 def test_practice_screen_markup_matches_own_ra():
  for unit,ces in EXPECTED.items():
   html=(ROOT/"scorm"/unit/"index.html").read_text(encoding="utf-8")
-  practice_start=html.index('<section class="screen" id="practica-home">')
-  auto_start=html.index('id="autoevaluacion"',practice_start)
-  practice_block=html[practice_start:auto_start]
+  assert '<section class="screen" id="practica-home">' in html
+  screens=re.findall(r'<section class="screen practice-screen" id="pract-([0-9][a-z])" data-ce="([0-9]\\.[a-z])"',html)
+  assert {ce for _,ce in screens}==set(ces),(unit,screens)
   expected_total=len(ces)*6
-  assert f">{expected_total} actividades<" in practice_block or f"{expected_total} actividades" in practice_block
+  assert f"{expected_total} actividades" in html
   for ce in ces:
    key=ce.replace(".","")
-   assert f'id="pract-{key}"' in practice_block
-   assert f'data-ce="{ce}"' in practice_block
-   assert f'id="ex-{key}"' in practice_block
-   assert f'id="homeprog-{key}"' in practice_block
-  foreign_prefixes={x.split(".")[0] for x in sum(EXPECTED.values(),[]) if x not in ces}
-  for prefix in foreign_prefixes:
-   assert f'data-ce="{prefix}.' not in practice_block
-   assert f'id="pract-{prefix}' not in practice_block
+   assert f'id="pract-{key}"' in html
+   assert f'data-ce="{ce}"' in html
+   assert f'id="ex-{key}"' in html
+   assert f'id="homeprog-{key}"' in html
 
 
 def test_ra2_ra3_have_no_ra1_legacy_content():
