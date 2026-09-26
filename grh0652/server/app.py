@@ -361,7 +361,8 @@ def evidence(x:EventIn,x_student_token:str|None=Header(None)):
   elif kind=="order":ok=given==expected
   elif kind=="match":ok=isinstance(given,list) and isinstance(expected,list) and [str(v) for v in given]==[str(v) for v in expected]
   else:ok=given==expected
-  correct=ok\n  if kind!="free":score=100 if ok else 0
+  correct=ok
+  if kind!="free":score=100 if ok else 0
  c.execute("INSERT INTO evidence(student_id,course_id,kind,ce,item_id,attempt,response,correct,score,payload,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)",(x.student_id,x.course_id,x.kind,x.ce,x.item_id,x.attempt,json.dumps(x.response,ensure_ascii=False),None if correct is None else int(correct),score,json.dumps(x.payload or {},ensure_ascii=False),now()));c.commit();c.close();return {"ok":True,"correct":correct,"score":score}
 @app.post("/api/result")
 def result(x:ResultIn,x_student_token:str|None=Header(None)):
