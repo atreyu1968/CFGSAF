@@ -89,4 +89,68 @@ const LAB_CASES={'lab-ordinaria':[{q:'1. Total devengado',a:1850,f:'1.500 + 200 
 function renderLab(){Object.entries(LAB_CASES).forEach(([id,steps])=>{const host=document.getElementById(id);if(!host)return;host.innerHTML='';steps.forEach(s=>{const row=document.createElement('div');row.className='exercise-card';const h=document.createElement('h3');h.textContent=s.q;const inp=document.createElement('input');inp.type='number';inp.step='0.01';inp.className='calc-input';inp.placeholder='Resultado';const b=document.createElement('button');b.className='btn primary';b.textContent='Comprobar';const fb=document.createElement('div');fb.className='feedback';b.onclick=()=>{const ok=Math.abs(Number(String(inp.value).replace(',','.'))-s.a)<0.011;fb.textContent=(ok?'✓ Correcto. ':'✗ Revisa. ')+s.f;fb.className='feedback '+(ok?'ok':'bad')};row.append(h,inp,b,fb);host.appendChild(row);});});}
 renderLab();
 renderPractice();scormInit();show('inicio');
+
+const PAYROLL_FIELD_HELP={
+base:['Salario base','Retribución fijada para el grupo, nivel o puesto según contrato y convenio.','Traslada el importe mensual que corresponda al periodo.','No confundas salario base con total devengado.'],
+comp:['Complemento salarial','Cantidad añadida al salario base por puesto, condiciones, resultados u otra causa prevista.','Identifica el complemento indicado en el supuesto o convenio.','No incluyas aquí conceptos extrasalariales.'],
+comision:['Comisión / variable','Retribución vinculada a ventas, objetivos o resultados.','Aplica el porcentaje o condición indicada y comprueba si se alcanzó el objetivo.','No la sumes dos veces al total.'],
+devengado:['Total devengado','Suma de todas las percepciones generadas en el periodo antes de deducciones.','Suma los devengos salariales y, cuando corresponda, los no salariales.','La prorrata usada solo para cotizar no siempre se cobra este mes.'],
+prorrata:['Prorrata de pagas extraordinarias','Parte mensual de las pagas extra que debe considerarse cuando el ejercicio lo exige.','Importe anual de extras ÷ 12, salvo que el supuesto indique otro periodo.','Distingue prorrata de cotización de paga extra efectivamente cobrada.'],
+bcc:['Base de contingencias comunes','Magnitud sobre la que se calculan las cuotas por contingencias comunes.','Integra los conceptos computables y la prorrata de extras conforme al supuesto.','No uses automáticamente el líquido ni el bruto sin revisar qué conceptos cotizan.'],
+base:['Base de cotización','Importe sobre el que se aplican los tipos de cotización del ejercicio.','Usa la base expresamente indicada o calcúlala con los conceptos computables.','No apliques porcentajes antes de determinar correctamente la base.'],
+cc:['Contingencias comunes','Aportación de la persona trabajadora para contingencias comunes.','Base correspondiente × tipo de CC indicado.','Introduce el importe de la cuota, no el porcentaje.'],
+des:['Desempleo','Cuota de la persona trabajadora destinada a la protección por desempleo.','Base correspondiente × tipo de desempleo del supuesto.','Comprueba el tipo que se proporciona para el ejercicio.'],
+fp:['Formación profesional','Aportación de la persona trabajadora para formación profesional.','Base correspondiente × tipo de FP indicado.','Un porcentaje pequeño también debe calcularse y redondearse correctamente.'],
+mei:['MEI','Aportación asociada al Mecanismo de Equidad Intergeneracional según los parámetros del ejercicio.','Base indicada × tipo MEI proporcionado.','No reutilices porcentajes de otros ejercicios o años.'],
+irpf:['IRPF','Retención a cuenta del impuesto sobre la renta aplicada a la base indicada en el supuesto.','Base de retención del ejercicio × porcentaje de IRPF indicado.','No confundas la base de IRPF con la base de cotización.'],
+ded:['Total deducciones','Suma de las cantidades que minoran el importe a percibir.','Suma cuotas, IRPF y cualquier otra deducción aplicable del supuesto.','Comprueba que no has incluido un devengo como deducción.'],
+liquido:['Líquido a percibir','Cantidad final que resulta después de las deducciones.','Total devengado − total deducciones, con los ajustes que indique el supuesto.','No es lo mismo que salario bruto.'],
+liq:['Líquido del supuesto','Importe final después de restar las deducciones calculadas.','A − B: total considerado menos total de deducciones.','Revisa redondeos de las cuotas antes de restar.'],
+br:['Base reguladora diaria','Referencia diaria utilizada para calcular una prestación.','Obténla a partir de la base y divisor que indique el supuesto.','No confundas base reguladora con base de cotización mensual.'],
+trab:['Salario por días trabajados','Retribución correspondiente únicamente a los días efectivamente trabajados del supuesto.','Valor diario × número de días trabajados.','No vuelvas a remunerar como salario los días cubiertos solo por prestación.'],
+p60:['Prestación al 60 %','Importe del tramo de IT que el ejercicio sitúa al 60 % de la BR.','BR diaria × 60 % × días incluidos en ese tramo.','Cuenta correctamente los días que pertenecen al tramo.'],
+p75:['Prestación al 75 %','Importe del tramo de IT que el ejercicio sitúa al 75 % de la BR.','BR diaria × 75 % × días incluidos.','No apliques el 75 % a todos los días si hay tramos diferentes.'],
+prest:['Prestación total','Suma de los importes de prestación que correspondan al periodo.','Suma los distintos tramos o multiplica prestación diaria por los días cubiertos.','No incluyas salario trabajado salvo que el campo pida total devengado.'],
+ord:['Parte ordinaria diaria','Parte de la base reguladora de AT/EP procedente de la base ordinaria indicada.','Base ordinaria del supuesto ÷ divisor indicado.','Las horas extra se incorporan separadamente cuando el supuesto lo exige.'],
+he:['Promedio diario de horas extraordinarias','Promedio de las horas extra del periodo de referencia utilizado en el ejercicio.','Total de horas extra de referencia ÷ divisor anual indicado.','No sumes el total anual directamente a una base diaria.'],
+pd:['Prestación diaria','Cuantía de prestación correspondiente a un día.','Base reguladora diaria × porcentaje aplicable.','Después debes multiplicarla por los días cubiertos cuando se pida el total.'],
+din:['Devengos dinerarios','Retribuciones que se satisfacen en dinero.','Suma los conceptos dinerarios del periodo.','Mantén separada la retribución en especie.'],
+esp:['Retribución en especie','Bien, derecho o servicio valorado económicamente que forma parte de la retribución.','Utiliza la valoración proporcionada en el supuesto.','No la vuelvas a transferir como efectivo si ya fue entregada.'],
+efectivo:['Efectivo a transferir','Cantidad que finalmente se abona en dinero cuando existe retribución en especie.','Total devengado − deducciones − valor ya satisfecho en especie, según el supuesto.','No pagues dos veces la percepción en especie.'],
+sal:['Salario pendiente','Salario generado hasta la fecha de extinción.','Valor diario × días pendientes de abono.','Usa el divisor establecido en el ejercicio.'],
+vac:['Vacaciones pendientes','Compensación de vacaciones devengadas y no disfrutadas cuando corresponde.','Valor diario × días pendientes indicados.','No inventes días: utiliza los datos del supuesto.'],
+extra:['Paga extra devengada','Parte proporcional de la paga extraordinaria generada hasta la extinción.','Importe de la paga × fracción del periodo devengado.','Comprueba el periodo de devengo de la paga.'],
+bruto:['Total bruto de liquidación','Suma de los conceptos brutos incluidos en el finiquito antes de las deducciones.','Suma salario pendiente, vacaciones, extra y otros conceptos que procedan.','Una indemnización solo se incorpora si la causa y los datos permiten calcularla.'],
+daily:['Valor salarial diario','Valor del salario correspondiente a un día según el criterio del ejercicio.','Salario mensual ÷ divisor didáctico indicado.','No uses 30 si el supuesto establece otro criterio.'],
+salary:['Salario resultante','Retribución salarial que corresponde tras aplicar los días trabajados o la reducción indicada.','Aplica el valor diario al número de días remunerados o resta la reducción.','Distingue salario empresarial de prestaciones externas.'],
+benefit:['Prestación','Cantidad satisfecha como prestación durante la suspensión indicada.','BR diaria × porcentaje × días cubiertos.','No la atribuyas a la empresa si el ejercicio la separa expresamente.'],
+combined:['Ingresos totales diferenciados','Suma didáctica de importes procedentes de pagadores distintos.','Suma salario empresarial y prestación solo para analizar el total del periodo.','Mantén identificada la procedencia de cada importe.'],
+reduction:['Reducción','Importe salarial que deja de devengarse por el tiempo no retribuido del supuesto.','Valor diario u horario × tiempo no retribuido.','La causa de la ausencia puede producir efectos jurídicos diferentes.'],
+net:['Total salarial del supuesto','Resultado salarial final del ejercicio simplificado.','Salario inicial − reducción indicada.','No lo trates como nómina real completa si faltan cotizaciones o IRPF.'],
+hourly:['Valor salarial por hora','Valor utilizado para calcular una reducción horaria en el supuesto.','Valor diario ÷ horas de jornada indicadas.','No dividas el salario mensual directamente por 8.']
+};
+function payrollHelpFor(input){
+ const attrs=[...input.attributes].find(a=>/^data-(pay\d*|rpay)$/.test(a.name));
+ const key=attrs?attrs.value:'';
+ const label=input.closest('.payroll-row')?.querySelector('span')?.textContent?.trim()||'Campo de nómina';
+ const h=PAYROLL_FIELD_HELP[key]||[label,'Campo que debes obtener a partir de los datos del supuesto.','Localiza los datos relacionados, identifica la regla aplicable y realiza el cálculo antes de introducirlo.','Comprueba unidades, porcentajes y redondeo.'];
+ return {label,h};
+}
+const payrollTip=document.createElement('div');payrollTip.className='payroll-help';payrollTip.hidden=true;document.body.appendChild(payrollTip);
+document.addEventListener('contextmenu',e=>{
+ const input=e.target.closest('.payroll-form input');
+ if(!input)return;
+ e.preventDefault();
+ const {label,h}=payrollHelpFor(input);
+ payrollTip.innerHTML='<b>'+label+'</b>'+h[1]+'<span class="hint-formula"><strong>Cómo obtenerlo:</strong> '+h[2]+'</span><span class="hint-error"><strong>Evita:</strong> '+h[3]+'</span>';
+ payrollTip.hidden=false;
+ const r=input.getBoundingClientRect(),w=Math.min(360,window.innerWidth-24);
+ payrollTip.style.width=w+'px';
+ let left=Math.max(12,Math.min(r.left,window.innerWidth-w-12)),top=r.bottom+10;
+ payrollTip.style.left=left+'px';payrollTip.style.top=top+'px';
+ requestAnimationFrame(()=>{if(payrollTip.getBoundingClientRect().bottom>window.innerHeight-8)payrollTip.style.top=Math.max(8,r.top-payrollTip.offsetHeight-10)+'px'});
+});
+const closePayrollTip=e=>{if(!e.target.closest?.('.payroll-help'))payrollTip.hidden=true};
+document.addEventListener('click',closePayrollTip);document.addEventListener('keydown',e=>{if(e.key==='Escape')payrollTip.hidden=true});window.addEventListener('scroll',()=>payrollTip.hidden=true,true);window.addEventListener('resize',()=>payrollTip.hidden=true);
+
 </script></body></html>
