@@ -211,3 +211,11 @@ def test_ut1_has_explained_completed_contract_examples():
  assert "Ejemplo 3 · Duración determinada por circunstancias de la producción" in html
  assert html.count("EJEMPLO RESUELTO")>=3
  assert "Por qué se elige:" in html and "Uso profesional:" in html
+
+
+def test_ut4_part_time_and_arrears_payroll_cases():
+ from pathlib import Path
+ html=(Path(__file__).resolve().parents[1]/"scorm"/"ut4"/"index.html").read_text(encoding="utf-8")
+ for needle in ["Caso 29 · Nómina a tiempo parcial","payroll-form-9","data-pay9=\"basep\"","data-pay9=\"liq\"","9:{basep:900","Caso 30 · Atrasos salariales","payroll-form-10","data-pay10=\"monthly\"","data-pay10=\"net\"","10:{monthly:100","9:'4.e',10:'4.e'"]:
+  assert needle in html,needle
+ assert "recordPayrollEvidence('4.ep-payroll-'+n" in html
