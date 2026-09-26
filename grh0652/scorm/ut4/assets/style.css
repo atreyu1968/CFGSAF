@@ -71,3 +71,25 @@ body.exam-mode .sidebar{pointer-events:none;opacity:.45}body.exam-mode #exitBtn{
 @media(max-width:600px){
   .question .option,.exercise .option{padding:13px 14px;gap:10px;margin:10px 0;line-height:1.4}
 }
+
+/* Nómina visual: documento laboral reconocible */
+.payroll-form{max-width:980px;margin:20px auto;background:#fff;border:2px solid #263b48;border-radius:4px;padding:0;overflow:hidden;box-shadow:0 8px 24px rgba(20,45,58,.10)}
+.payroll-title{background:#edf2f4;border-bottom:2px solid #263b48;padding:13px 16px;text-align:center;font-weight:900;letter-spacing:.025em;color:#172f3c}
+.payroll-meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border-bottom:1px solid #627782}
+.payroll-meta span{padding:10px 14px;border-right:1px solid #aebbc1;border-bottom:1px solid #d3dde1;min-height:22px}
+.payroll-form h3{margin:0;padding:9px 14px;background:#f1f5f6;border-top:1px solid #627782;border-bottom:1px solid #627782;font-size:.88rem;letter-spacing:.04em;color:#173441}
+.payroll-row{display:grid;grid-template-columns:minmax(260px,1fr) 190px;align-items:center;min-height:43px;border-bottom:1px solid #d5dee2}
+.payroll-row>span{padding:9px 14px}
+.payroll-row input{width:calc(100% - 20px);margin:5px 10px;padding:9px 10px;text-align:right;border:1px solid #9fb0b8;border-radius:3px;background:#fff;font:inherit;box-sizing:border-box}
+.payroll-row input:focus{outline:3px solid rgba(22,135,127,.2);border-color:#16877f}
+.payroll-row.total{font-weight:900;background:#f8fafb}
+.payroll-row.liquid{font-size:1.05rem;font-weight:900;background:#e6f3ef;border-top:2px solid #263b48}
+.payroll-form .btn{margin:16px}.payroll-form .feedback{margin:0 16px 16px}
+.payroll-example{max-width:980px;margin:18px auto;border:2px solid #263b48;background:#fff;box-shadow:0 6px 20px rgba(20,45,58,.08)}
+.payroll-example .doc-head{text-align:center;font-weight:900;padding:12px;border-bottom:2px solid #263b48;background:#edf2f4}
+.payroll-example .doc-meta{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid #627782}
+.payroll-example .doc-meta div{padding:8px 12px;border-right:1px solid #c3cdd2}
+.payroll-example table{width:100%;border-collapse:collapse}.payroll-example th,.payroll-example td{padding:8px 11px;border:1px solid #cbd5da;text-align:left}.payroll-example th{background:#f1f5f6}.payroll-example td:last-child,.payroll-example th:last-child{text-align:right}
+.payroll-example .net{font-size:1.08rem;font-weight:900;background:#e6f3ef}
+.payroll-example .explanation{padding:12px 14px;background:#fbfcfc;border-top:1px solid #9fb0b8;line-height:1.5}
+@media(max-width:650px){.payroll-meta,.payroll-example .doc-meta{grid-template-columns:1fr}.payroll-row{grid-template-columns:1fr}.payroll-row input{width:calc(100% - 28px);margin:0 14px 10px}.payroll-example{overflow-x:auto}}
