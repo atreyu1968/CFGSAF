@@ -439,7 +439,7 @@ def exam_start(x:AttemptIn,x_student_token:str|None=Header(None)):
  c=con();active=c.execute("SELECT id,attempt_no FROM attempts WHERE student_id=? AND course_id=? AND kind='exam' AND item_id=? AND status='started' ORDER BY attempt_no DESC LIMIT 1",(x.student_id,x.course_id,x.item_id)).fetchone()
  if active:
   old=c.execute("SELECT * FROM exam_versions WHERE attempt_id=?",(active["id"],)).fetchone()
-  if old:c.close();return {"attempt_id":active["id"],"attempt":active["attempt_no"],"version":old["version"],"questions":json.loads(old["questions"]),"config":json.loads(old["config"]) if old["config"] else {},"deadline_at":old["deadline_at"],"resumed":True}
+  if old:c.close();ap=json.loads(active["payload"] or "{}");return {"attempt_id":active["id"],"attempt":active["attempt_no"],"version":old["version"],"questions":json.loads(old["questions"]),"config":json.loads(old["config"]) if old["config"] else {},"deadline_at":old["deadline_at"],"saved_answers":ap.get("draft_answers",{}),"draft_saved_at":ap.get("draft_saved_at"),"resumed":True}
  cfg,_=config_row(c,x.course_id)
  if not cfg.get("exam_enabled"):c.close();raise HTTPException(403,"Examen no activado")
  if c.execute("SELECT 1 FROM evaluation_closures WHERE course_id=?",(x.course_id,)).fetchone():c.close();raise HTTPException(409,"Evaluación cerrada")
@@ -466,7 +466,16 @@ def exam_start(x:AttemptIn,x_student_token:str|None=Header(None)):
  cfg={**cfg,"exam_integrity_exempt":x.student_id in cfg.get("exam_exempt_students",[]),"exam_pin_required":bool(cfg.get("exam_pin"))};cfg.pop("exam_pin",None)
  snap=json.dumps(cfg,ensure_ascii=False)
  c.execute("INSERT INTO exam_versions(attempt_id,student_id,course_id,version,questions,answers,created_at,config,deadline_at) VALUES(?,?,?,?,?,?,?,?,?)",(gate["id"],x.student_id,x.course_id,version,json.dumps(public,ensure_ascii=False),json.dumps(keys),created,snap,deadline))
- c.commit();c.close();return {"attempt_id":gate["id"],"attempt":gate["attempt"],"version":version,"questions":public,"config":cfg,"deadline_at":deadline,"resumed":False}
+ c.commit();c.close();return {"attempt_id":gate["id"],"attempt":gate["attempt"],"version":version,"questions":public,"config":cfg,"deadline_at":deadline,"saved_answers":{},"draft_saved_at":None,"resumed":False}
+
+@app.put("/api/exam/{attempt_id}/answers")
+def exam_save_answers(attempt_id:int,x:SubmitAttempt,x_student_token:str|None=Header(None)):
+ c=con();a=c.execute("SELECT student_id,status,payload FROM attempts WHERE id=? AND kind='exam'",(attempt_id,)).fetchone();v=c.execute("SELECT deadline_at FROM exam_versions WHERE attempt_id=?",(attempt_id,)).fetchone()
+ if not a or not v:c.close();raise HTTPException(404,"Examen no encontrado")
+ require_student(a["student_id"],x_student_token,c)
+ if a["status"]!="started":c.close();raise HTTPException(409,"El examen ya no está activo")
+ if v["deadline_at"] and datetime.datetime.now(datetime.timezone.utc)>=datetime.datetime.fromisoformat(v["deadline_at"]):c.close();raise HTTPException(410,"Tiempo de examen agotado")
+ p=json.loads(a["payload"] or "{}");p["draft_answers"]=(x.payload or {}).get("answers",{});p["draft_saved_at"]=now();c.execute("UPDATE attempts SET payload=? WHERE id=?",(json.dumps(p,ensure_ascii=False),attempt_id));c.commit();c.close();return {"ok":True,"saved_at":p["draft_saved_at"],"count":len(p["draft_answers"])}
 
 @app.get("/api/exam/{attempt_id}/status")
 def exam_live_status(attempt_id:int,x_student_token:str|None=Header(None)):
