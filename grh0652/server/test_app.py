@@ -502,3 +502,19 @@ def test_default_document_rubrics_are_seeded_without_overwrite():
  for x in found.values():
   criteria=json.loads(x["criteria"])
   assert criteria and abs(sum(float(c["weight"]) for c in criteria)-100)<0.01
+
+
+def test_document_evidence_teacher_review_e2e():
+ course="GRH0652_UT1";sid="doc-e2e"
+ created=client.post(f"/api/teacher/students/{sid}",headers=H);assert created.status_code==200
+ sh={"X-Student-Token":created.json()["token"]}
+ payload={"student_id":sid,"course_id":course,"kind":"portfolio","ce":"1.g","item_id":"1.g-contract-c1","attempt":1,"response":{"modalidad":"indefinido","jornada":"completa","convenio":"aplicable"},"payload":{"activity":"contract-document","review_required":True,"fields_total":3,"fields_completed":3}}
+ sent=client.post("/api/evidence",headers=sh,json=payload);assert sent.status_code==200,sent.text;assert sent.json()["score"] is None
+ reviews=client.get("/api/teacher/ai-reviews",headers=H,params={"course_id":course});assert reviews.status_code==200
+ review=next(x for x in reviews.json() if x["student_id"]==sid and x["item_id"]=="1.g-contract-c1");assert review["status"]=="pending"
+ decided=client.put(f"/api/teacher/ai-reviews/{review['id']}",headers=H,json={"score":82,"feedback":"Contrato coherente; revisar detalle formal.","status":"accepted"});assert decided.status_code==200,decided.text
+ z=decided.json();assert z["score"]==82 and z["evidence_id"] is not None
+ db=module.con();ev=db.execute("SELECT score,correct,payload FROM evidence WHERE id=?",(z["evidence_id"],)).fetchone();db.close()
+ assert ev["score"]==82 and ev["correct"]==1
+ ep=json.loads(ev["payload"]);assert ep["teacher_decision"]=="accepted" and ep["teacher_feedback"]
+ assert z["result"]["ce"]["1.g"]["portfolio"]==82
