@@ -1,4 +1,4 @@
-import os,json,sqlite3,datetime,secrets,tempfile,shutil
+import os,json,sqlite3,datetime,secrets,tempfile,shutil,hashlib
 import httpx
 from pathlib import Path
 from fastapi import FastAPI,HTTPException,Header,UploadFile,File
@@ -295,6 +295,26 @@ async def teacher_validate_backup(file:UploadFile=File(...),x_teacher_token:str|
   except OSError:pass
  if integrity!="ok" or missing:raise HTTPException(400,{"integrity":integrity,"missing_tables":missing})
  return {"ok":True,"integrity":integrity,"size":len(data),"counts":counts}
+
+@app.post("/api/teacher/backup/restore")
+async def teacher_restore_backup(file:UploadFile=File(...),confirm:str=Header("",alias="X-Restore-Confirm"),x_teacher_token:str|None=Header(None)):
+ auth(x_teacher_token)
+ if confirm!="RESTAURAR":raise HTTPException(400,"Confirmación de restauración incorrecta")
+ data=await file.read()
+ if len(data)<100 or data[:16]!=b"SQLite format 3\x00":raise HTTPException(400,"El archivo no es una copia SQLite válida")
+ p=tempfile.NamedTemporaryFile(suffix=".db",delete=False);p.write(data);p.close()
+ try:
+  src=sqlite3.connect(p.name);integrity=src.execute("PRAGMA integrity_check").fetchone()[0];tables={r[0] for r in src.execute("SELECT name FROM sqlite_master WHERE type='table'")};required={"students","states","evidence","results","configs","attempts","exam_banks","exam_versions"}
+  if integrity!="ok" or required-tables:src.close();raise HTTPException(400,{"integrity":integrity,"missing_tables":sorted(required-tables)})
+  dst=con();pre=tempfile.NamedTemporaryFile(prefix="grh0652-pre-restore-",suffix=".db",delete=False);pre.close();safe=sqlite3.connect(pre.name);dst.backup(safe);safe.close()
+  dst.execute("PRAGMA wal_checkpoint(FULL)");src.backup(dst);dst.commit();src.close();dst.close()
+  global _schema_ready;_schema_ready=False
+  verify=con();post=verify.execute("PRAGMA integrity_check").fetchone()[0];verify.close()
+  if post!="ok":raise HTTPException(500,"La restauración no superó la comprobación posterior")
+  return {"ok":True,"integrity":post,"sha256":hashlib.sha256(data).hexdigest(),"safety_backup":os.path.basename(pre.name)}
+ finally:
+  try:os.unlink(p.name)
+  except OSError:pass
 
 @app.get("/api/teacher/readiness/{course_id}")
 def teacher_readiness(course_id:str,x_teacher_token:str|None=Header(None)):
