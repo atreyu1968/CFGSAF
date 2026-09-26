@@ -1,0 +1,65 @@
+name: Build GRH0652 SCORM package set
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'grh0652/scorm/**'
+      - '.github/workflows/build-grh0652-scorm.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - unit: ut1
+            ra: RA1
+          - unit: ut2
+            ra: RA2
+          - unit: ut3
+            ra: RA3
+          - unit: ut4
+            ra: RA4
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate and build SCORM 1.2
+        shell: bash
+        run: |
+          set -euo pipefail
+          UNIT="${{ matrix.unit }}"
+          RA="${{ matrix.ra }}"
+          ROOT="grh0652/scorm/$UNIT"
+          test -f "$ROOT/imsmanifest.xml"
+          test -f "$ROOT/index.html"
+          python3 - "$ROOT" "$UNIT" "$RA" <<'PY'
+          import re,sys,pathlib,zipfile
+          root=pathlib.Path(sys.argv[1]); unit=sys.argv[2].upper(); ra=sys.argv[3]
+          manifest=(root/"imsmanifest.xml").read_text(encoding="utf-8")
+          assert 'adlcp:scormtype="sco"' in manifest
+          files=re.findall(r'<file href="([^"]+)"',manifest)
+          missing=[f for f in files if not (root/f).is_file()]
+          if missing: raise SystemExit("Missing manifest resources: "+", ".join(missing))
+          html=(root/"index.html").read_text(encoding="utf-8")
+          refs=set(re.findall(r'(?:src|href)="(assets/[^"]+)"',html))
+          undeclared=sorted(refs-set(files))
+          if undeclared: raise SystemExit("HTML assets not declared in manifest: "+", ".join(undeclared))
+          out=pathlib.Path("dist")/f"GRH0652_{unit}_{ra}_SCORM12.zip"
+          out.parent.mkdir(exist_ok=True)
+          with zipfile.ZipFile(out,"w",zipfile.ZIP_DEFLATED) as z:
+              z.write(root/"imsmanifest.xml","imsmanifest.xml")
+              for f in files: z.write(root/f,f)
+          with zipfile.ZipFile(out) as z:
+              assert z.namelist()[0]=="imsmanifest.xml"
+          print(out, "OK", len(files), "resources")
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: GRH0652_${{ matrix.unit }}_${{ matrix.ra }}_SCORM12
+          path: dist/*.zip
+          if-no-files-found: error
+          retention-days: 30

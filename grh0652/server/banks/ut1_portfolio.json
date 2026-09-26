@@ -1,0 +1,552 @@
+{
+  "items": [
+    {
+      "id": "1a1",
+      "ce": "1.a",
+      "kind": "choice",
+      "prompt": "Una empresa quiere saber qué norma regula con carácter básico la relación laboral ordinaria. ¿Qué fuente debe consultar?",
+      "options": [
+        "Estatuto de los Trabajadores",
+        "Padrón municipal",
+        "Plan contable",
+        "Contrato de alquiler"
+      ]
+    },
+    {
+      "id": "1a2",
+      "ce": "1.a",
+      "kind": "multi",
+      "prompt": "Selecciona todas las fuentes que pueden ser relevantes al preparar una contratación laboral.",
+      "options": [
+        "Estatuto de los Trabajadores",
+        "Convenio colectivo aplicable",
+        "Contrato de trabajo",
+        "Catálogo de mobiliario"
+      ]
+    },
+    {
+      "id": "1a3",
+      "ce": "1.a",
+      "kind": "tf",
+      "prompt": "Una cláusula contractual puede reducir un derecho mínimo imperativo reconocido por una norma superior si ambas partes la firman.",
+      "options": []
+    },
+    {
+      "id": "1a4",
+      "ce": "1.a",
+      "kind": "order",
+      "prompt": "Ordena una secuencia profesional para determinar la regulación aplicable antes de contratar.",
+      "options": []
+    },
+    {
+      "id": "1a5",
+      "ce": "1.a",
+      "kind": "match",
+      "prompt": "Relaciona cada fuente con su función principal.",
+      "options": []
+    },
+    {
+      "id": "1a6",
+      "ce": "1.a",
+      "kind": "choice",
+      "prompt": "Encuentras una plantilla de contrato de 2022 en un blog y una versión consolidada vigente del Estatuto en el BOE. ¿Cuál debe prevalecer para tomar la decisión jurídica?",
+      "options": [
+        "La plantilla antigua porque ya está redactada",
+        "La fuente oficial vigente y después adaptar el modelo",
+        "El blog si aparece primero en el buscador",
+        "Cualquiera de las dos"
+      ]
+    },
+    {
+      "id": "1b1",
+      "ce": "1.b",
+      "kind": "order",
+      "prompt": "Ordena las fases generales de una contratación desde la necesidad hasta el archivo.",
+      "options": []
+    },
+    {
+      "id": "1b2",
+      "ce": "1.b",
+      "kind": "choice",
+      "prompt": "¿Qué debe ocurrir antes de cumplimentar un modelo de contrato?",
+      "options": [
+        "Analizar la necesidad y elegir la modalidad adecuada",
+        "Archivar el contrato",
+        "Emitir una nómina",
+        "Tramitar una baja"
+      ]
+    },
+    {
+      "id": "1b3",
+      "ce": "1.b",
+      "kind": "match",
+      "prompt": "Relaciona cada fase con la actuación que mejor la representa.",
+      "options": []
+    },
+    {
+      "id": "1b4",
+      "ce": "1.b",
+      "kind": "multi",
+      "prompt": "¿Qué actuaciones deben estar resueltas antes de considerar cerrada la incorporación?",
+      "options": [
+        "Contrato y anexos correctamente formalizados",
+        "Alta y comunicaciones procedentes",
+        "Justificantes archivados",
+        "Destruir toda evidencia de los trámites"
+      ]
+    },
+    {
+      "id": "1b5",
+      "ce": "1.b",
+      "kind": "tf",
+      "prompt": "El archivo del expediente forma parte del proceso administrativo de contratación.",
+      "options": []
+    },
+    {
+      "id": "1b6",
+      "ce": "1.b",
+      "kind": "choice",
+      "prompt": "Una empresa ya ha firmado el contrato, pero aún no ha realizado el alta ni la comunicación correspondiente. ¿En qué situación está el procedimiento?",
+      "options": [
+        "Completamente cerrado",
+        "Incompleto: faltan fases administrativas",
+        "No existe contrato",
+        "Solo falta la nómina"
+      ]
+    },
+    {
+      "id": "1c1",
+      "ce": "1.c",
+      "kind": "match",
+      "prompt": "Relaciona organismo y función habitual.",
+      "options": []
+    },
+    {
+      "id": "1c2",
+      "ce": "1.c",
+      "kind": "choice",
+      "prompt": "¿Qué organismo gestiona habitualmente el alta de una persona trabajadora en el Régimen General?",
+      "options": [
+        "TGSS",
+        "SEPE",
+        "AEAT",
+        "Cabildo"
+      ]
+    },
+    {
+      "id": "1c3",
+      "ce": "1.c",
+      "kind": "choice",
+      "prompt": "¿A qué organismo estatal se comunica el contenido de los contratos por los sistemas habilitados?",
+      "options": [
+        "SEPE",
+        "INSS",
+        "TGSS exclusivamente",
+        "Registro Mercantil"
+      ]
+    },
+    {
+      "id": "1c4",
+      "ce": "1.c",
+      "kind": "tf",
+      "prompt": "El INSS es el organismo al que se comunica ordinariamente el alta inicial de un trabajador por cuenta ajena.",
+      "options": []
+    },
+    {
+      "id": "1c5",
+      "ce": "1.c",
+      "kind": "multi",
+      "prompt": "Selecciona actuaciones que pueden relacionarse con el Servicio Canario de Empleo.",
+      "options": [
+        "Consultar convocatorias de incentivos o programas de empleo",
+        "Obtener información sobre políticas activas de empleo",
+        "Gestionar determinados recursos de orientación y empleo",
+        "Asignar el número de afiliación a la Seguridad Social"
+      ]
+    },
+    {
+      "id": "1c6",
+      "ce": "1.c",
+      "kind": "choice",
+      "prompt": "Una asesoría debe tramitar el alta, comunicar el contrato y consultar un programa autonómico de incentivos. ¿Qué combinación es correcta?",
+      "options": [
+        "TGSS + SEPE + SCE",
+        "INSS + AEAT + Ayuntamiento",
+        "SEPE + Catastro + SCE",
+        "TGSS + Registro Mercantil + Cabildo"
+      ]
+    },
+    {
+      "id": "1d1",
+      "ce": "1.d",
+      "kind": "choice",
+      "prompt": "Una empresa necesita cubrir de forma estable un puesto estructural. ¿Qué modalidad es la referencia general?",
+      "options": [
+        "Contrato indefinido",
+        "Contrato temporal sin causa",
+        "Contrato de sustitución",
+        "Beca sin contrato"
+      ]
+    },
+    {
+      "id": "1d2",
+      "ce": "1.d",
+      "kind": "choice",
+      "prompt": "Una actividad hotelera se repite cada temporada y existe una necesidad intermitente recurrente. ¿Qué figura debe analizarse especialmente?",
+      "options": [
+        "Fijo-discontinuo",
+        "Temporal para probar",
+        "Contrato mercantil",
+        "Sustitución sin persona sustituida"
+      ]
+    },
+    {
+      "id": "1d3",
+      "ce": "1.d",
+      "kind": "multi",
+      "prompt": "Según el esquema actual de contratación, selecciona categorías generales de contratos laborales.",
+      "options": [
+        "Indefinido",
+        "Temporal causal",
+        "Formativo",
+        "Contrato por obra y servicio como modalidad ordinaria vigente"
+      ]
+    },
+    {
+      "id": "1d4",
+      "ce": "1.d",
+      "kind": "tf",
+      "prompt": "El contrato fijo-discontinuo es una modalidad de contratación indefinida.",
+      "options": []
+    },
+    {
+      "id": "1d5",
+      "ce": "1.d",
+      "kind": "match",
+      "prompt": "Relaciona modalidad y rasgo principal.",
+      "options": []
+    },
+    {
+      "id": "1d6",
+      "ce": "1.d",
+      "kind": "choice",
+      "prompt": "¿Qué dato define específicamente un contrato a tiempo parcial?",
+      "options": [
+        "Una jornada inferior a la de una persona comparable a tiempo completo",
+        "Que solo se trabaje en verano",
+        "Que el contrato sea siempre temporal",
+        "Que no exista convenio"
+      ]
+    },
+    {
+      "id": "1e1",
+      "ce": "1.e",
+      "kind": "choice",
+      "prompt": "Una asesoría incorpora de forma permanente a una administrativa para tareas estructurales. ¿Qué propuesta es la más coherente?",
+      "options": [
+        "Indefinido ordinario, salvo particularidad legal",
+        "Temporal de seis meses para probar",
+        "Sustitución",
+        "Formación en alternancia sin formación"
+      ]
+    },
+    {
+      "id": "1e2",
+      "ce": "1.e",
+      "kind": "choice",
+      "prompt": "Una trabajadora está de baja con derecho a reserva de puesto y la empresa necesita cubrir sus funciones. ¿Qué modalidad debe analizarse?",
+      "options": [
+        "Contrato de sustitución",
+        "Indefinido fijo-discontinuo",
+        "Temporal sin causa",
+        "Prácticas no laborales"
+      ]
+    },
+    {
+      "id": "1e3",
+      "ce": "1.e",
+      "kind": "choice",
+      "prompt": "Un hotel tiene cada año una campaña estacional recurrente con periodos de actividad e inactividad. ¿Qué figura encaja mejor?",
+      "options": [
+        "Fijo-discontinuo",
+        "Temporal por costumbre cada año",
+        "Contrato mercantil",
+        "Indefinido a tiempo completo necesariamente todo el año"
+      ]
+    },
+    {
+      "id": "1e4",
+      "ce": "1.e",
+      "kind": "choice",
+      "prompt": "Una empresa sufre un incremento ocasional e imprevisible de pedidos durante unas semanas, bien documentado y no estructural. ¿Qué modalidad podría proceder si se cumplen los requisitos legales?",
+      "options": [
+        "Temporal por circunstancias de la producción",
+        "Fijo-discontinuo automáticamente",
+        "Sustitución",
+        "Contrato sin alta"
+      ]
+    },
+    {
+      "id": "1e5",
+      "ce": "1.e",
+      "kind": "choice",
+      "prompt": "Una persona estudia FP y la empresa quiere compatibilizar trabajo retribuido con su proceso formativo coordinado. ¿Qué contrato debe valorarse?",
+      "options": [
+        "Formación en alternancia",
+        "Sustitución",
+        "Temporal sin causa",
+        "Indefinido fijo-discontinuo por definición"
+      ]
+    },
+    {
+      "id": "1e6",
+      "ce": "1.e",
+      "kind": "choice",
+      "prompt": "Una persona acaba de obtener una titulación y se pretende que adquiera práctica profesional adecuada a ese nivel de estudios. ¿Qué modalidad formativa debe analizarse?",
+      "options": [
+        "Contrato formativo para la obtención de práctica profesional",
+        "Sustitución",
+        "Temporal por vacaciones siempre",
+        "Fijo-discontinuo"
+      ]
+    },
+    {
+      "id": "1f1",
+      "ce": "1.f",
+      "kind": "choice",
+      "prompt": "Antes de aplicar un convenio colectivo, ¿qué debe comprobarse?",
+      "options": [
+        "Ámbitos funcional, territorial, personal y temporal",
+        "Solo la portada",
+        "Solo el salario base",
+        "Que tenga muchas páginas"
+      ]
+    },
+    {
+      "id": "1f2",
+      "ce": "1.f",
+      "kind": "multi",
+      "prompt": "¿Qué materias puede concretar habitualmente un convenio colectivo?",
+      "options": [
+        "Clasificación profesional",
+        "Jornada y descansos",
+        "Tablas salariales y complementos",
+        "Número de DNI de cada trabajador"
+      ]
+    },
+    {
+      "id": "1f3",
+      "ce": "1.f",
+      "kind": "tf",
+      "prompt": "El periodo de prueba puede estar condicionado por lo previsto en el convenio colectivo aplicable.",
+      "options": []
+    },
+    {
+      "id": "1f4",
+      "ce": "1.f",
+      "kind": "match",
+      "prompt": "Relaciona ámbito del convenio y pregunta de comprobación.",
+      "options": []
+    },
+    {
+      "id": "1f5",
+      "ce": "1.f",
+      "kind": "choice",
+      "prompt": "Una empresa está en Tenerife, pero realiza una actividad distinta a la del convenio que el administrativo suele usar. ¿Qué debe hacer?",
+      "options": [
+        "Comprobar el ámbito funcional y localizar el convenio correcto",
+        "Aplicar el convenio habitual por comodidad",
+        "No aplicar convenio alguno",
+        "Elegir el que tenga salarios más bajos"
+      ]
+    },
+    {
+      "id": "1f6",
+      "ce": "1.f",
+      "kind": "choice",
+      "prompt": "El contrato individual fija un salario inferior al mínimo de convenio para el grupo profesional correctamente asignado. ¿Qué debe hacer el técnico?",
+      "options": [
+        "Corregirlo para respetar el mínimo aplicable",
+        "Mantenerlo si el trabajador firma",
+        "Ocultarlo en un anexo",
+        "Compensarlo con días libres sin revisar norma"
+      ]
+    },
+    {
+      "id": "1g1",
+      "ce": "1.g",
+      "kind": "match",
+      "prompt": "Relaciona documento y finalidad.",
+      "options": []
+    },
+    {
+      "id": "1g2",
+      "ce": "1.g",
+      "kind": "choice",
+      "prompt": "¿Qué comprobación es prioritaria antes de firmar un contrato?",
+      "options": [
+        "Que datos, jornada, salario, modalidad y convenio sean coherentes",
+        "Que el archivo tenga un color concreto",
+        "Que el documento ocupe una sola página",
+        "Que no tenga anexos"
+      ]
+    },
+    {
+      "id": "1g3",
+      "ce": "1.g",
+      "kind": "multi",
+      "prompt": "Selecciona documentos o evidencias que conviene conservar en el expediente de contratación.",
+      "options": [
+        "Contrato firmado",
+        "Anexos aplicables",
+        "Justificantes de comunicaciones",
+        "Contraseñas personales del certificado digital"
+      ]
+    },
+    {
+      "id": "1g4",
+      "ce": "1.g",
+      "kind": "tf",
+      "prompt": "Una comunicación telemática sin guardar justificante dificulta demostrar que el trámite se realizó correctamente.",
+      "options": []
+    },
+    {
+      "id": "1g5",
+      "ce": "1.g",
+      "kind": "order",
+      "prompt": "Ordena una secuencia de control documental.",
+      "options": []
+    },
+    {
+      "id": "1g6",
+      "ce": "1.g",
+      "kind": "choice",
+      "prompt": "Detectas que el grupo profesional del contrato no coincide con las funciones reales descritas en la oferta. ¿Qué actuación es correcta?",
+      "options": [
+        "Detener la formalización y revisar clasificación y convenio",
+        "Firmar y corregirlo solo si hay una reclamación",
+        "Borrar la descripción del puesto",
+        "Cambiar el DNI del trabajador"
+      ]
+    },
+    {
+      "id": "1h1",
+      "ce": "1.h",
+      "kind": "choice",
+      "prompt": "¿Qué canal se asocia específicamente con la comunicación electrónica de contratos al SEPE?",
+      "options": [
+        "Contrat@ o sistema habilitado por el SEPE",
+        "Registro Mercantil",
+        "Catastro",
+        "Portal de becas"
+      ]
+    },
+    {
+      "id": "1h2",
+      "ce": "1.h",
+      "kind": "choice",
+      "prompt": "¿Qué sistema se asocia a la comunicación telemática de datos de afiliación, altas y bajas con la TGSS?",
+      "options": [
+        "Sistema RED",
+        "Contrat@",
+        "Sede del Catastro",
+        "Registro de la Propiedad"
+      ]
+    },
+    {
+      "id": "1h3",
+      "ce": "1.h",
+      "kind": "multi",
+      "prompt": "¿Qué buenas prácticas deben aplicarse en comunicaciones telemáticas?",
+      "options": [
+        "Comprobar destinatario y datos antes de enviar",
+        "Guardar justificantes y acuses",
+        "Respetar plazos",
+        "Compartir claves de acceso con todo el equipo"
+      ]
+    },
+    {
+      "id": "1h4",
+      "ce": "1.h",
+      "kind": "tf",
+      "prompt": "Una llamada telefónica informal sustituye siempre cualquier comunicación oficial exigida por la normativa.",
+      "options": []
+    },
+    {
+      "id": "1h5",
+      "ce": "1.h",
+      "kind": "match",
+      "prompt": "Relaciona comunicación y canal habitual.",
+      "options": []
+    },
+    {
+      "id": "1h6",
+      "ce": "1.h",
+      "kind": "choice",
+      "prompt": "El sistema devuelve un error al comunicar un contrato. ¿Qué debe hacer el técnico?",
+      "options": [
+        "Revisar el error, corregir los datos y conservar la evidencia del trámite válido",
+        "Dar por hecho que se envió",
+        "Borrar el expediente",
+        "Enviar el contrato a cualquier organismo"
+      ]
+    },
+    {
+      "id": "1i1",
+      "ce": "1.i",
+      "kind": "choice",
+      "prompt": "¿Cuál es la función correcta de un programa de gestión laboral?",
+      "options": [
+        "Ayudar a confeccionar, registrar y archivar, manteniendo la revisión profesional",
+        "Decidir por sí solo qué contrato es legal",
+        "Sustituir el convenio colectivo",
+        "Eliminar la necesidad de proteger datos"
+      ]
+    },
+    {
+      "id": "1i2",
+      "ce": "1.i",
+      "kind": "multi",
+      "prompt": "Selecciona buenas prácticas de archivo digital laboral.",
+      "options": [
+        "Carpetas estructuradas por persona/proceso",
+        "Control de accesos",
+        "Nombres de archivo claros y fechas",
+        "Guardar documentación sensible en carpetas públicas"
+      ]
+    },
+    {
+      "id": "1i3",
+      "ce": "1.i",
+      "kind": "tf",
+      "prompt": "Si el software genera un contrato sin errores técnicos, no es necesario revisar modalidad, convenio ni datos.",
+      "options": []
+    },
+    {
+      "id": "1i4",
+      "ce": "1.i",
+      "kind": "match",
+      "prompt": "Relaciona función digital y objetivo.",
+      "options": []
+    },
+    {
+      "id": "1i5",
+      "ce": "1.i",
+      "kind": "order",
+      "prompt": "Ordena un flujo digital seguro.",
+      "options": []
+    },
+    {
+      "id": "1i6",
+      "ce": "1.i",
+      "kind": "choice",
+      "prompt": "Un compañero pide tu contraseña del certificado digital para “ir más rápido”. ¿Qué actuación es correcta?",
+      "options": [
+        "No compartir credenciales personales y seguir el procedimiento autorizado de acceso",
+        "Compartirla por mensajería",
+        "Escribirla en un post-it común",
+        "Desactivar los permisos"
+      ]
+    }
+  ]
+}

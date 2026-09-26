@@ -1,0 +1,60 @@
+name: Build GRH0652 UT4 SCORM
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'grh0652/scorm/ut4/**'
+      - '.github/workflows/build-grh0652-ut4-scorm.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate SCORM source
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd grh0652/scorm/ut4
+          test -f imsmanifest.xml
+          test -f index.html
+          test -f assets/style.css
+          test -f assets/scorm.js
+          grep -q 'adlcp:scormtype="sco"' imsmanifest.xml
+          grep -q 'href="index.html"' imsmanifest.xml
+          python3 - <<'PY'
+          import re, pathlib, sys
+          m=pathlib.Path("imsmanifest.xml").read_text(encoding="utf-8")
+          files=re.findall(r'<file href="([^"]+)"',m)
+          missing=[f for f in files if not pathlib.Path(f).is_file()]
+          if missing:
+              print("Missing manifest resources:", *missing, sep="\n- ")
+              sys.exit(1)
+          print(f"Manifest resources OK: {len(files)}")
+          PY
+
+      - name: Build SCORM 1.2 ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          cd grh0652/scorm/ut4
+          zip -r ../../../dist/GRH0652_UT4_RA4_SCORM12.zip imsmanifest.xml index.html assets
+          cd ../../../dist
+          unzip -l GRH0652_UT4_RA4_SCORM12.zip
+          test "$(unzip -Z1 GRH0652_UT4_RA4_SCORM12.zip | head -n1)" = "imsmanifest.xml"
+
+      - name: Upload SCORM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: GRH0652_UT4_RA4_SCORM12
+          path: dist/GRH0652_UT4_RA4_SCORM12.zip
+          if-no-files-found: error
+          retention-days: 30

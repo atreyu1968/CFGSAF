@@ -1,0 +1,500 @@
+{
+  "items": [
+    {
+      "id": "3.ap1",
+      "ce": "3.a",
+      "kind": "choice",
+      "prompt": "Ante un caso sobre Normativa y trámites empresariales, ¿qué actuación debe realizarse primero?",
+      "options": [
+        "Identificar el hecho y comprobar datos y normativa vigentes",
+        "Copiar un trámite anterior",
+        "Enviar sin comprobar fechas",
+        "Archivar sin justificante"
+      ]
+    },
+    {
+      "id": "3.ap2",
+      "ce": "3.a",
+      "kind": "tf",
+      "prompt": "En Normativa y trámites empresariales, el justificante de una comunicación telemática forma parte del expediente.",
+      "options": []
+    },
+    {
+      "id": "3.ap3",
+      "ce": "3.a",
+      "kind": "multi",
+      "prompt": "Selecciona controles útiles para Normativa y trámites empresariales.",
+      "options": [
+        "Identidad y situación previa",
+        "Fechas/periodo",
+        "Fuente oficial vigente",
+        "Una captura antigua sin verificar"
+      ]
+    },
+    {
+      "id": "3.ap4",
+      "ce": "3.a",
+      "kind": "order",
+      "prompt": "Ordena una gestión segura.",
+      "options": []
+    },
+    {
+      "id": "3.ap5",
+      "ce": "3.a",
+      "kind": "choice",
+      "prompt": "¿Qué inconsistencia exige detener el trámite?",
+      "options": [
+        "Fechas del expediente que no coinciden con el hecho real",
+        "Existencia de justificante",
+        "Uso de fuente oficial",
+        "Registro del responsable"
+      ]
+    },
+    {
+      "id": "3.ap6",
+      "ce": "3.a",
+      "kind": "choice",
+      "prompt": "¿Qué evidencia permite auditar un caso de Normativa y trámites empresariales?",
+      "options": [
+        "Datos de origen, operación/trámite, respuesta y responsable",
+        "Solo una nota informal",
+        "Solo el resultado final",
+        "Ninguna si el sistema aceptó"
+      ]
+    },
+    {
+      "id": "3.bp1",
+      "ce": "3.b",
+      "kind": "choice",
+      "prompt": "Ante un caso sobre Bases y aportaciones, ¿qué actuación debe realizarse primero?",
+      "options": [
+        "Identificar el hecho y comprobar datos y normativa vigentes",
+        "Copiar un trámite anterior",
+        "Enviar sin comprobar fechas",
+        "Archivar sin justificante"
+      ]
+    },
+    {
+      "id": "3.bp2",
+      "ce": "3.b",
+      "kind": "tf",
+      "prompt": "En Bases y aportaciones, el justificante de una comunicación telemática forma parte del expediente.",
+      "options": []
+    },
+    {
+      "id": "3.bp3",
+      "ce": "3.b",
+      "kind": "multi",
+      "prompt": "Selecciona controles útiles para Bases y aportaciones.",
+      "options": [
+        "Identidad y situación previa",
+        "Fechas/periodo",
+        "Fuente oficial vigente",
+        "Una captura antigua sin verificar"
+      ]
+    },
+    {
+      "id": "3.bp4",
+      "ce": "3.b",
+      "kind": "order",
+      "prompt": "Ordena una gestión segura.",
+      "options": []
+    },
+    {
+      "id": "3.bp5",
+      "ce": "3.b",
+      "kind": "choice",
+      "prompt": "¿Qué inconsistencia exige detener el trámite?",
+      "options": [
+        "Fechas del expediente que no coinciden con el hecho real",
+        "Existencia de justificante",
+        "Uso de fuente oficial",
+        "Registro del responsable"
+      ]
+    },
+    {
+      "id": "3.bp6",
+      "ce": "3.b",
+      "kind": "choice",
+      "prompt": "¿Qué evidencia permite auditar un caso de Bases y aportaciones?",
+      "options": [
+        "Datos de origen, operación/trámite, respuesta y responsable",
+        "Solo una nota informal",
+        "Solo el resultado final",
+        "Ninguna si el sistema aceptó"
+      ]
+    },
+    {
+      "id": "3.cp1",
+      "ce": "3.c",
+      "kind": "choice",
+      "prompt": "Ante un caso sobre Prestaciones económicas, ¿qué actuación debe realizarse primero?",
+      "options": [
+        "Identificar el hecho y comprobar datos y normativa vigentes",
+        "Copiar un trámite anterior",
+        "Enviar sin comprobar fechas",
+        "Archivar sin justificante"
+      ]
+    },
+    {
+      "id": "3.cp2",
+      "ce": "3.c",
+      "kind": "tf",
+      "prompt": "En Prestaciones económicas, el justificante de una comunicación telemática forma parte del expediente.",
+      "options": []
+    },
+    {
+      "id": "3.cp3",
+      "ce": "3.c",
+      "kind": "multi",
+      "prompt": "Selecciona controles útiles para Prestaciones económicas.",
+      "options": [
+        "Identidad y situación previa",
+        "Fechas/periodo",
+        "Fuente oficial vigente",
+        "Una captura antigua sin verificar"
+      ]
+    },
+    {
+      "id": "3.cp4",
+      "ce": "3.c",
+      "kind": "order",
+      "prompt": "Ordena una gestión segura.",
+      "options": []
+    },
+    {
+      "id": "3.cp5",
+      "ce": "3.c",
+      "kind": "choice",
+      "prompt": "¿Qué inconsistencia exige detener el trámite?",
+      "options": [
+        "Fechas del expediente que no coinciden con el hecho real",
+        "Existencia de justificante",
+        "Uso de fuente oficial",
+        "Registro del responsable"
+      ]
+    },
+    {
+      "id": "3.cp6",
+      "ce": "3.c",
+      "kind": "choice",
+      "prompt": "¿Qué evidencia permite auditar un caso de Prestaciones económicas?",
+      "options": [
+        "Datos de origen, operación/trámite, respuesta y responsable",
+        "Solo una nota informal",
+        "Solo el resultado final",
+        "Ninguna si el sistema aceptó"
+      ]
+    },
+    {
+      "id": "3.dp1",
+      "ce": "3.d",
+      "kind": "choice",
+      "prompt": "Ante un caso sobre Afiliación, altas, bajas y variaciones, ¿qué actuación debe realizarse primero?",
+      "options": [
+        "Identificar el hecho y comprobar datos y normativa vigentes",
+        "Copiar un trámite anterior",
+        "Enviar sin comprobar fechas",
+        "Archivar sin justificante"
+      ]
+    },
+    {
+      "id": "3.dp2",
+      "ce": "3.d",
+      "kind": "tf",
+      "prompt": "En Afiliación, altas, bajas y variaciones, el justificante de una comunicación telemática forma parte del expediente.",
+      "options": []
+    },
+    {
+      "id": "3.dp3",
+      "ce": "3.d",
+      "kind": "multi",
+      "prompt": "Selecciona controles útiles para Afiliación, altas, bajas y variaciones.",
+      "options": [
+        "Identidad y situación previa",
+        "Fechas/periodo",
+        "Fuente oficial vigente",
+        "Una captura antigua sin verificar"
+      ]
+    },
+    {
+      "id": "3.dp4",
+      "ce": "3.d",
+      "kind": "order",
+      "prompt": "Ordena una gestión segura.",
+      "options": []
+    },
+    {
+      "id": "3.dp5",
+      "ce": "3.d",
+      "kind": "choice",
+      "prompt": "¿Qué inconsistencia exige detener el trámite?",
+      "options": [
+        "Fechas del expediente que no coinciden con el hecho real",
+        "Existencia de justificante",
+        "Uso de fuente oficial",
+        "Registro del responsable"
+      ]
+    },
+    {
+      "id": "3.dp6",
+      "ce": "3.d",
+      "kind": "choice",
+      "prompt": "¿Qué evidencia permite auditar un caso de Afiliación, altas, bajas y variaciones?",
+      "options": [
+        "Datos de origen, operación/trámite, respuesta y responsable",
+        "Solo una nota informal",
+        "Solo el resultado final",
+        "Ninguna si el sistema aceptó"
+      ]
+    },
+    {
+      "id": "3.ep1",
+      "ce": "3.e",
+      "kind": "choice",
+      "prompt": "Ante un caso sobre Vías de comunicación, ¿qué actuación debe realizarse primero?",
+      "options": [
+        "Identificar el hecho y comprobar datos y normativa vigentes",
+        "Copiar un trámite anterior",
+        "Enviar sin comprobar fechas",
+        "Archivar sin justificante"
+      ]
+    },
+    {
+      "id": "3.ep2",
+      "ce": "3.e",
+      "kind": "tf",
+      "prompt": "En Vías de comunicación, el justificante de una comunicación telemática forma parte del expediente.",
+      "options": []
+    },
+    {
+      "id": "3.ep3",
+      "ce": "3.e",
+      "kind": "multi",
+      "prompt": "Selecciona controles útiles para Vías de comunicación.",
+      "options": [
+        "Identidad y situación previa",
+        "Fechas/periodo",
+        "Fuente oficial vigente",
+        "Una captura antigua sin verificar"
+      ]
+    },
+    {
+      "id": "3.ep4",
+      "ce": "3.e",
+      "kind": "order",
+      "prompt": "Ordena una gestión segura.",
+      "options": []
+    },
+    {
+      "id": "3.ep5",
+      "ce": "3.e",
+      "kind": "choice",
+      "prompt": "¿Qué inconsistencia exige detener el trámite?",
+      "options": [
+        "Fechas del expediente que no coinciden con el hecho real",
+        "Existencia de justificante",
+        "Uso de fuente oficial",
+        "Registro del responsable"
+      ]
+    },
+    {
+      "id": "3.ep6",
+      "ce": "3.e",
+      "kind": "choice",
+      "prompt": "¿Qué evidencia permite auditar un caso de Vías de comunicación?",
+      "options": [
+        "Datos de origen, operación/trámite, respuesta y responsable",
+        "Solo una nota informal",
+        "Solo el resultado final",
+        "Ninguna si el sistema aceptó"
+      ]
+    },
+    {
+      "id": "3.fp1",
+      "ce": "3.f",
+      "kind": "choice",
+      "prompt": "Ante un caso sobre Órganos inspectores y fiscalizadores, ¿qué actuación debe realizarse primero?",
+      "options": [
+        "Identificar el hecho y comprobar datos y normativa vigentes",
+        "Copiar un trámite anterior",
+        "Enviar sin comprobar fechas",
+        "Archivar sin justificante"
+      ]
+    },
+    {
+      "id": "3.fp2",
+      "ce": "3.f",
+      "kind": "tf",
+      "prompt": "En Órganos inspectores y fiscalizadores, el justificante de una comunicación telemática forma parte del expediente.",
+      "options": []
+    },
+    {
+      "id": "3.fp3",
+      "ce": "3.f",
+      "kind": "multi",
+      "prompt": "Selecciona controles útiles para Órganos inspectores y fiscalizadores.",
+      "options": [
+        "Identidad y situación previa",
+        "Fechas/periodo",
+        "Fuente oficial vigente",
+        "Una captura antigua sin verificar"
+      ]
+    },
+    {
+      "id": "3.fp4",
+      "ce": "3.f",
+      "kind": "order",
+      "prompt": "Ordena una gestión segura.",
+      "options": []
+    },
+    {
+      "id": "3.fp5",
+      "ce": "3.f",
+      "kind": "choice",
+      "prompt": "¿Qué inconsistencia exige detener el trámite?",
+      "options": [
+        "Fechas del expediente que no coinciden con el hecho real",
+        "Existencia de justificante",
+        "Uso de fuente oficial",
+        "Registro del responsable"
+      ]
+    },
+    {
+      "id": "3.fp6",
+      "ce": "3.f",
+      "kind": "choice",
+      "prompt": "¿Qué evidencia permite auditar un caso de Órganos inspectores y fiscalizadores?",
+      "options": [
+        "Datos de origen, operación/trámite, respuesta y responsable",
+        "Solo una nota informal",
+        "Solo el resultado final",
+        "Ninguna si el sistema aceptó"
+      ]
+    },
+    {
+      "id": "3.gp1",
+      "ce": "3.g",
+      "kind": "choice",
+      "prompt": "Ante un caso sobre Previsión social complementaria, ¿qué actuación debe realizarse primero?",
+      "options": [
+        "Identificar el hecho y comprobar datos y normativa vigentes",
+        "Copiar un trámite anterior",
+        "Enviar sin comprobar fechas",
+        "Archivar sin justificante"
+      ]
+    },
+    {
+      "id": "3.gp2",
+      "ce": "3.g",
+      "kind": "tf",
+      "prompt": "En Previsión social complementaria, el justificante de una comunicación telemática forma parte del expediente.",
+      "options": []
+    },
+    {
+      "id": "3.gp3",
+      "ce": "3.g",
+      "kind": "multi",
+      "prompt": "Selecciona controles útiles para Previsión social complementaria.",
+      "options": [
+        "Identidad y situación previa",
+        "Fechas/periodo",
+        "Fuente oficial vigente",
+        "Una captura antigua sin verificar"
+      ]
+    },
+    {
+      "id": "3.gp4",
+      "ce": "3.g",
+      "kind": "order",
+      "prompt": "Ordena una gestión segura.",
+      "options": []
+    },
+    {
+      "id": "3.gp5",
+      "ce": "3.g",
+      "kind": "choice",
+      "prompt": "¿Qué inconsistencia exige detener el trámite?",
+      "options": [
+        "Fechas del expediente que no coinciden con el hecho real",
+        "Existencia de justificante",
+        "Uso de fuente oficial",
+        "Registro del responsable"
+      ]
+    },
+    {
+      "id": "3.gp6",
+      "ce": "3.g",
+      "kind": "choice",
+      "prompt": "¿Qué evidencia permite auditar un caso de Previsión social complementaria?",
+      "options": [
+        "Datos de origen, operación/trámite, respuesta y responsable",
+        "Solo una nota informal",
+        "Solo el resultado final",
+        "Ninguna si el sistema aceptó"
+      ]
+    },
+    {
+      "id": "3.hp1",
+      "ce": "3.h",
+      "kind": "choice",
+      "prompt": "Ante un caso sobre Aplicaciones informáticas, ¿qué actuación debe realizarse primero?",
+      "options": [
+        "Identificar el hecho y comprobar datos y normativa vigentes",
+        "Copiar un trámite anterior",
+        "Enviar sin comprobar fechas",
+        "Archivar sin justificante"
+      ]
+    },
+    {
+      "id": "3.hp2",
+      "ce": "3.h",
+      "kind": "tf",
+      "prompt": "En Aplicaciones informáticas, el justificante de una comunicación telemática forma parte del expediente.",
+      "options": []
+    },
+    {
+      "id": "3.hp3",
+      "ce": "3.h",
+      "kind": "multi",
+      "prompt": "Selecciona controles útiles para Aplicaciones informáticas.",
+      "options": [
+        "Identidad y situación previa",
+        "Fechas/periodo",
+        "Fuente oficial vigente",
+        "Una captura antigua sin verificar"
+      ]
+    },
+    {
+      "id": "3.hp4",
+      "ce": "3.h",
+      "kind": "order",
+      "prompt": "Ordena una gestión segura.",
+      "options": []
+    },
+    {
+      "id": "3.hp5",
+      "ce": "3.h",
+      "kind": "choice",
+      "prompt": "¿Qué inconsistencia exige detener el trámite?",
+      "options": [
+        "Fechas del expediente que no coinciden con el hecho real",
+        "Existencia de justificante",
+        "Uso de fuente oficial",
+        "Registro del responsable"
+      ]
+    },
+    {
+      "id": "3.hp6",
+      "ce": "3.h",
+      "kind": "choice",
+      "prompt": "¿Qué evidencia permite auditar un caso de Aplicaciones informáticas?",
+      "options": [
+        "Datos de origen, operación/trámite, respuesta y responsable",
+        "Solo una nota informal",
+        "Solo el resultado final",
+        "Ninguna si el sistema aceptó"
+      ]
+    }
+  ]
+}
