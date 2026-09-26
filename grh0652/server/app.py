@@ -427,9 +427,9 @@ def recovery_submit(attempt_id:int,x:SubmitAttempt,x_student_token:str|None=Head
   d=by.setdefault(r["ce"],{"ok":0,"n":0});d["n"]+=1;given=answers.get(r["item_id"]);expected=json.loads(r["answer"]);kind=r["kind"] or "choice"
   semantic_kinds={"free","text","case","calculation"};score=None
   if kind=="multi" and isinstance(given,list) and isinstance(expected,list):ok=sorted(given)==sorted(expected);score=100 if ok else 0
-  elif kind=="order":ok=given==expected;score=100 if ok else 0
-  elif kind=="match":ok=isinstance(given,list) and isinstance(expected,list) and [str(v) for v in given]==[str(v) for v in expected];score=100 if ok else 0
-  elif kind in semantic_kinds:
+   elif kind=="order":ok=given==expected;score=100 if ok else 0
+   elif kind=="match":ok=isinstance(given,list) and isinstance(expected,list) and [str(v) for v in given]==[str(v) for v in expected];score=100 if ok else 0
+   elif kind in semantic_kinds:
    exact=str(given or "").strip().casefold()==str(expected or "").strip().casefold();settings=ai_settings_row(c)
    if exact:ok=True;score=100
    elif settings.get("enabled") and kind in settings.get("auto_kinds",[]):
@@ -439,7 +439,7 @@ def recovery_submit(attempt_id:int,x:SubmitAttempt,x_student_token:str|None=Head
     except Exception as e:
      ok=None;score=None;c.execute("INSERT INTO ai_reviews(student_id,course_id,ce,item_id,attempt,response,reference,score,confidence,verdict,feedback,status,created_at,breakdown,source_kind) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",(a["student_id"],a["course_id"],r["ce"],r["item_id"],a["attempt_no"],json.dumps(given,ensure_ascii=False),json.dumps(expected,ensure_ascii=False),None,0,"error",str(e)[:1200],"pending",now(),"[]","recovery"))
    else:ok=False;score=0
-  else:ok=given==expected;score=100 if ok else 0
+   else:ok=given==expected;score=100 if ok else 0
   if ok is None:d["pending"]=d.get("pending",0)+1
   else:
    d["graded"]=d.get("graded",0)+1;d["points"]=d.get("points",0)+float(score or 0)
@@ -600,11 +600,23 @@ def evidence(x:EventIn,x_student_token:str|None=Header(None)):
  c=con();correct=x.correct;score=x.score
  if x.kind=="portfolio":
   key=c.execute("SELECT ce,kind,answer FROM portfolio_banks WHERE course_id=? AND item_id=?",(x.course_id,x.item_id)).fetchone()
-  if not key:c.close();raise HTTPException(409,"Actividad de portafolio no definida en el banco autoritativo")
-  if x.ce!=key["ce"]:c.close();raise HTTPException(409,"CE de portafolio no coincide con la definición autoritativa")
-  expected=json.loads(key["answer"]);given=x.response;kind=key["kind"] or "choice"
-  semantic_kinds={"free","text","case","calculation"}
-  if kind=="multi" and isinstance(given,list) and isinstance(expected,list):ok=sorted(given)==sorted(expected)
+  document=bool((x.payload or {}).get("review_required")) and (x.payload or {}).get("activity") in ("contract-document","payroll-document")
+  if not key and document:
+   settings=ai_settings_row(c);rub=rubric_for(c,x.course_id,x.ce or "",x.item_id or "",settings.get("rubric") or "");grade=None
+   if settings.get("enabled"):
+    try:
+     local_settings=dict(settings);local_settings["rubric"]=rub["rubric"];local_settings["criteria"]=rub.get("criteria",[])
+     grade=ai_grade(local_settings,x.response,{"task":"Revisar coherencia profesional del documento cumplimentado."},{"course_id":x.course_id,"ce":x.ce,"item_id":x.item_id,"kind":"document","rubric_name":rub.get("name",""),"activity":(x.payload or {}).get("activity")})
+    except Exception as e:
+     grade={"score":None,"confidence":0,"verdict":"error","feedback":str(e)[:1200],"criteria":[]}
+   c.execute("INSERT INTO ai_reviews(student_id,course_id,ce,item_id,attempt,response,reference,score,confidence,verdict,feedback,status,created_at,breakdown,source_kind) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",(x.student_id,x.course_id,x.ce,x.item_id,x.attempt,json.dumps(x.response,ensure_ascii=False),None,None if not grade else grade.get("score"),0 if not grade else grade.get("confidence",0),"pending" if not grade else grade.get("verdict","pending"),"Pendiente de revisión docente." if not grade else grade.get("feedback",""),"pending",now(),json.dumps([] if not grade else grade.get("criteria",[]),ensure_ascii=False),"portfolio"))
+   correct=None;score=None
+  elif not key:c.close();raise HTTPException(409,"Actividad de portafolio no definida en el banco autoritativo")
+  if key and x.ce!=key["ce"]:c.close();raise HTTPException(409,"CE de portafolio no coincide con la definición autoritativa")
+  if key:
+   expected=json.loads(key["answer"]);given=x.response;kind=key["kind"] or "choice"
+   semantic_kinds={"free","text","case","calculation"}
+   if kind=="multi" and isinstance(given,list) and isinstance(expected,list):ok=sorted(given)==sorted(expected)
   elif kind in semantic_kinds:
    exact=str(given or "").strip().casefold()==str(expected or "").strip().casefold();settings=ai_settings_row(c)
    if exact:ok=True;score=100
@@ -617,8 +629,8 @@ def evidence(x:EventIn,x_student_token:str|None=Header(None)):
   elif kind=="order":ok=given==expected
   elif kind=="match":ok=isinstance(given,list) and isinstance(expected,list) and [str(v) for v in given]==[str(v) for v in expected]
   else:ok=given==expected
-  correct=ok
-  if kind not in semantic_kinds:score=100 if ok else 0
+   correct=ok
+   if kind not in semantic_kinds:score=100 if ok else 0
  c.execute("INSERT INTO evidence(student_id,course_id,kind,ce,item_id,attempt,response,correct,score,payload,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)",(x.student_id,x.course_id,x.kind,x.ce,x.item_id,x.attempt,json.dumps(x.response,ensure_ascii=False),None if correct is None else int(correct),score,json.dumps(x.payload or {},ensure_ascii=False),now()));c.commit();c.close();return {"ok":True,"correct":correct,"score":score}
 @app.post("/api/result")
 def result(x:ResultIn,x_student_token:str|None=Header(None)):
