@@ -489,12 +489,16 @@ def exam_submit(attempt_id:int,x:SubmitAttempt,x_student_token:str|None=Header(N
  if not v or not a:c.close();raise HTTPException(404,"Examen no encontrado")
  require_student(a["student_id"],x_student_token)
  if a["status"]!="started":c.close();raise HTTPException(409,"Examen ya entregado")
- if v["deadline_at"] and datetime.datetime.now(datetime.timezone.utc)>datetime.datetime.fromisoformat(v["deadline_at"]):
-  c.execute("UPDATE attempts SET status='expired',submitted_at=? WHERE id=?",(now(),attempt_id));c.commit();c.close();raise HTTPException(410,"Tiempo de examen agotado")
- answers=(x.payload or {}).get("answers",{});integrity=(x.payload or {}).get("integrity",{});keys=json.loads(v["answers"]);questions=json.loads(v["questions"]);by={};good=0
+ payload=x.payload or {};answers=payload.get("answers",{});integrity=payload.get("integrity",{});deadline=datetime.datetime.fromisoformat(v["deadline_at"]) if v["deadline_at"] else None;tnow=datetime.datetime.now(datetime.timezone.utc)
+ if deadline and tnow>deadline:
+  grace=15;is_timeout=bool(integrity.get("auto")) and integrity.get("reason")=="timeout"
+  if not is_timeout or (tnow-deadline).total_seconds()>grace:
+   c.execute("UPDATE attempts SET status='expired',submitted_at=? WHERE id=?",(now(),attempt_id));c.commit();c.close();raise HTTPException(410,"Tiempo de examen agotado")
+  integrity["timeout_grace_seconds"]=grace
+ keys=json.loads(v["answers"]);questions=json.loads(v["questions"]);by={};good=0
  for q in questions:
   given=answers.get(q["id"]);expected=keys.get(q["id"]);ok=(sorted(given)==expected if q.get("type")=="multi" and isinstance(given,list) else given==expected);good+=int(ok);d=by.setdefault(q["ce"],{"ok":0,"n":0});d["n"]+=1;d["ok"]+=int(ok)
- score=round(good/max(1,len(questions))*100,2);c.execute("UPDATE attempts SET status='submitted',submitted_at=?,payload=? WHERE id=?",(now(),json.dumps({"answers":answers,"score":score,"by_ce":by},ensure_ascii=False),attempt_id));c.commit();c.close();return {"score":score,"by_ce":by,"answered":len(answers),"total":len(questions)}
+ score=round(good/max(1,len(questions))*100,2);c.execute("UPDATE attempts SET status='submitted',submitted_at=?,payload=? WHERE id=?",(now(),json.dumps({"answers":answers,"score":score,"by_ce":by,"integrity":integrity},ensure_ascii=False),attempt_id));c.commit();c.close();return {"score":score,"by_ce":by,"answered":len(answers),"total":len(questions)}
 
 @app.put("/api/state/{student_id}")
 def put_state(student_id:str,x:StateIn,x_student_token:str|None=Header(None)):
