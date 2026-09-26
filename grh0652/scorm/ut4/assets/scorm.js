@@ -119,7 +119,7 @@ function updateProgress(){
  CRITERIA.forEach(c=>{const ex=PRACTICE[c.id]||[],n=ex.filter(e=>state.mastered.includes(e.id)).length,k=c.id.replace('.','');const tx=document.getElementById('prog-'+k),hb=document.getElementById('homeprog-'+k),bar=document.getElementById('bar-'+k),hbar=document.getElementById('homebar-'+k);if(tx)tx.textContent=n+'/6 dominadas';if(hb)hb.textContent=n+'/6';if(bar)bar.style.width=(n/6*100)+'%';if(hbar)hbar.style.width=(n/6*100)+'%'});
 }
 
-let examQuestions=[];\nlet examDeadline=null,examTimer=null;\nfunction renderExam(){
+let examQuestions=[];\nlet examDeadline=null,examTimer=null,examLiveTimer=null,examKnownExtensions=0;\nfunction renderExam(){
  const box=$('#examBox');if(!box)return;
  box.innerHTML=`<div class="notice" id="incidentNotice"><strong>Modo evaluación.</strong> Tiempo restante: <strong id="examCountdown">--:--</strong> · Incidencias de foco: <span id="incidentCount">0</span>/3.</div>`+examQuestions.map((q,i)=>{
  let opts='';
@@ -133,13 +133,16 @@ let examQuestions=[];\nlet examDeadline=null,examTimer=null;\nfunction renderExa
 function updateExamCountdown(){
  const el=$('#examCountdown');if(!el||!examDeadline)return;
  const left=Math.max(0,new Date(examDeadline).getTime()-Date.now()),sec=Math.ceil(left/1000),m=Math.floor(sec/60),s=sec%60;el.textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
- if(left<=0&&examActive&&!autoSubmitPending){autoSubmitPending=true;clearInterval(examTimer);examTimer=null;submitExam(true)}
+ if(left<=0&&examActive&&!autoSubmitPending){autoSubmitPending=true;clearInterval(examTimer);clearInterval(examLiveTimer);examTimer=examLiveTimer=null;submitExam(true)}
 }
+async function pollExamStatus(){if(!examActive||!state.serverExamAttemptId)return;const ev=evidence();if(!(ev&&ev.api&&ev.examStatus))return;try{const s=await ev.examStatus(state.serverExamAttemptId);if(!s||s.error)return;if(s.deadline_at&&s.deadline_at!==examDeadline){examDeadline=s.deadline_at;updateExamCountdown()}const ext=s.time_extensions||[];if(ext.length>examKnownExtensions){const z=ext[ext.length-1];examKnownExtensions=ext.length;alert('El profesor ha añadido '+z.minutes+' minutos a tu examen.'+(z.reason?' Motivo: '+z.reason:''))}if(s.status==='teacher_finished'||s.teacher_finished){examActive=false;clearInterval(examTimer);clearInterval(examLiveTimer);examTimer=examLiveTimer=null;document.body.classList.remove('exam-mode');$('#examBox')?.classList.add('hidden');$('#examResult').innerHTML='<div class="exam-result"><h2>Examen finalizado por el profesor</h2><p>El intento ha sido cerrado desde el panel docente. No puedes continuar respondiendo.</p></div>';try{if(document.fullscreenElement)document.exitFullscreen()}catch(e){}}}catch(e){}}
+function startExamLive(){clearInterval(examLiveTimer);examKnownExtensions=0;pollExamStatus();examLiveTimer=setInterval(pollExamStatus,3000)}
+
 function startExamTimer(){clearInterval(examTimer);examTimer=null;updateExamCountdown();if(examDeadline)examTimer=setInterval(updateExamCountdown,1000);}
 async function startExam(){
  if(state.examTaken){alert('El examen solo permite un intento.');return}if(!state.evaluationConfig||!state.evaluationConfig.exam_enabled){alert('El profesor todavía no ha activado el examen.');return}
  const ev=evidence();if(ev&&ev.api){let examPin='';if(examServerConfig&&examServerConfig.exam_pin_required)examPin=prompt('Introduce el PIN del examen:')||'';const gate=await ev.startExam({unit:UNIT_ID},examPin);if(!gate||gate.error){alert('No se puede iniciar el examen: '+(gate?.error||'servidor no disponible'));return}state.serverExamAttempt=gate.attempt;state.serverExamAttemptId=gate.attempt_id;state.examVersion=gate.version||state.examVersion;examDeadline=gate.deadline_at||null;examQuestions=(gate.questions||[]).map(q=>({...q,type:q.type||'choice'}));}
- if(!examQuestions.length){alert('El servidor no ha proporcionado preguntas para el examen.');return}\n examActive=true;autoSubmitPending=false;state.incidents=0;state.examIncidentLog=[];state.attempts=(state.attempts||0)+1;document.body.classList.add('exam-mode');$('#examIntro')?.classList.add('hidden');$('#examResult').innerHTML='';$('#examBox')?.classList.remove('hidden');renderExam();startExamTimer();requestFull();sync();
+ if(!examQuestions.length){alert('El servidor no ha proporcionado preguntas para el examen.');return}\n examActive=true;autoSubmitPending=false;state.incidents=0;state.examIncidentLog=[];state.attempts=(state.attempts||0)+1;document.body.classList.add('exam-mode');$('#examIntro')?.classList.add('hidden');$('#examResult').innerHTML='';$('#examBox')?.classList.remove('hidden');renderExam();startExamTimer();startExamLive();requestFull();sync();
 }
 
 function examGuard(e){if(!examActive)return;if(e.type==='beforeunload'){e.preventDefault();e.returnValue='';return ''}if(e.type==='popstate'){history.pushState(null,'',location.href);registerIncident('navigation')}if(e.type==='contextmenu'){e.preventDefault();registerIncident('blocked_command')}}
