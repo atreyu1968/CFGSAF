@@ -47,7 +47,7 @@ def test_practice_screen_markup_matches_own_ra():
  for unit,ces in EXPECTED.items():
   html=(ROOT/"scorm"/unit/"index.html").read_text(encoding="utf-8")
   assert '<section class="screen" id="practica-home">' in html
-  screens=re.findall(r'<section class="screen practice-screen" id="pract-([0-9][a-z])" data-ce="([0-9]\\.[a-z])"',html)
+  screens=re.findall(r'<section class="screen practice-screen" id="pract-([0-9][a-z])" data-ce="([0-9][.][a-z])"',html)
   assert {ce for _,ce in screens}==set(ces),(unit,screens)
   expected_total=len(ces)*6
   assert f"{expected_total} actividades" in html
