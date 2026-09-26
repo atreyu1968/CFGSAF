@@ -468,6 +468,12 @@ def exam_start(x:AttemptIn,x_student_token:str|None=Header(None)):
  c.execute("INSERT INTO exam_versions(attempt_id,student_id,course_id,version,questions,answers,created_at,config,deadline_at) VALUES(?,?,?,?,?,?,?,?,?)",(gate["id"],x.student_id,x.course_id,version,json.dumps(public,ensure_ascii=False),json.dumps(keys),created,snap,deadline))
  c.commit();c.close();return {"attempt_id":gate["id"],"attempt":gate["attempt"],"version":version,"questions":public,"config":cfg,"deadline_at":deadline,"resumed":False}
 
+@app.get("/api/exam/{attempt_id}/status")
+def exam_live_status(attempt_id:int,x_student_token:str|None=Header(None)):
+ c=con();r=c.execute("SELECT a.student_id,a.status,a.submitted_at,a.payload,v.deadline_at,v.config FROM attempts a JOIN exam_versions v ON v.attempt_id=a.id WHERE a.id=? AND a.kind='exam'",(attempt_id,)).fetchone()
+ if not r:c.close();raise HTTPException(404,"Examen no encontrado")
+ require_student(r["student_id"],x_student_token,c);p=json.loads(r["payload"] or "{}");cfg=json.loads(r["config"] or "{}");ext=cfg.get("teacher_time_extensions",[]);c.close();return {"attempt_id":attempt_id,"status":r["status"],"deadline_at":r["deadline_at"],"submitted_at":r["submitted_at"],"teacher_finished":bool(p.get("teacher_finished")),"teacher_finished_at":p.get("teacher_finished_at"),"time_extensions":ext}
+
 @app.post("/api/exam/{attempt_id}/submit")
 def exam_submit(attempt_id:int,x:SubmitAttempt,x_student_token:str|None=Header(None)):
  c=con();v=c.execute("SELECT * FROM exam_versions WHERE attempt_id=?",(attempt_id,)).fetchone();a=c.execute("SELECT * FROM attempts WHERE id=?",(attempt_id,)).fetchone()
