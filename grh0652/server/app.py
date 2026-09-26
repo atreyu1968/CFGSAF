@@ -86,6 +86,34 @@ def official_result(c,student_id,course_id,base):
   if x:d[col]=x["new_score"]
  d["official_adjustments"]=[x for x in a.values()];return d
 
+def recompute_official(c,student_id,course_id):
+ cfg,_=config_row(c,course_id);adj=effective_adjustments(c,student_id,course_id);rows=c.execute("SELECT id,ce,item_id,attempt,score FROM evidence WHERE student_id=? AND course_id=? AND kind='portfolio' AND ce IS NOT NULL AND score IS NOT NULL ORDER BY id",(student_id,course_id)).fetchall();latest={}
+ for r in rows:
+  k=(r["ce"],r["item_id"]);p=latest.get(k)
+  if not p or int(r["attempt"] or 0)>=int(p["attempt"] or 0):latest[k]=dict(r)
+ pb={}
+ for r in latest.values():
+  score=float(r["score"] or 0);x=adj.get(("evidence",str(r["id"])))
+  if x:score=float(x["new_score"])
+  pb.setdefault(r["ce"],[]).append(score)
+ er=c.execute("SELECT payload FROM attempts WHERE student_id=? AND course_id=? AND kind='exam' AND status='submitted' ORDER BY attempt_no DESC LIMIT 1",(student_id,course_id)).fetchone();eb=json.loads(er["payload"] or "{}").get("by_ce",{}) if er else {};ces=[r["ce"] for r in c.execute("SELECT DISTINCT ce FROM exam_banks WHERE course_id=? AND ce IS NOT NULL AND ce<>'' ORDER BY ce",(course_id,))];pw=float(cfg["portfolio_weight"])/100;ew=float(cfg["exam_weight"])/100;detail={}
+ for ce in ces:
+  ps=sum(pb.get(ce,[]))/len(pb[ce]) if pb.get(ce) else 0;ex=eb.get(ce,{});es=float(ex.get("ok",0))/max(1,int(ex.get("n",0)))*100 if ex.get("n",0) else 0;fv=ps*pw+es*ew;x=adj.get(("ce",ce))
+  if x:fv=float(x["new_score"])
+  detail[ce]={"portfolio":round(ps,2),"exam":round(es,2),"final":round(fv,2),"passed":fv>=float(cfg["ce_pass_score"])}
+ vals=list(detail.values());portfolio=sum(v["portfolio"] for v in vals)/len(vals) if vals else 0;exam=sum(v["exam"] for v in vals)/len(vals) if vals else 0;final=portfolio*pw+exam*ew;passed=sum(v["passed"] for v in vals);needed=(len(vals)*int(cfg["ce_pass_percent"])+99)//100 if vals else 0;both=(not cfg.get("require_both_instruments")) or (portfolio>=float(cfg["pass_score"]) and exam>=float(cfg["pass_score"]));ra=final>=float(cfg["pass_score"]) and passed>=needed and both;recovery=[k for k,v in detail.items() if not v["passed"]]
+ for scope,key in (("portfolio","portfolio"),("exam","exam"),("ra","final")):
+  x=adj.get((scope,""))
+  if x:
+   if key=="portfolio":portfolio=float(x["new_score"])
+   elif key=="exam":exam=float(x["new_score"])
+   else:final=float(x["new_score"])
+ if adj.get(("ra","")):ra=final>=float(cfg["pass_score"])
+ c.execute("INSERT OR REPLACE INTO results VALUES(?,?,?,?,?,?,?,?,?,?)",(student_id,course_id,portfolio,exam,final,passed,len(vals),int(ra),json.dumps(recovery),now()))
+ plan=c.execute("SELECT 1 FROM recovery_plans WHERE student_id=? AND course_id=?",(student_id,course_id)).fetchone()
+ if plan or recovery:c.execute("INSERT OR REPLACE INTO recovery_plans VALUES(?,?,?,?,?)",(student_id,course_id,json.dumps(recovery),"completed" if not recovery else "pending",now()))
+ return {"portfolio":round(portfolio,2),"exam":round(exam,2),"final":round(final,2),"ce_passed":passed,"ce_total":len(vals),"ra_passed":ra,"recovery":recovery,"ce":detail}
+
 def ai_settings_row(c):
  r=c.execute("SELECT * FROM ai_settings WHERE id=1").fetchone()
  if not r:return {"enabled":False,"base_url":"","api_key":"","model":"","rubric":"Valora exactitud técnica, razonamiento, completitud y claridad. No exijas coincidencia literal.","confidence":0.75,"auto_kinds":["free"]}
@@ -525,7 +553,7 @@ def reverse_grade_adjustment(adjustment_id:int,x:GradeReversalIn,x_teacher_token
  c=con();r=c.execute("SELECT * FROM grade_adjustments WHERE id=?",(adjustment_id,)).fetchone()
  if not r:c.close();raise HTTPException(404,"Rectificación no encontrada")
  if not r["active"]:c.close();raise HTTPException(409,"La rectificación ya no está vigente")
- c.execute("UPDATE grade_adjustments SET active=0,reversed_at=?,reversal_reason=? WHERE id=?",(now(),x.reason.strip(),adjustment_id));c.commit();c.close();return {"ok":True,"restored_calculated":True}
+ c.execute("UPDATE grade_adjustments SET active=0,reversed_at=?,reversal_reason=? WHERE id=?",(now(),x.reason.strip(),adjustment_id));official=recompute_official(c,r["student_id"],r["course_id"]);c.commit();c.close();return {"ok":True,"restored_calculated":True,"result":official}
 
 @app.get("/api/teacher/student-record/{course_id}/{student_id}")
 def teacher_student_record(course_id:str,student_id:str,x_teacher_token:str|None=Header(None)):
@@ -538,15 +566,21 @@ def teacher_student_record(course_id:str,student_id:str,x_teacher_token:str|None
 @app.post("/api/teacher/grade-adjustment/{course_id}/{student_id}")
 def grade_adjustment(course_id:str,student_id:str,x:GradeAdjustmentIn,x_teacher_token:str|None=Header(None)):
  auth(x_teacher_token)
- if x.scope not in ("ra","portfolio","exam","ce"):raise HTTPException(400,"Ámbito de rectificación no válido")
+ if x.scope not in ("ra","portfolio","exam","ce","evidence"):raise HTTPException(400,"Ámbito de rectificación no válido")
  if not 0<=x.new_score<=100:raise HTTPException(400,"La nota debe estar entre 0 y 100")
  if len(x.reason.strip())<5:raise HTTPException(400,"Debe indicar el motivo de la rectificación")
- c=con();old=None
+ c=con();old=None;key=x.scope_key.strip()
+ if x.scope=="ce" and not key:c.close();raise HTTPException(400,"Debe indicar el CE")
+ if x.scope=="evidence":
+  if not key.isdigit():c.close();raise HTTPException(400,"Debe indicar el id de evidencia")
+  er=c.execute("SELECT score FROM evidence WHERE id=? AND student_id=? AND course_id=?",(int(key),student_id,course_id)).fetchone()
+  if not er:c.close();raise HTTPException(404,"Evidencia no encontrada")
+  old=float(er["score"]) if er["score"] is not None else None
  if x.scope in ("ra","portfolio","exam"):
   r=c.execute("SELECT final,portfolio,exam FROM results WHERE student_id=? AND course_id=?",(student_id,course_id)).fetchone()
   if not r:c.close();raise HTTPException(404,"No existe resultado del alumno")
   old=float(r[{"ra":"final","portfolio":"portfolio","exam":"exam"}[x.scope]])
- key=x.scope_key.strip();c.execute("UPDATE grade_adjustments SET active=0,reversed_at=?,reversal_reason=? WHERE student_id=? AND course_id=? AND scope=? AND scope_key=? AND active=1",(now(),"Sustituida por una rectificación posterior",student_id,course_id,x.scope,key));c.execute("INSERT INTO grade_adjustments(student_id,course_id,scope,scope_key,old_score,new_score,reason,created_at,active) VALUES(?,?,?,?,?,?,?,?,1)",(student_id,course_id,x.scope,key,old,x.new_score,x.reason.strip(),now()));c.commit();c.close();return {"ok":True,"old_score":old,"new_score":x.new_score,"official":True}
+ c.execute("UPDATE grade_adjustments SET active=0,reversed_at=?,reversal_reason=? WHERE student_id=? AND course_id=? AND scope=? AND scope_key=? AND active=1",(now(),"Sustituida por una rectificación posterior",student_id,course_id,x.scope,key));c.execute("INSERT INTO grade_adjustments(student_id,course_id,scope,scope_key,old_score,new_score,reason,created_at,active) VALUES(?,?,?,?,?,?,?,?,1)",(student_id,course_id,x.scope,key,old,x.new_score,x.reason.strip(),now()));official=recompute_official(c,student_id,course_id);c.commit();c.close();return {"ok":True,"old_score":old,"new_score":x.new_score,"official":True,"result":official}
 
 @app.get("/api/teacher/evidence/{student_id}")
 def student_evidence(student_id:str,x_teacher_token:str|None=Header(None)):
