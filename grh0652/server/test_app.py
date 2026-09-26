@@ -1,3 +1,4 @@
+import json
 import os,tempfile,importlib
 os.environ["GRH_TEACHER_TOKEN"]="test-token"
 fd,path=tempfile.mkstemp(suffix=".db");os.close(fd);os.environ["GRH_DB"]=path
