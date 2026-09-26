@@ -119,6 +119,10 @@ def recompute_official(c,student_id,course_id):
  for ce in recovered:
   if ce in detail:detail[ce]["passed"]=True;detail[ce]["recovered"]=True
  vals=list(detail.values());portfolio=sum(v["portfolio"] for v in vals)/len(vals) if vals else 0;exam=sum(v["exam"] for v in vals)/len(vals) if vals else 0;final=portfolio*pw+exam*ew;passed=sum(v["passed"] for v in vals);needed=(len(vals)*int(cfg["ce_pass_percent"])+99)//100 if vals else 0;both=(not cfg.get("require_both_instruments")) or (portfolio>=float(cfg["pass_score"]) and exam>=float(cfg["pass_score"]));ra=final>=float(cfg["pass_score"]) and passed>=needed and both;recovery=[k for k,v in detail.items() if not v["passed"]]
+ base=c.execute("SELECT * FROM results WHERE student_id=? AND course_id=?",(student_id,course_id)).fetchone()
+ if not vals and base:
+  portfolio=float(base["portfolio"]);exam=float(base["exam"]);final=float(base["final"]);passed=int(base["ce_passed"]);total=int(base["ce_total"]);ra=bool(base["ra_passed"]);recovery=json.loads(base["recovery"] or "[]")
+ else:total=len(vals)
  for scope,key in (("portfolio","portfolio"),("exam","exam"),("ra","final")):
   x=adj.get((scope,""))
   if x:
@@ -126,10 +130,9 @@ def recompute_official(c,student_id,course_id):
    elif key=="exam":exam=float(x["new_score"])
    else:final=float(x["new_score"])
  if adj.get(("ra","")):ra=final>=float(cfg["pass_score"])
- base=c.execute("SELECT * FROM results WHERE student_id=? AND course_id=?",(student_id,course_id)).fetchone()
  plan=c.execute("SELECT 1 FROM recovery_plans WHERE student_id=? AND course_id=?",(student_id,course_id)).fetchone()
  if plan or recovery:c.execute("INSERT OR REPLACE INTO recovery_plans VALUES(?,?,?,?,?)",(student_id,course_id,json.dumps(recovery),"completed" if not recovery else "pending",now()))
- return {"portfolio":round(portfolio,2),"exam":round(exam,2),"final":round(final,2),"ce_passed":passed,"ce_total":len(vals),"ra_passed":ra,"recovery":recovery,"ce":detail,"calculated":({"portfolio":base["portfolio"],"exam":base["exam"],"final":base["final"]} if base else None)}
+ return {"portfolio":round(portfolio,2),"exam":round(exam,2),"final":round(final,2),"ce_passed":passed,"ce_total":total,"ra_passed":ra,"recovery":recovery,"ce":detail,"calculated":({"portfolio":base["portfolio"],"exam":base["exam"],"final":base["final"]} if base else None)}
 
 def ai_settings_row(c):
  r=c.execute("SELECT * FROM ai_settings WHERE id=1").fetchone()
