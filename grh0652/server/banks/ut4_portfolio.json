@@ -406,134 +406,140 @@
       "id": "4.gp1",
       "ce": "4.g",
       "kind": "choice",
-      "prompt": "Al preparar las obligaciones posteriores a nómina, ¿qué debe identificar el técnico?",
+      "prompt": "¿Qué debe identificarse antes de tramitar una declaración-liquidación de cotizaciones o retenciones?",
       "options": [
-        "Analizar los datos y reglas aplicables antes de confirmar",
-        "Copiar el mes anterior",
-        "Modificar el resultado final",
-        "Usar un parámetro sin fecha"
+        "Modelo o procedimiento aplicable, periodo y plazo vigente",
+        "Solo el líquido de las nóminas",
+        "Únicamente el banco de la empresa",
+        "El convenio del año anterior"
       ]
     },
     {
       "id": "4.gp2",
       "ce": "4.g",
-      "kind": "tf",
-      "prompt": "En 4.g, los datos variables, reglas y fuentes utilizadas deben quedar identificados por periodo.",
-      "options": []
+      "kind": "multi",
+      "prompt": "Selecciona los datos que debe contener un control profesional de obligaciones periódicas.",
+      "options": [
+        "Obligación o trámite",
+        "Periodo",
+        "Fecha límite y fuente oficial",
+        "Responsable/estado"
+      ]
     },
     {
       "id": "4.gp3",
       "ce": "4.g",
-      "kind": "multi",
-      "prompt": "Selecciona los elementos que deben comprobarse.",
-      "options": [
-        "Modelo/procedimiento aplicable",
-        "Periodo de liquidación",
-        "Plazo y canal",
-        "Una fecha recordada de otro año"
-      ]
+      "kind": "tf",
+      "prompt": "Una fecha de presentación aprendida de memoria puede aplicarse indefinidamente sin consultar el calendario vigente.",
+      "options": []
     },
     {
       "id": "4.gp4",
       "ce": "4.g",
-      "kind": "order",
-      "prompt": "Ordena el procedimiento profesional.",
+      "kind": "choice",
+      "prompt": "Una obligación vence en una fecha dudosa por coincidir con un día inhábil. ¿Qué haces?",
       "options": [
-        "Identificar obligación",
-        "Comprobar modelo y periodo",
-        "Preparar datos conciliados",
-        "Presentar y conservar justificante"
+        "Inventar una fecha prudente",
+        "Consultar la regla y calendario oficial del trámite",
+        "Presentar siempre siete días después",
+        "No presentar"
       ]
     },
     {
       "id": "4.gp5",
       "ce": "4.g",
       "kind": "choice",
-      "prompt": "Se presenta una liquidación sin reconciliarla con las nóminas. ¿Qué riesgo existe?",
+      "prompt": "¿Qué relación debe existir entre un formulario/procedimiento y el expediente mensual?",
       "options": [
-        "Detener el cierre, comprobar la causa y corregir con trazabilidad",
-        "Ignorarlo si el total parece razonable",
-        "Ocultar la diferencia",
-        "Copiar los datos de otra nómina"
+        "Debe quedar identificado con su periodo, estado y justificante cuando proceda",
+        "Ninguna",
+        "Solo debe guardarse el nombre",
+        "Basta una captura sin fecha"
       ]
     },
     {
       "id": "4.gp6",
       "ce": "4.g",
       "kind": "choice",
-      "prompt": "¿Qué documentos deben relacionarse con el expediente mensual?",
+      "prompt": "Antes de iniciar una obligación de ingreso de retenciones, ¿qué debe comprobar el técnico?",
       "options": [
-        "Datos de origen, reglas, operaciones, resultado y justificantes",
-        "Solo el líquido final",
-        "Solo una captura",
-        "Ninguna si el programa no da error"
+        "Procedimiento/modelo aplicable, periodo, plazo y datos que lo alimentan",
+        "Solo el número de trabajadores",
+        "Solo el total de salarios base",
+        "El color del justificante"
       ]
     },
     {
       "id": "4.hp1",
       "ce": "4.h",
       "kind": "choice",
-      "prompt": "Antes de confirmar una liquidación de cuotas o retenciones, ¿qué control debe realizarse?",
+      "prompt": "Antes de confirmar una declaración-liquidación de cotizaciones, ¿qué control es imprescindible?",
       "options": [
-        "Analizar los datos y reglas aplicables antes de confirmar",
-        "Copiar el mes anterior",
-        "Modificar el resultado final",
-        "Usar un parámetro sin fecha"
+        "Conciliar bases y cuotas con las nóminas del periodo",
+        "Comprobar solo el nombre de empresa",
+        "Imprimir un borrador",
+        "Cambiar el periodo"
       ]
     },
     {
       "id": "4.hp2",
       "ce": "4.h",
-      "kind": "tf",
-      "prompt": "En 4.h, los datos variables, reglas y fuentes utilizadas deben quedar identificados por periodo.",
-      "options": []
+      "kind": "choice",
+      "prompt": "La liquidación incluye once personas y el resumen de nóminas diez. ¿Qué procede?",
+      "options": [
+        "Confirmar igualmente",
+        "Investigar altas, bajas, periodos y posibles errores antes de cerrar",
+        "Eliminar una persona al azar",
+        "Modificar el resumen"
+      ]
     },
     {
       "id": "4.hp3",
       "ce": "4.h",
       "kind": "multi",
-      "prompt": "Selecciona los elementos que deben comprobarse.",
+      "prompt": "¿Qué elementos deben verificarse al confeccionar una declaración-liquidación?",
       "options": [
-        "Conciliar totales con nóminas",
-        "Verificar periodo",
-        "Revisar incidencias y rectificaciones",
-        "Aceptar cualquier diferencia pequeña"
+        "Periodo y sujetos incluidos",
+        "Bases/importes de origen",
+        "Parámetros vigentes",
+        "Totales y conciliación"
       ]
     },
     {
       "id": "4.hp4",
       "ce": "4.h",
-      "kind": "order",
-      "prompt": "Ordena el procedimiento profesional.",
+      "kind": "choice",
+      "prompt": "El total de retenciones del periodo no coincide con la declaración preparada. ¿Qué haces?",
       "options": [
-        "Obtener resumen de nóminas",
-        "Contrastar bases/cuotas/retenciones",
-        "Investigar diferencias",
-        "Confirmar y archivar justificante"
+        "Presentarla y corregir después",
+        "Localizar la diferencia por perceptores y datos antes de confirmar",
+        "Cambiar el total de nóminas",
+        "Ignorar importes pequeños"
       ]
     },
     {
       "id": "4.hp5",
       "ce": "4.h",
       "kind": "choice",
-      "prompt": "La liquidación incluye once personas y el resumen de nómina diez. ¿Qué procede?",
+      "prompt": "Tras detectar un error en una liquidación ya confeccionada, ¿qué práctica conserva trazabilidad?",
       "options": [
-        "Detener el cierre, comprobar la causa y corregir con trazabilidad",
-        "Ignorarlo si el total parece razonable",
-        "Ocultar la diferencia",
-        "Copiar los datos de otra nómina"
+        "Borrar la versión anterior",
+        "Registrar causa, corrección y documentos afectados siguiendo el procedimiento vigente",
+        "Cambiar solo el PDF",
+        "Crear otro periodo"
       ]
     },
     {
       "id": "4.hp6",
       "ce": "4.h",
-      "kind": "choice",
-      "prompt": "¿Qué evidencia acredita una declaración-liquidación correctamente cerrada?",
+      "kind": "order",
+      "prompt": "Ordena el cierre profesional de una declaración-liquidación.",
       "options": [
-        "Datos de origen, reglas, operaciones, resultado y justificantes",
-        "Solo el líquido final",
-        "Solo una captura",
-        "Ninguna si el programa no da error"
+        "Reunir datos del periodo",
+        "Calcular",
+        "Conciliar con nóminas/registros",
+        "Revisar y confirmar",
+        "Presentar y conservar justificante"
       ]
     },
     {
