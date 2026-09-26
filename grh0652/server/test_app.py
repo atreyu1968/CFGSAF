@@ -742,3 +742,20 @@ def test_private_bootstrap_makes_readiness_accept_exam_and_recovery(tmp_path,mon
  assert d["ready"] is True,d
  assert set(d["checks"]["exam_bank"]["counts"])==set(ces) and all(d["checks"]["exam_bank"]["counts"][ce]>=3 for ce in ces)
  monkeypatch.setattr(module,"ORIGINS",old_origins);monkeypatch.setattr(module,"PRIVATE_BANK_DIR","");monkeypatch.setattr(module,"_private_banks_seeded",False)
+
+
+def test_backup_validation_rejects_valid_sqlite_with_incomplete_schema(tmp_path):
+ import sqlite3
+ p=tmp_path/"incomplete.db";db=sqlite3.connect(p);db.execute("CREATE TABLE students(student_id TEXT PRIMARY KEY)");db.commit();db.close()
+ data=p.read_bytes()
+ out=client.post("/api/teacher/backup/validate",headers=H,files={"file":("incomplete.db",data,"application/vnd.sqlite3")})
+ assert out.status_code==400,out.text
+ detail=out.json()["detail"];assert detail["integrity"]=="ok";assert "ai_reviews" in detail["missing_tables"];assert "portfolio_banks" in detail["missing_tables"];assert "recovery_banks" in detail["missing_tables"]
+
+
+def test_backup_validation_accepts_current_complete_database():
+ out=client.get("/api/teacher/backup",headers=H);assert out.status_code==200,out.text
+ checked=client.post("/api/teacher/backup/validate",headers=H,files={"file":("backup.db",out.content,"application/vnd.sqlite3")})
+ assert checked.status_code==200,checked.text
+ d=checked.json();assert d["ok"] is True and d["integrity"]=="ok"
+ assert set(module.BACKUP_REQUIRED_TABLES)<=set(d["counts"])
