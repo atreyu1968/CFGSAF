@@ -23,9 +23,9 @@ footer{text-align:center;padding:28px;color:#71808a;font-size:.85rem}
 <main><div class="grid">
 <section class="card"><span class="badge">SCORM 1.2 · RA1–RA4</span><h2>Módulo completo de Gestión de Recursos Humanos</h2><p>Contratación; modificación, suspensión y extinción; Seguridad Social; y retribución, nóminas, cotización e IRPF. Cada RA incluye teoría, práctica interactiva y evaluación.</p>
 <div class="stats"><div class="stat"><b>4</b>resultados de aprendizaje</div><div class="stat"><b>RA1–RA4</b>disponibles</div><div class="stat"><b>SCORM 1.2</b>seguimiento</div></div>
-<label for="student">Nombre o identificador del alumno/a</label><input id="student" autocomplete="off" placeholder="Ej.: Ana Pérez · AF2-07">
-<button id="launch">Entrar al módulo GRH 0652</button>
-<p class="note">El progreso se conserva localmente y, cuando se configura el servidor de evidencias, queda centralizado por alumno para consulta docente, reanudación y recuperación.</p><p class="note"><a href="teacher.html">Acceso al panel docente</a></p></section>
+<label for="access">Acceso del alumno/a</label><input id="access" autocomplete="off" placeholder="Pega aquí el código de acceso facilitado por el profesor">
+<button id="launch">Validar y entrar al módulo GRH 0652</button>
+<p class="note" id="loginStatus">Para la evaluación real necesitas el código personal emitido por el profesor. No basta con escribir un nombre.</p><p class="note"><a href="teacher.html">Acceso al panel docente</a></p></section>
 <aside class="card"><h2>Qué hace el reproductor</h2><div class="steps">
 <div class="step"><div class="num">1</div><div><b>Crea la API SCORM</b><div class="note">Expone el objeto API que espera un SCO SCORM 1.2.</div></div></div>
 <div class="step"><div class="num">2</div><div><b>Carga el SCO</b><div class="note">El contenido se ejecuta dentro de un iframe del mismo origen.</div></div></div>
@@ -34,6 +34,8 @@ footer{text-align:center;padding:28px;color:#71808a;font-size:.85rem}
 </div></aside></div></main>
 <footer>Francisco Javier González Rolo · GRH 0652 · 2026-2027</footer>
 <script>
-const s=document.getElementById('student');s.value=localStorage.getItem('grh0652.student')||'';
-document.getElementById('launch').onclick=()=>{const v=s.value.trim();if(!v){alert('Introduce un nombre o identificador.');s.focus();return}localStorage.setItem('grh0652.student',v);location.href='course.html?student='+encodeURIComponent(v)};
+const q=new URLSearchParams(location.search);if(q.get('api'))localStorage.setItem('grh0652.api',q.get('api'));const API=(q.get('api')||localStorage.getItem('grh0652.api')||'').replace(/\/$/,'');const a=document.getElementById('access'),status=document.getElementById('loginStatus');a.value=q.get('access')||'';
+async function login(){const token=a.value.trim();if(!API){status.textContent='El servidor de GRH no está configurado. Solicita al profesor el enlace de acceso completo.';return}if(!token){status.textContent='Introduce tu código personal de acceso.';a.focus();return}const b=document.getElementById('launch');b.disabled=true;status.textContent='Validando acceso…';try{const r=await fetch(API+'/api/student/session',{headers:{'X-Student-Token':token}});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.detail||'Acceso no válido');localStorage.setItem('grh0652.studentKey',token);localStorage.setItem('grh0652.student',d.student_id);history.replaceState({},'',location.pathname+(q.get('api')?'?api='+encodeURIComponent(q.get('api')):''));location.href='course.html'}catch(e){localStorage.removeItem('grh0652.studentKey');localStorage.removeItem('grh0652.student');status.textContent='No se pudo iniciar sesión: '+e.message}finally{b.disabled=false}}
+document.getElementById('launch').onclick=login;a.addEventListener('keydown',e=>{if(e.key==='Enter')login()});
+if(q.get('access')&&API)login();
 </script></body></html>
