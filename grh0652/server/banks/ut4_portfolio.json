@@ -412,7 +412,8 @@
         "Solo el líquido de las nóminas",
         "Únicamente el banco de la empresa",
         "El convenio del año anterior"
-      ]
+      ],
+      "answer": 0
     },
     {
       "id": "4.gp2",
@@ -424,6 +425,12 @@
         "Periodo",
         "Fecha límite y fuente oficial",
         "Responsable/estado"
+      ],
+      "answer": [
+        0,
+        1,
+        2,
+        3
       ]
     },
     {
@@ -431,7 +438,8 @@
       "ce": "4.g",
       "kind": "tf",
       "prompt": "Una fecha de presentación aprendida de memoria puede aplicarse indefinidamente sin consultar el calendario vigente.",
-      "options": []
+      "options": [],
+      "answer": false
     },
     {
       "id": "4.gp4",
@@ -443,7 +451,8 @@
         "Consultar la regla y calendario oficial del trámite",
         "Presentar siempre siete días después",
         "No presentar"
-      ]
+      ],
+      "answer": 1
     },
     {
       "id": "4.gp5",
@@ -455,7 +464,8 @@
         "Ninguna",
         "Solo debe guardarse el nombre",
         "Basta una captura sin fecha"
-      ]
+      ],
+      "answer": 0
     },
     {
       "id": "4.gp6",
@@ -467,7 +477,8 @@
         "Solo el número de trabajadores",
         "Solo el total de salarios base",
         "El color del justificante"
-      ]
+      ],
+      "answer": 0
     },
     {
       "id": "4.hp1",
@@ -479,7 +490,8 @@
         "Comprobar solo el nombre de empresa",
         "Imprimir un borrador",
         "Cambiar el periodo"
-      ]
+      ],
+      "answer": 0
     },
     {
       "id": "4.hp2",
@@ -491,7 +503,8 @@
         "Investigar altas, bajas, periodos y posibles errores antes de cerrar",
         "Eliminar una persona al azar",
         "Modificar el resumen"
-      ]
+      ],
+      "answer": 1
     },
     {
       "id": "4.hp3",
@@ -503,6 +516,12 @@
         "Bases/importes de origen",
         "Parámetros vigentes",
         "Totales y conciliación"
+      ],
+      "answer": [
+        0,
+        1,
+        2,
+        3
       ]
     },
     {
@@ -515,7 +534,8 @@
         "Localizar la diferencia por perceptores y datos antes de confirmar",
         "Cambiar el total de nóminas",
         "Ignorar importes pequeños"
-      ]
+      ],
+      "answer": 1
     },
     {
       "id": "4.hp5",
@@ -527,7 +547,8 @@
         "Registrar causa, corrección y documentos afectados siguiendo el procedimiento vigente",
         "Cambiar solo el PDF",
         "Crear otro periodo"
-      ]
+      ],
+      "answer": 1
     },
     {
       "id": "4.hp6",
@@ -540,6 +561,13 @@
         "Conciliar con nóminas/registros",
         "Revisar y confirmar",
         "Presentar y conservar justificante"
+      ],
+      "answer": [
+        0,
+        1,
+        2,
+        3,
+        4
       ]
     },
     {
