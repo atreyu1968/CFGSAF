@@ -53,12 +53,15 @@ function showScreen(id,mark=true){
 }
 
 async function loadStudentFeedback(){
- const box=document.getElementById('studentFeedback');if(!box)return;const ev=evidence();if(!ev||!ev.api||!ev.feedback){box.innerHTML='<p>El feedback requiere conexión con el servidor de evaluación.</p>';return}
- box.innerHTML='<p>Cargando correcciones…</p>';const rows=await ev.feedback();if(!rows||rows.error){box.innerHTML='<p>No se pudieron cargar las correcciones.</p>';return}
- if(!rows.length){box.innerHTML='<p>Todavía no tienes respuestas abiertas corregidas y validadas.</p>';return}
- box.innerHTML=rows.map(r=>'<article class="exercise done"><div class="type">CE '+safe(r.ce||'')+' · '+safe(r.item_id||'')+'</div><h3>'+Math.round(Number(r.score||0))+' / 100</h3><p>'+safe(r.feedback||'Sin comentario')+'</p>'+(r.breakdown&&r.breakdown.length?'<div class="ce-table">'+r.breakdown.map(x=>'<div><b>'+safe(x.name)+' · '+Number(x.weight||0)+'%</b><span>'+Math.round(Number(x.score||0))+'/100 · '+safe(x.feedback||'')+'</span></div>').join('')+'</div>':'')+'</article>').join('');
+ const box=document.getElementById('studentFeedback');if(!box)return;const ev=evidence();if(!ev||!ev.api||!ev.feedback){box.innerHTML='<p>El seguimiento requiere conexión con el servidor de evaluación.</p>';return}
+ box.innerHTML='<p>Cargando resultados…</p>';const [dash,rows]=await Promise.all([ev.dashboard?ev.dashboard():null,ev.feedback()]);
+ if((dash&&dash.error)||(rows&&rows.error)){box.innerHTML='<p>No se pudieron cargar los resultados.</p>';return}
+ let html='';if(dash&&dash.result){const r=dash.result;html+='<div class="mini-stat"><div><strong>'+Math.round(r.final)+'</strong>Nota RA</div><div><strong>'+Math.round(r.portfolio)+'</strong>Portafolio</div><div><strong>'+Math.round(r.exam)+'</strong>Examen</div><div><strong>'+r.ce_passed+'/'+r.ce_total+'</strong>CE superados</div></div><div class="notice"><strong>'+(r.ra_passed?'RA superado':'RA pendiente')+'</strong>'+(r.recovery&&r.recovery.length?' · Recuperación: '+r.recovery.map(safe).join(', '):'')+'</div>'}else html+='<div class="notice">La calificación global del RA todavía no está cerrada.</div>';
+ if(dash&&dash.ce&&Object.keys(dash.ce).length)html+='<h2>Situación por criterio</h2><div class="ce-table">'+Object.entries(dash.ce).map(([ce,v])=>'<div><b>'+safe(ce)+' · '+(v.passed?'Superado':'Pendiente')+'</b><span>Portafolio '+Math.round(v.portfolio)+' · Examen '+Math.round(v.exam)+' · Resultado '+Math.round(v.final)+'</span></div>').join('')+'</div>';
+ if(dash&&dash.recovery_plan)html+='<div class="notice"><strong>Plan de recuperación '+safe(dash.recovery_plan.status)+'</strong> · '+dash.recovery_plan.criteria.map(safe).join(', ')+'</div>';
+ html+='<h2>Feedback de actividades abiertas</h2>';if(!rows||!rows.length)html+='<p>Todavía no tienes respuestas abiertas corregidas y validadas.</p>';else html+=rows.map(r=>'<article class="exercise done"><div class="type">CE '+safe(r.ce||'')+' · '+safe(r.item_id||'')+'</div><h3>'+Math.round(Number(r.score||0))+' / 100</h3><p>'+safe(r.feedback||'Sin comentario')+'</p>'+(r.breakdown&&r.breakdown.length?'<div class="ce-table">'+r.breakdown.map(x=>'<div><b>'+safe(x.name)+' · '+Number(x.weight||0)+'%</b><span>'+Math.round(Number(x.score||0))+'/100 · '+safe(x.feedback||'')+'</span></div>').join('')+'</div>':'')+'</article>').join('');
+ box.innerHTML=html;
 }
-
 function bindNav(){
  $$('[data-target]').forEach(b=>b.addEventListener('click',()=>showScreen(b.dataset.target)));
  $$('[data-goto]').forEach(b=>b.addEventListener('click',()=>showScreen(b.dataset.goto)));
