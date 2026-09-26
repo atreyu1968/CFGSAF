@@ -310,3 +310,11 @@ def test_student_feedback_is_private_and_hides_reference():
  r=client.get("/api/student/feedback/FB",headers={"X-Student-Token":tok});assert r.status_code==200,r.text
  d=r.json()[0];assert d["score"]==80 and len(d["breakdown"])==2 and "reference" not in d and "response" not in d
  assert client.get("/api/student/feedback/FB").status_code==401
+
+
+def test_teacher_grade_adjustment_is_audited_without_destroying_original_result():
+ db=module.con();db.execute("INSERT OR REPLACE INTO results VALUES(?,?,?,?,?,?,?,?,?,?)",("audit-student","AUDIT",70,60,64,2,3,0,json.dumps(["1.c"]),module.now()));db.commit();db.close()
+ r=client.post("/api/teacher/grade-adjustment/AUDIT/audit-student",headers=H,json={"scope":"ra","new_score":68,"reason":"Revisión docente motivada"});assert r.status_code==200,r.text;assert r.json()["old_score"]==64 and r.json()["audit_only"] is True
+ rec=client.get("/api/teacher/student-record/AUDIT/audit-student",headers=H);assert rec.status_code==200;d=rec.json();assert d["result"]["final"]==64 and d["adjustments"][0]["new_score"]==68 and d["adjustments"][0]["old_score"]==64
+ assert client.post("/api/teacher/grade-adjustment/AUDIT/audit-student",headers=H,json={"scope":"ra","new_score":101,"reason":"Motivo válido"}).status_code==400
+ assert client.post("/api/teacher/grade-adjustment/AUDIT/audit-student",headers=H,json={"scope":"ra","new_score":68,"reason":"x"}).status_code==400
