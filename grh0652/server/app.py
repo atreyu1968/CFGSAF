@@ -32,7 +32,8 @@ CREATE TABLE IF NOT EXISTS exam_banks(course_id TEXT,question_id TEXT,ce TEXT,qu
 CREATE TABLE IF NOT EXISTS exam_versions(attempt_id INTEGER PRIMARY KEY,student_id TEXT,course_id TEXT,version TEXT,questions TEXT,answers TEXT,created_at TEXT,config TEXT,deadline_at TEXT);
 CREATE TABLE IF NOT EXISTS recovery_banks(course_id TEXT,item_id TEXT,ce TEXT,kind TEXT,prompt TEXT,options TEXT,answer TEXT,feedback TEXT,PRIMARY KEY(course_id,item_id));
 CREATE TABLE IF NOT EXISTS portfolio_banks(course_id TEXT,item_id TEXT,ce TEXT,kind TEXT,answer TEXT,PRIMARY KEY(course_id,item_id));
-CREATE TABLE IF NOT EXISTS recovery_results(student_id TEXT,course_id TEXT,score REAL,criteria_passed TEXT,status TEXT,updated_at TEXT,PRIMARY KEY(student_id,course_id));\nCREATE TABLE IF NOT EXISTS ai_settings(id INTEGER PRIMARY KEY CHECK(id=1),enabled INTEGER NOT NULL DEFAULT 0,base_url TEXT,api_key TEXT,model TEXT,rubric TEXT,confidence REAL NOT NULL DEFAULT 0.75,auto_kinds TEXT,updated_at TEXT);\nCREATE TABLE IF NOT EXISTS ai_reviews(id INTEGER PRIMARY KEY AUTOINCREMENT,student_id TEXT,course_id TEXT,ce TEXT,item_id TEXT,attempt INTEGER,response TEXT,reference TEXT,score REAL,confidence REAL,verdict TEXT,feedback TEXT,status TEXT,created_at TEXT);
+CREATE TABLE IF NOT EXISTS recovery_results(student_id TEXT,course_id TEXT,score REAL,criteria_passed TEXT,status TEXT,updated_at TEXT,PRIMARY KEY(student_id,course_id));
+CREATE TABLE IF NOT EXISTS grade_adjustments(id INTEGER PRIMARY KEY AUTOINCREMENT,student_id TEXT NOT NULL,course_id TEXT NOT NULL,scope TEXT NOT NULL,scope_key TEXT NOT NULL DEFAULT '',old_score REAL,new_score REAL NOT NULL,reason TEXT NOT NULL,created_at TEXT NOT NULL);\nCREATE TABLE IF NOT EXISTS ai_settings(id INTEGER PRIMARY KEY CHECK(id=1),enabled INTEGER NOT NULL DEFAULT 0,base_url TEXT,api_key TEXT,model TEXT,rubric TEXT,confidence REAL NOT NULL DEFAULT 0.75,auto_kinds TEXT,updated_at TEXT);\nCREATE TABLE IF NOT EXISTS ai_reviews(id INTEGER PRIMARY KEY AUTOINCREMENT,student_id TEXT,course_id TEXT,ce TEXT,item_id TEXT,attempt INTEGER,response TEXT,reference TEXT,score REAL,confidence REAL,verdict TEXT,feedback TEXT,status TEXT,created_at TEXT);
 CREATE TABLE IF NOT EXISTS ai_rubrics(id INTEGER PRIMARY KEY AUTOINCREMENT,course_id TEXT NOT NULL,ce TEXT NOT NULL DEFAULT '',item_id TEXT NOT NULL DEFAULT '',name TEXT NOT NULL,rubric TEXT NOT NULL,updated_at TEXT,UNIQUE(course_id,ce,item_id));""")
   _schema_ready=True
  cols={r["name"] for r in c.execute("PRAGMA table_info(exam_versions)")}
@@ -71,6 +72,7 @@ class AISettingsIn(BaseModel):
 class RubricCriterion(BaseModel): id:str;name:str;weight:float;description:str=""
 class AIRubricIn(BaseModel): course_id:str;ce:str="";item_id:str="";name:str="Rúbrica";rubric:str="";criteria:list[RubricCriterion]=[]
 class AIReviewDecision(BaseModel): score:float;feedback:str="";status:str="accepted"
+class GradeAdjustmentIn(BaseModel): scope:str;scope_key:str="";new_score:float;reason:str
 class AITestIn(BaseModel): text:str="Explica brevemente qué es un contrato de trabajo."
 def ai_settings_row(c):
  r=c.execute("SELECT * FROM ai_settings WHERE id=1").fetchone()
@@ -504,6 +506,28 @@ def overview(x_teacher_token:str|None=Header(None)):
  auth(x_teacher_token);c=con();rows=[dict(r) for r in c.execute("SELECT * FROM results ORDER BY course_id,student_id")];c.close()
  for r in rows:r["recovery"]=json.loads(r["recovery"] or "[]")
  return rows
+@app.get("/api/teacher/student-record/{course_id}/{student_id}")
+def teacher_student_record(course_id:str,student_id:str,x_teacher_token:str|None=Header(None)):
+ auth(x_teacher_token);c=con();res=c.execute("SELECT * FROM results WHERE student_id=? AND course_id=?",(student_id,course_id)).fetchone();attempts=[dict(r) for r in c.execute("SELECT id,kind,item_id,attempt_no,status,started_at,submitted_at,payload FROM attempts WHERE student_id=? AND course_id=? ORDER BY id DESC",(student_id,course_id))];evidence=[dict(r) for r in c.execute("SELECT id,kind,ce,item_id,attempt,response,correct,score,payload,created_at FROM evidence WHERE student_id=? AND course_id=? ORDER BY id DESC",(student_id,course_id))];reviews=[dict(r) for r in c.execute("SELECT id,ce,item_id,attempt,score,confidence,verdict,feedback,status,created_at,breakdown FROM ai_reviews WHERE student_id=? AND course_id=? ORDER BY id DESC",(student_id,course_id))];rec=c.execute("SELECT * FROM recovery_plans WHERE student_id=? AND course_id=?",(student_id,course_id)).fetchone();adj=[dict(r) for r in c.execute("SELECT * FROM grade_adjustments WHERE student_id=? AND course_id=? ORDER BY id DESC",(student_id,course_id))];c.close()
+ for a in attempts:a["payload"]=json.loads(a["payload"] or "{}")
+ for e in evidence:e["response"]=json.loads(e["response"]) if e["response"] else None;e["payload"]=json.loads(e["payload"] or "{}")
+ for r in reviews:r["breakdown"]=json.loads(r.get("breakdown") or "[]")
+ rd=dict(res) if res else None
+ if rd:rd["recovery"]=json.loads(rd["recovery"] or "[]")
+ return {"student_id":student_id,"course_id":course_id,"result":rd,"attempts":attempts,"evidence":evidence,"ai_reviews":reviews,"recovery":({**dict(rec),"criteria":json.loads(rec["criteria"] or "[]")} if rec else None),"adjustments":adj}
+@app.post("/api/teacher/grade-adjustment/{course_id}/{student_id}")
+def grade_adjustment(course_id:str,student_id:str,x:GradeAdjustmentIn,x_teacher_token:str|None=Header(None)):
+ auth(x_teacher_token)
+ if x.scope not in ("ra","portfolio","exam","ce"):raise HTTPException(400,"Ámbito de rectificación no válido")
+ if not 0<=x.new_score<=100:raise HTTPException(400,"La nota debe estar entre 0 y 100")
+ if len(x.reason.strip())<5:raise HTTPException(400,"Debe indicar el motivo de la rectificación")
+ c=con();old=None
+ if x.scope in ("ra","portfolio","exam"):
+  r=c.execute("SELECT final,portfolio,exam FROM results WHERE student_id=? AND course_id=?",(student_id,course_id)).fetchone()
+  if not r:c.close();raise HTTPException(404,"No existe resultado del alumno")
+  old=float(r[{"ra":"final","portfolio":"portfolio","exam":"exam"}[x.scope]])
+ c.execute("INSERT INTO grade_adjustments(student_id,course_id,scope,scope_key,old_score,new_score,reason,created_at) VALUES(?,?,?,?,?,?,?,?)",(student_id,course_id,x.scope,x.scope_key.strip(),old,x.new_score,x.reason.strip(),now()));c.commit();c.close();return {"ok":True,"old_score":old,"new_score":x.new_score,"audit_only":True}
+
 @app.get("/api/teacher/evidence/{student_id}")
 def student_evidence(student_id:str,x_teacher_token:str|None=Header(None)):
  auth(x_teacher_token);c=con();rows=[dict(r) for r in c.execute("SELECT * FROM evidence WHERE student_id=? ORDER BY id",(student_id,))];c.close();return rows
