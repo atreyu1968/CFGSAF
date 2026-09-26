@@ -408,3 +408,24 @@ def test_student_security_boundaries_and_secret_redaction():
 
 def test_public_portfolio_bank_contains_no_answer_keys():
  client.post("/api/teacher/students/pub-bank",headers=H);db=module.con();tok=db.execute("SELECT token FROM students WHERE student_id='pub-bank'").fetchone()["token"];db.close();r=client.get("/api/portfolio/GRH0652",headers={"X-Student-Token":tok});assert r.status_code==200;rj=r.json();assert rj["items"] and all("answer" not in q and "correct" not in q and "solution" not in q for q in rj["items"])
+
+
+def test_teacher_exceptional_reopen_preserves_original_submission_and_is_audited():
+ body={**module.DEFAULT,"exam_enabled":True,"exam_minutes":20};assert client.put("/api/config/REOPEN",headers=H,json=body).status_code==200
+ db=module.con();db.execute("INSERT OR REPLACE INTO exam_banks(course_id,question_id,ce,question,options,answer,type) VALUES(?,?,?,?,?,?,?)",("REOPEN","rq1","1.a","q",json.dumps(["a","b"]),json.dumps(0),"choice"));db.commit();db.close()
+ client.post("/api/teacher/students/reopen-student",headers=H);db=module.con();tok=db.execute("SELECT token FROM students WHERE student_id='reopen-student'").fetchone()["token"];db.close();sh={"X-Student-Token":tok}
+ st=client.post("/api/exam/start",headers=sh,json={"student_id":"reopen-student","course_id":"REOPEN","kind":"exam","item_id":"final","payload":{}});assert st.status_code==200,st.text;old_id=st.json()["attempt_id"];qid=st.json()["questions"][0]["id"]
+ sub=client.post(f"/api/exam/{old_id}/submit",headers=sh,json={"payload":{"answers":{qid:0},"integrity":{}}});assert sub.status_code==200,sub.text
+ ro=client.post(f"/api/teacher/exam-monitor/{old_id}/reopen",headers=H,json={"minutes":35,"reason":"Incidencia técnica acreditada"});assert ro.status_code==200,ro.text;z=ro.json();assert z["attempt_id"]!=old_id and z["attempt"]==2 and z["restored_answers"]==1
+ db=module.con();old=db.execute("SELECT status,payload FROM attempts WHERE id=?",(old_id,)).fetchone();new=db.execute("SELECT status,payload FROM attempts WHERE id=?",(z["attempt_id"],)).fetchone();audit=db.execute("SELECT * FROM exam_reopen_audit WHERE source_attempt_id=?",(old_id,)).fetchone();db.close()
+ assert old["status"]=="submitted";assert json.loads(old["payload"])["score"]==100;assert new["status"]=="started";assert json.loads(new["payload"])["draft_answers"][qid]==0;assert audit["new_attempt_id"]==z["attempt_id"] and audit["reason"]=="Incidencia técnica acreditada" and audit["minutes"]==35
+ rs=client.post("/api/exam/start",headers=sh,json={"student_id":"reopen-student","course_id":"REOPEN","kind":"exam","item_id":"final","payload":{}});assert rs.status_code==200,rs.text;assert rs.json()["resumed"] is True and rs.json()["attempt_id"]==z["attempt_id"] and rs.json()["saved_answers"][qid]==0
+
+
+def test_exam_reopen_requires_reason_and_closed_source():
+ body={**module.DEFAULT,"exam_enabled":True};assert client.put("/api/config/REOPENRULE",headers=H,json=body).status_code==200
+ db=module.con();db.execute("INSERT OR REPLACE INTO exam_banks(course_id,question_id,ce,question,options,answer,type) VALUES(?,?,?,?,?,?,?)",("REOPENRULE","rrq1","1.a","q",json.dumps(["a","b"]),json.dumps(0),"choice"));db.commit();db.close();client.post("/api/teacher/students/reopen-rule",headers=H);db=module.con();tok=db.execute("SELECT token FROM students WHERE student_id='reopen-rule'").fetchone()["token"];db.close();sh={"X-Student-Token":tok}
+ st=client.post("/api/exam/start",headers=sh,json={"student_id":"reopen-rule","course_id":"REOPENRULE","kind":"exam","item_id":"final","payload":{}});aid=st.json()["attempt_id"]
+ assert client.post(f"/api/teacher/exam-monitor/{aid}/reopen",headers=H,json={"minutes":45,"reason":"motivo suficiente"}).status_code==409
+ client.post(f"/api/teacher/exam-monitor/{aid}/finish",headers=H)
+ assert client.post(f"/api/teacher/exam-monitor/{aid}/reopen",headers=H,json={"minutes":45,"reason":"x"}).status_code==400
