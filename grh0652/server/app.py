@@ -17,9 +17,11 @@ app.add_middleware(CORSMiddleware,allow_origins=ORIGINS or [],allow_credentials=
 def now(): return datetime.datetime.now(datetime.UTC).isoformat()
 _schema_ready=False
 _defaults_seeded=False
+_private_banks_seeded=False
+PRIVATE_BANK_DIR=os.getenv("GRH_PRIVATE_BANK_DIR","").strip()
 
 def con():
- global _schema_ready,_defaults_seeded
+ global _schema_ready,_defaults_seeded,_private_banks_seeded
  c=sqlite3.connect(DB,timeout=10);c.row_factory=sqlite3.Row;c.execute("PRAGMA journal_mode=WAL");c.execute("PRAGMA foreign_keys=ON");c.execute("PRAGMA busy_timeout=5000")
  if not _schema_ready:
   c.executescript("""CREATE TABLE IF NOT EXISTS students(student_id TEXT PRIMARY KEY,token TEXT NOT NULL UNIQUE,created_at TEXT);
@@ -73,6 +75,30 @@ CREATE TABLE IF NOT EXISTS ai_rubrics(id INTEGER PRIMARY KEY AUTOINCREMENT,cours
   _defaults_seeded=True
  # Portfolio answer keys are intentionally not loaded from repository files.
  # Production keys must be provisioned into SQLite through the authenticated teacher endpoint.
+ if not _private_banks_seeded and PRIVATE_BANK_DIR:
+  root=Path(PRIVATE_BANK_DIR)
+  if not root.is_dir():raise RuntimeError("GRH_PRIVATE_BANK_DIR no existe o no es un directorio")
+  for p in sorted(root.glob("*.json")):
+   try:d=json.loads(p.read_text(encoding="utf-8"))
+   except Exception as e:raise RuntimeError(f"Banco privado inválido {p.name}: {e}")
+   course=str(d.get("course_id","")).strip();kind=str(d.get("kind","")).strip();items=d.get("questions" if kind=="exam" else "items")
+   if not course or kind not in ("exam","recovery") or not isinstance(items,list) or not items:raise RuntimeError(f"Banco privado inválido {p.name}: course_id/kind/items")
+   table="exam_banks" if kind=="exam" else "recovery_banks";existing=c.execute(f"SELECT COUNT(*) n FROM {table} WHERE course_id=?",(course,)).fetchone()["n"]
+   if existing:continue
+   seen=set()
+   for q in items:
+    qid=str(q.get("id","")).strip();ce=str(q.get("ce","")).strip()
+    if not qid or not ce or qid in seen:raise RuntimeError(f"Banco privado inválido {p.name}: id/CE duplicado o vacío")
+    seen.add(qid)
+    if kind=="exam":
+     prompt=str(q.get("q","")).strip();opts=q.get("options",[])
+     if not prompt or "answer" not in q or not isinstance(opts,list):raise RuntimeError(f"Banco privado inválido {p.name}: pregunta incompleta {qid}")
+     c.execute("INSERT INTO exam_banks(course_id,question_id,ce,question,options,answer,type) VALUES(?,?,?,?,?,?,?)",(course,qid,ce,prompt,json.dumps(opts,ensure_ascii=False),json.dumps(q["answer"],ensure_ascii=False),str(q.get("type","choice"))))
+    else:
+     prompt=str(q.get("prompt","")).strip();opts=q.get("options",[])
+     if not prompt or "answer" not in q or not isinstance(opts,list):raise RuntimeError(f"Banco privado inválido {p.name}: recuperación incompleta {qid}")
+     c.execute("INSERT INTO recovery_banks(course_id,item_id,ce,kind,prompt,options,answer,feedback) VALUES(?,?,?,?,?,?,?,?)",(course,qid,ce,str(q.get("kind","choice")),prompt,json.dumps(opts,ensure_ascii=False),json.dumps(q["answer"],ensure_ascii=False),str(q.get("feedback",""))))
+  _private_banks_seeded=True
  c.commit();return c
 
 DEFAULT={"portfolio_weight":40,"exam_weight":60,"pass_score":50,"ce_pass_percent":80,"ce_pass_score":50,"exam_enabled":False,"exam_questions_per_ce":3,"exam_minutes":45,"require_both_instruments":False,"exam_integrity_enabled":True,"exam_fullscreen_required":True,"exam_incident_limit":3,"exam_incident_policy":"submit","exam_exempt_students":[],"exam_open_at":"","exam_close_at":"","exam_pin":"","exam_allowed_students":[]}
