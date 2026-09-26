@@ -582,3 +582,31 @@ def test_ut4_private_keys_grade_reclassified_4g_4h_without_public_leak():
  pub=client.get("/api/portfolio/GRH0652",headers=sh);assert pub.status_code==200
  selected=[x for x in pub.json()["items"] if x["id"] in ("4.gp4","4.hp2")]
  assert len(selected)==2 and all("answer" not in x for x in selected)
+
+
+def test_exam_access_gates_and_active_attempt_resume():
+ import datetime,json
+ course="GATED-E2E"
+ now=datetime.datetime.now(datetime.timezone.utc)
+ body={**module.DEFAULT,"exam_enabled":True,"exam_pin":"2468","exam_allowed_students":["gate-ok"],"exam_open_at":(now-datetime.timedelta(minutes=5)).isoformat(),"exam_close_at":(now+datetime.timedelta(minutes=5)).isoformat()}
+ assert client.put("/api/config/"+course,headers=H,json=body).status_code==200
+ db=module.con();db.execute("INSERT OR REPLACE INTO exam_banks(course_id,question_id,ce,question,options,answer,type) VALUES(?,?,?,?,?,?,?)",(course,"g1","1.a","Pregunta segura",json.dumps(["A","B"]),json.dumps(0),"choice"));db.commit();db.close()
+ def student(sid):
+  r=client.post("/api/teacher/students/"+sid,headers=H);assert r.status_code==200
+  return {"X-Student-Token":r.json()["token"]}
+ hbad=student("gate-no");hok=student("gate-ok")
+ payload=lambda sid,pin:{"student_id":sid,"course_id":course,"kind":"exam","item_id":"final","pin":pin,"payload":{}}
+ assert client.post("/api/exam/start",headers=hbad,json=payload("gate-no","2468")).status_code==403
+ assert client.post("/api/exam/start",headers=hok,json=payload("gate-ok","wrong")).status_code==403
+ first=client.post("/api/exam/start",headers=hok,json=payload("gate-ok","2468"));assert first.status_code==200,first.text
+ fid=first.json()["attempt_id"]
+ closed={**body,"exam_open_at":(now-datetime.timedelta(minutes=10)).isoformat(),"exam_close_at":(now-datetime.timedelta(minutes=1)).isoformat()}
+ assert client.put("/api/config/"+course,headers=H,json=closed).status_code==200
+ resumed=client.post("/api/exam/start",headers=hok,json=payload("gate-ok",""))
+ assert resumed.status_code==200,resumed.text
+ assert resumed.json()["resumed"] is True and resumed.json()["attempt_id"]==fid
+ client.post("/api/exam/"+str(fid)+"/submit",headers=hok,json={"payload":{"answers":{},"integrity":{}}})
+ late=student("gate-late")
+ closed_allowed={**closed,"exam_allowed_students":["gate-ok","gate-late"]}
+ assert client.put("/api/config/"+course,headers=H,json=closed_allowed).status_code==200
+ assert client.post("/api/exam/start",headers=late,json=payload("gate-late","2468")).status_code==403
