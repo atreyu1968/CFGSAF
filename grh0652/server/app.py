@@ -42,6 +42,8 @@ CREATE TABLE IF NOT EXISTS ai_rubrics(id INTEGER PRIMARY KEY AUTOINCREMENT,cours
  if "type" not in bcols:c.execute("ALTER TABLE exam_banks ADD COLUMN type TEXT NOT NULL DEFAULT 'choice'")
  rcols={r["name"] for r in c.execute("PRAGMA table_info(ai_rubrics)")}
  if "criteria" not in rcols:c.execute("ALTER TABLE ai_rubrics ADD COLUMN criteria TEXT NOT NULL DEFAULT '[]'")
+ vcols={r["name"] for r in c.execute("PRAGMA table_info(ai_reviews)")}
+ if "breakdown" not in vcols:c.execute("ALTER TABLE ai_reviews ADD COLUMN breakdown TEXT NOT NULL DEFAULT '[]'")
  # Portfolio answer keys are intentionally not loaded from repository files.
  # Production keys must be provisioned into SQLite through the authenticated teacher endpoint.
  c.commit();return c
@@ -156,7 +158,7 @@ def get_ai_reviews(course_id:str|None=None,x_teacher_token:str|None=Header(None)
  if course_id:sql+=" WHERE course_id=?";args=[course_id]
  sql+=" ORDER BY id DESC LIMIT 200";rows=[dict(r) for r in c.execute(sql,args)];c.close()
  for r in rows:
-  r["response"]=json.loads(r["response"]) if r["response"] else None;r.pop("reference",None)
+  r["response"]=json.loads(r["response"]) if r["response"] else None;r["breakdown"]=json.loads(r.get("breakdown") or "[]");r.pop("reference",None)
  return rows
 
 @app.put("/api/teacher/ai-reviews/{review_id}")
@@ -175,6 +177,12 @@ def decide_ai_review(review_id:int,x:AIReviewDecision,x_teacher_token:str|None=H
 @app.post("/api/teacher/students/{student_id}")
 def create_student(student_id:str,x_teacher_token:str|None=Header(None)):
  auth(x_teacher_token);token=secrets.token_urlsafe(32);c=con();c.execute("INSERT OR REPLACE INTO students(student_id,token,created_at) VALUES(?,?,?)",(student_id,token,now()));c.commit();c.close();return {"student_id":student_id,"token":token}
+
+@app.get("/api/student/feedback/{course_id}")
+def student_feedback(course_id:str,x_student_token:str|None=Header(None)):
+ sid=student_auth(x_student_token);c=con();rows=[dict(r) for r in c.execute("SELECT ce,item_id,score,feedback,status,breakdown,created_at FROM ai_reviews WHERE student_id=? AND course_id=? AND status IN ('accepted','rejected') ORDER BY id DESC",(sid,course_id))];c.close()
+ for r in rows:r["breakdown"]=json.loads(r.get("breakdown") or "[]")
+ return rows
 
 @app.get("/health")
 def health(): return {"ok":True}
@@ -271,7 +279,7 @@ def recovery_submit(attempt_id:int,x:SubmitAttempt,x_student_token:str|None=Head
    elif settings.get("enabled") and kind in settings.get("auto_kinds",[]):
     try:
      rub=rubric_for(c,x.course_id,x.ce or "",x.item_id or "",settings.get("rubric") or "");local_settings=dict(settings);local_settings["rubric"]=rub["rubric"];local_settings["criteria"]=rub.get("criteria",[]);grade=ai_grade(local_settings,given,expected,{"course_id":x.course_id,"ce":x.ce,"item_id":x.item_id,"kind":kind,"rubric_name":rub.get("name","")});review=grade["confidence"]<float(settings.get("confidence",0.75));score=None if review else grade["score"];ok=None if review else grade["score"]>=float(config_row(c,x.course_id)[0].get("ce_pass_score",50))
-     c.execute("INSERT INTO ai_reviews(student_id,course_id,ce,item_id,attempt,response,reference,score,confidence,verdict,feedback,status,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)",(x.student_id,x.course_id,x.ce,x.item_id,x.attempt,json.dumps(given,ensure_ascii=False),json.dumps(expected,ensure_ascii=False),grade["score"],grade["confidence"],grade["verdict"],grade["feedback"],"pending" if review else "accepted",now()))
+     c.execute("INSERT INTO ai_reviews(student_id,course_id,ce,item_id,attempt,response,reference,score,confidence,verdict,feedback,status,created_at,breakdown) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)",(x.student_id,x.course_id,x.ce,x.item_id,x.attempt,json.dumps(given,ensure_ascii=False),json.dumps(expected,ensure_ascii=False),grade["score"],grade["confidence"],grade["verdict"],grade["feedback"],"pending" if review else "accepted",now(),json.dumps(grade.get("criteria",[]),ensure_ascii=False)))
     except Exception as e:ok=None;score=None;c.execute("INSERT INTO ai_reviews(student_id,course_id,ce,item_id,attempt,response,reference,score,confidence,verdict,feedback,status,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)",(x.student_id,x.course_id,x.ce,x.item_id,x.attempt,json.dumps(given,ensure_ascii=False),json.dumps(expected,ensure_ascii=False),None,0,"error",str(e)[:1200],"pending",now()))
    else:ok=False;score=0
   else:ok=given==expected
