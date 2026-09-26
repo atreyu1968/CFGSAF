@@ -117,3 +117,20 @@ def test_theory_is_not_schematic_in_ra2_ra3_ra4():
   for i,b in enumerate(blocks,1):
    plain=re.sub(r'<[^>]+>',' ',b);words=re.findall(r'\b[\wÁÉÍÓÚÜÑáéíóúüñ]+\b',plain)
    assert len(words)>=floor,f"{unit} teoria-{i} demasiado esquemática: {len(words)} palabras"
+
+
+def test_portfolio_banks_are_varied_and_orders_are_populated():
+ for unit in (2,3,4):
+  data=json.loads((ROOT/"server"/"banks"/f"ut{unit}_portfolio.json").read_text(encoding="utf-8"))
+  items=data["items"]
+  groups={}
+  for item in items:
+   groups.setdefault(item["ce"],[]).append(item)
+  assert all(len(v)>=6 for v in groups.values())
+  for ce,group in groups.items():
+   prompts=[x["prompt"].strip().lower() for x in group]
+   assert len(set(prompts))==len(prompts),f"{unit} {ce}: enunciados duplicados"
+   for item in group:
+    if item["kind"]=="order":
+     assert len(item.get("options",[]))>=4,f"{unit} {ce}: ordenación vacía"
+     assert len(set(item["options"]))==len(item["options"])
