@@ -344,19 +344,26 @@ def recovery_submit(attempt_id:int,x:SubmitAttempt,x_student_token:str|None=Head
  answers=(x.payload or {}).get("answers",{});rows=[dict(r) for r in c.execute("SELECT * FROM recovery_banks WHERE course_id=?",(a["course_id"],)) if r["ce"] in ces];by={}
  for r in rows:
   d=by.setdefault(r["ce"],{"ok":0,"n":0});d["n"]+=1;given=answers.get(r["item_id"]);expected=json.loads(r["answer"]);kind=r["kind"] or "choice"
-  if kind=="multi" and isinstance(given,list) and isinstance(expected,list):ok=sorted(given)==sorted(expected)
-  elif kind=="free":
+  semantic_kinds={"free","text","case","calculation"};score=None
+  if kind=="multi" and isinstance(given,list) and isinstance(expected,list):ok=sorted(given)==sorted(expected);score=100 if ok else 0
+  elif kind=="order":ok=given==expected;score=100 if ok else 0
+  elif kind=="match":ok=isinstance(given,list) and isinstance(expected,list) and [str(v) for v in given]==[str(v) for v in expected];score=100 if ok else 0
+  elif kind in semantic_kinds:
    exact=str(given or "").strip().casefold()==str(expected or "").strip().casefold();settings=ai_settings_row(c)
    if exact:ok=True;score=100
    elif settings.get("enabled") and kind in settings.get("auto_kinds",[]):
     try:
-     rub=rubric_for(c,a["course_id"],r["ce"] or "",r["item_id"] or "",settings.get("rubric") or "");local_settings=dict(settings);local_settings["rubric"]=rub["rubric"];local_settings["criteria"]=rub.get("criteria",[]);grade=ai_grade(local_settings,given,expected,{"course_id":a["course_id"],"ce":r["ce"],"item_id":r["item_id"],"kind":kind,"rubric_name":rub.get("name","")});review=grade["confidence"]<float(settings.get("confidence",0.75));score=None if review else grade["score"];ok=None if review else grade["score"]>=float(config_row(c,x.course_id)[0].get("ce_pass_score",50))
+     rub=rubric_for(c,a["course_id"],r["ce"] or "",r["item_id"] or "",settings.get("rubric") or "");local_settings=dict(settings);local_settings["rubric"]=rub["rubric"];local_settings["criteria"]=rub.get("criteria",[]);grade=ai_grade(local_settings,given,expected,{"course_id":a["course_id"],"ce":r["ce"],"item_id":r["item_id"],"kind":kind,"rubric_name":rub.get("name","")});review=grade["confidence"]<float(settings.get("confidence",0.75));score=None if review else float(grade["score"]);ok=None if review else score>=float(cfg.get("ce_pass_score",50))
      c.execute("INSERT INTO ai_reviews(student_id,course_id,ce,item_id,attempt,response,reference,score,confidence,verdict,feedback,status,created_at,breakdown) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)",(a["student_id"],a["course_id"],r["ce"],r["item_id"],a["attempt_no"],json.dumps(given,ensure_ascii=False),json.dumps(expected,ensure_ascii=False),grade["score"],grade["confidence"],grade["verdict"],grade["feedback"],"pending" if review else "accepted",now(),json.dumps(grade.get("criteria",[]),ensure_ascii=False)))
-    except Exception as e:ok=None;score=None;c.execute("INSERT INTO ai_reviews(student_id,course_id,ce,item_id,attempt,response,reference,score,confidence,verdict,feedback,status,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)",(x.student_id,x.course_id,x.ce,x.item_id,x.attempt,json.dumps(given,ensure_ascii=False),json.dumps(expected,ensure_ascii=False),None,0,"error",str(e)[:1200],"pending",now()))
+    except Exception as e:
+     ok=None;score=None;c.execute("INSERT INTO ai_reviews(student_id,course_id,ce,item_id,attempt,response,reference,score,confidence,verdict,feedback,status,created_at,breakdown) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)",(a["student_id"],a["course_id"],r["ce"],r["item_id"],a["attempt_no"],json.dumps(given,ensure_ascii=False),json.dumps(expected,ensure_ascii=False),None,0,"error",str(e)[:1200],"pending",now(),"[]"))
    else:ok=False;score=0
-  else:ok=given==expected
-  if ok:d["ok"]+=1
- passed=[ce for ce,v in by.items() if v["n"] and v["ok"]/v["n"]>=threshold];score=round(sum(v["ok"] for v in by.values())/max(1,sum(v["n"] for v in by.values()))*100,2);status="passed" if len(passed)==len(ces) else "pending"
+  else:ok=given==expected;score=100 if ok else 0
+  if ok is None:d["pending"]=d.get("pending",0)+1
+  else:
+   d["graded"]=d.get("graded",0)+1;d["points"]=d.get("points",0)+float(score or 0)
+   if ok:d["ok"]+=1
+ pending_any=any(v.get("pending",0)>0 for v in by.values());passed=[ce for ce,v in by.items() if not v.get("pending",0) and v.get("graded",0)==v["n"] and (v.get("points",0)/(100*v["n"]))>=threshold];graded=sum(v.get("graded",0) for v in by.values());score=round(sum(v.get("points",0) for v in by.values())/max(1,graded),2) if graded else 0;status="review" if pending_any else ("passed" if len(passed)==len(ces) else "pending")
  c.execute("UPDATE attempts SET status='submitted',submitted_at=?,payload=? WHERE id=?",(now(),json.dumps({"answers":answers,"score":score,"by_ce":by},ensure_ascii=False),attempt_id));c.execute("INSERT OR REPLACE INTO recovery_results VALUES(?,?,?,?,?,?)",(a["student_id"],a["course_id"],score,json.dumps(passed),status,now()))
  rr=c.execute("SELECT * FROM results WHERE student_id=? AND course_id=?",(a["student_id"],a["course_id"])).fetchone()
  authoritative=None
