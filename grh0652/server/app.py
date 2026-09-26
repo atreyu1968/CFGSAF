@@ -255,6 +255,10 @@ def decide_ai_review(review_id:int,x:AIReviewDecision,x_teacher_token:str|None=H
 def create_student(student_id:str,x_teacher_token:str|None=Header(None)):
  auth(x_teacher_token);token=secrets.token_urlsafe(32);c=con();c.execute("INSERT OR REPLACE INTO students(student_id,token,created_at) VALUES(?,?,?)",(student_id,token,now()));c.commit();c.close();return {"student_id":student_id,"token":token}
 
+@app.get("/api/student/session")
+def student_session(x_student_token:str|None=Header(None)):
+ sid=student_auth(x_student_token);return {"ok":True,"student_id":sid}
+
 @app.get("/api/student/dashboard/{course_id}")
 def student_dashboard(course_id:str,x_student_token:str|None=Header(None)):
  sid=student_auth(x_student_token);c=con();official=recompute_official(c,sid,course_id);plan=c.execute("SELECT criteria,status,created_at FROM recovery_plans WHERE student_id=? AND course_id=?",(sid,course_id)).fetchone();c.commit();c.close();return {"result":official,"ce":official["ce"],"recovery_plan":({"criteria":json.loads(plan["criteria"] or "[]"),"status":plan["status"],"created_at":plan["created_at"]} if plan else None)}
