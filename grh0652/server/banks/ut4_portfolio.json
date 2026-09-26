@@ -3,14 +3,9 @@
     {
       "id": "4.ap1",
       "ce": "4.a",
-      "kind": "choice",
-      "prompt": "Una empresa quiere implantar salario fijo más variable. ¿Qué debe analizar antes de parametrizar la nómina?",
-      "options": [
-        "Analizar los datos y reglas aplicables antes de confirmar",
-        "Copiar el mes anterior",
-        "Modificar el resultado final",
-        "Usar un parámetro sin fecha"
-      ]
+      "kind": "calculation",
+      "prompt": "Salario fijo mensual 1.450 € y comisión del 2 % sobre 12.000 € de ventas computables. Calcula el bruto formado por esos dos conceptos (€).",
+      "options": []
     },
     {
       "id": "4.ap2",
@@ -70,14 +65,9 @@
     {
       "id": "4.bp1",
       "ce": "4.b",
-      "kind": "choice",
-      "prompt": "Un ejercicio compara una retribución anual con el SMI. ¿Qué comprobación es imprescindible?",
-      "options": [
-        "Analizar los datos y reglas aplicables antes de confirmar",
-        "Copiar el mes anterior",
-        "Modificar el resultado final",
-        "Usar un parámetro sin fecha"
-      ]
+      "kind": "calculation",
+      "prompt": "En un supuesto didáctico, el SMI utilizado para la comparación es 1.200 € en 14 pagas. Calcula su cuantía anual (€).",
+      "options": []
     },
     {
       "id": "4.bp2",
@@ -137,14 +127,9 @@
     {
       "id": "4.cp1",
       "ce": "4.c",
-      "kind": "choice",
-      "prompt": "Un hotel paga un incentivo por reservas gestionadas. ¿Qué debe definirse para que sea verificable?",
-      "options": [
-        "Analizar los datos y reglas aplicables antes de confirmar",
-        "Copiar el mes anterior",
-        "Modificar el resultado final",
-        "Usar un parámetro sin fecha"
-      ]
+      "kind": "calculation",
+      "prompt": "Una comercial percibe una comisión del 2,5 % sobre 20.000 € de ventas computables. Calcula la comisión (€).",
+      "options": []
     },
     {
       "id": "4.cp2",
@@ -204,14 +189,9 @@
     {
       "id": "4.dp1",
       "ce": "4.d",
-      "kind": "choice",
-      "prompt": "Antes de confeccionar la nómina mensual, ¿qué documentación debe reunir RR. HH.?",
-      "options": [
-        "Analizar los datos y reglas aplicables antes de confirmar",
-        "Copiar el mes anterior",
-        "Modificar el resultado final",
-        "Usar un parámetro sin fecha"
-      ]
+      "kind": "calculation",
+      "prompt": "Salario base 1.450 €, antigüedad 110 €, complemento de puesto 190 € y comisión 250 €. Calcula el total de estos devengos (€).",
+      "options": []
     },
     {
       "id": "4.dp2",
@@ -271,14 +251,9 @@
     {
       "id": "4.ep1",
       "ce": "4.e",
-      "kind": "choice",
-      "prompt": "Salario base 1.500 €, complemento 200 € y plus salarial 100 €. Antes de obtener el líquido, ¿qué bloque se calcula primero?",
-      "options": [
-        "Analizar los datos y reglas aplicables antes de confirmar",
-        "Copiar el mes anterior",
-        "Modificar el resultado final",
-        "Usar un parámetro sin fecha"
-      ]
+      "kind": "calculation",
+      "prompt": "Total devengado: 1.950 €. Deducciones: Seguridad Social 125 €, IRPF 195 € y anticipo 100 €. Calcula el líquido a percibir (€).",
+      "options": []
     },
     {
       "id": "4.ep2",
@@ -338,14 +313,9 @@
     {
       "id": "4.fp1",
       "ce": "4.f",
-      "kind": "choice",
-      "prompt": "Una base de cotización es 2.000 €. Para calcular una cuota, ¿qué dato adicional es imprescindible?",
-      "options": [
-        "Analizar los datos y reglas aplicables antes de confirmar",
-        "Copiar el mes anterior",
-        "Modificar el resultado final",
-        "Usar un parámetro sin fecha"
-      ]
+      "kind": "calculation",
+      "prompt": "Base de cotización: 2.000 €. Tipo didáctico de aportación de la persona trabajadora: 4,70 %. Calcula la cuota (€).",
+      "options": []
     },
     {
       "id": "4.fp2",
@@ -460,14 +430,9 @@
     {
       "id": "4.gp6",
       "ce": "4.g",
-      "kind": "choice",
-      "prompt": "Antes de iniciar una obligación de ingreso de retenciones, ¿qué debe comprobar el técnico?",
-      "options": [
-        "Procedimiento/modelo aplicable, periodo, plazo y datos que lo alimentan",
-        "Solo el número de trabajadores",
-        "Solo el total de salarios base",
-        "El color del justificante"
-      ]
+      "kind": "case",
+      "prompt": "Debes preparar una obligación periódica de ingreso de retenciones y existen dudas sobre el plazo aplicable. Explica qué fuente, periodo, formulario/procedimiento y evidencia dejarías documentados antes de tramitarla.",
+      "options": []
     },
     {
       "id": "4.hp1",
@@ -520,14 +485,9 @@
     {
       "id": "4.hp5",
       "ce": "4.h",
-      "kind": "choice",
-      "prompt": "Tras detectar un error en una liquidación ya confeccionada, ¿qué práctica conserva trazabilidad?",
-      "options": [
-        "Borrar la versión anterior",
-        "Registrar causa, corrección y documentos afectados siguiendo el procedimiento vigente",
-        "Cambiar solo el PDF",
-        "Crear otro periodo"
-      ]
+      "kind": "case",
+      "prompt": "Después de confeccionar una declaración-liquidación detectas una diferencia con el resumen de nóminas. Explica cómo corregirías el expediente sin perder trazabilidad ni ocultar la versión anterior.",
+      "options": []
     },
     {
       "id": "4.hp6",
@@ -600,14 +560,9 @@
     {
       "id": "4.ip6",
       "ce": "4.i",
-      "kind": "choice",
-      "prompt": "¿Qué evidencia prueba una comunicación efectiva con el organismo?",
-      "options": [
-        "Datos de origen, reglas, operaciones, resultado y justificantes",
-        "Solo el líquido final",
-        "Solo una captura",
-        "Ninguna si el programa no da error"
-      ]
+      "kind": "case",
+      "prompt": "Una comunicación telemática devuelve justificante y una advertencia. Explica qué evidencias permiten demostrar el envío efectivo y qué harías con la advertencia antes de cerrar el expediente.",
+      "options": []
     },
     {
       "id": "4.jp1",
@@ -667,14 +622,9 @@
     {
       "id": "4.jp6",
       "ce": "4.j",
-      "kind": "choice",
-      "prompt": "¿Qué elementos permiten auditar el uso de una aplicación de nóminas?",
-      "options": [
-        "Datos de origen, reglas, operaciones, resultado y justificantes",
-        "Solo el líquido final",
-        "Solo una captura",
-        "Ninguna si el programa no da error"
-      ]
+      "kind": "case",
+      "prompt": "El programa de nóminas genera un resultado distinto del control manual. Explica qué datos, parámetros, versiones y evidencias conservarías para localizar la causa y auditar la corrección.",
+      "options": []
     }
   ]
 }
