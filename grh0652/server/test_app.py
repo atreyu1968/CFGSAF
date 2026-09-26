@@ -856,3 +856,24 @@ def test_ra2_ra3_exam_banks_are_distinct_and_complete():
             assert len({q["q"] for q in questions}) == expected_per_ce
         joined = " ".join(q["q"] for q in bank)
         assert all(text not in joined for text in forbidden)
+
+
+def test_ra2_infographic_collection_matches_ra1_design_contract():
+    """RA2 must keep the complete 13-slide, 16:9 RA1-derived infographic set."""
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1] / "scorm" / "ut2"
+    html = (root / "index.html").read_text(encoding="utf-8")
+    info_dir = root / "assets" / "infografias"
+    files = sorted(info_dir.glob("*.svg"))
+    assert len(files) == 13
+    assert html.count("assets/infografias/") == 13
+    assert "13_claves_ut2.svg" in html
+    for path in files:
+        svg = path.read_text(encoding="utf-8")
+        assert 'width="1200" height="675"' in svg
+        assert 'viewBox="0 0 1200 675"' in svg
+        assert '#f4f7f9' in svg
+        assert '#17365d' in svg
+        assert '#168c9e' in svg
+        assert 'font-family="Arial"' in svg
