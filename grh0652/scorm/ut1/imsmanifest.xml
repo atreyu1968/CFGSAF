@@ -16,6 +16,22 @@
    <file href="index.html"/>
    <file href="assets/style.css"/>
    <file href="assets/scorm.js"/>
+      <file href="assets/infografias/01_mapa_ut1.svg"/>
+      <file href="assets/infografias/02_relacion_laboral.svg"/>
+      <file href="assets/infografias/03_fuentes.svg"/>
+      <file href="assets/infografias/04_convenio.svg"/>
+      <file href="assets/infografias/05_contrato.svg"/>
+      <file href="assets/infografias/06_modalidades.svg"/>
+      <file href="assets/infografias/07_indefinido.svg"/>
+      <file href="assets/infografias/08_fijo_discontinuo.svg"/>
+      <file href="assets/infografias/09_temporal.svg"/>
+      <file href="assets/infografias/10_parcial_fd.svg"/>
+      <file href="assets/infografias/11_documentacion.svg"/>
+      <file href="assets/infografias/12_organismos.svg"/>
+      <file href="assets/infografias/13_claves.svg"/>
+      <file href="assets/media/image3.svg"/>
+      <file href="assets/media/image4.svg"/>
+      <file href="assets/media/image5.svg"/>
   </resource>
  </resources>
 </manifest>
