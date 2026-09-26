@@ -14,3 +14,20 @@ main{max-width:1100px;margin:auto;padding:22px}.screen{display:none}.screen.acti
 .source-list li{margin:8px 0}.inline-diagram{margin:16px auto;max-width:850px;background:linear-gradient(135deg,#edf6fa,#edf8f3);border:1px solid #cfe0e7;border-radius:18px;padding:22px;color:var(--navy);font-weight:800;text-align:center}
 body.exam-mode .sidebar{pointer-events:none;opacity:.45}body.exam-mode #exitBtn{display:none}
 @media(max-width:850px){.app{grid-template-columns:1fr}.sidebar{position:fixed;z-index:80;left:-330px;width:310px;transition:.2s}.sidebar.open{left:0}.icon-btn{display:inline-block}.mini-stat{grid-template-columns:repeat(2,1fr)}.top-actions{flex-wrap:wrap}.match-row{grid-template-columns:1fr}.pdf-box{display:block}.pdf-box .btn{margin-top:10px}}
+
+/* Estado de respuesta seleccionada: visible antes de corregir/enviar */
+.option:has(input[type="radio"]:checked),
+.option:has(input[type="checkbox"]:checked){
+  background:#dff3f1;
+  border-color:#16877f;
+  box-shadow:0 0 0 2px rgba(22,135,127,.18);
+  color:var(--navy);
+  font-weight:800;
+}
+.option:has(input[type="radio"]:focus-visible),
+.option:has(input[type="checkbox"]:focus-visible){
+  outline:3px solid rgba(22,135,127,.28);
+  outline-offset:2px;
+}
+.option input[type="radio"],
+.option input[type="checkbox"]{accent-color:#16877f}
