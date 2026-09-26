@@ -486,11 +486,12 @@ def test_teacher_exceptional_reopen_preserves_original_submission_and_is_audited
  db=module.con();db.execute("INSERT OR REPLACE INTO exam_banks(course_id,question_id,ce,question,options,answer,type) VALUES(?,?,?,?,?,?,?)",("REOPEN","rq1","1.a","q",json.dumps(["a","b"]),json.dumps(0),"choice"));db.commit();db.close()
  client.post("/api/teacher/students/reopen-student",headers=H);db=module.con();tok=db.execute("SELECT token FROM students WHERE student_id='reopen-student'").fetchone()["token"];db.close();sh={"X-Student-Token":tok}
  st=client.post("/api/exam/start",headers=sh,json={"student_id":"reopen-student","course_id":"REOPEN","kind":"exam","item_id":"final","payload":{}});assert st.status_code==200,st.text;old_id=st.json()["attempt_id"];qid=st.json()["questions"][0]["id"]
- sub=client.post(f"/api/exam/{old_id}/submit",headers=sh,json={"payload":{"answers":{qid:0},"integrity":{}}});assert sub.status_code==200,sub.text
+ db=module.con();version=db.execute("SELECT answers FROM exam_versions WHERE attempt_id=?",(old_id,)).fetchone();correct_answer=json.loads(version["answers"])[qid];db.close()
+ sub=client.post(f"/api/exam/{old_id}/submit",headers=sh,json={"payload":{"answers":{qid:correct_answer},"integrity":{}}});assert sub.status_code==200,sub.text
  ro=client.post(f"/api/teacher/exam-monitor/{old_id}/reopen",headers=H,json={"minutes":35,"reason":"Incidencia técnica acreditada"});assert ro.status_code==200,ro.text;z=ro.json();assert z["attempt_id"]!=old_id and z["attempt"]==2 and z["restored_answers"]==1
  db=module.con();old=db.execute("SELECT status,payload FROM attempts WHERE id=?",(old_id,)).fetchone();new=db.execute("SELECT status,payload FROM attempts WHERE id=?",(z["attempt_id"],)).fetchone();audit=db.execute("SELECT * FROM exam_reopen_audit WHERE source_attempt_id=?",(old_id,)).fetchone();db.close()
- assert old["status"]=="submitted";assert json.loads(old["payload"])["score"]==100;assert new["status"]=="started";assert json.loads(new["payload"])["draft_answers"][qid]==0;assert audit["new_attempt_id"]==z["attempt_id"] and audit["reason"]=="Incidencia técnica acreditada" and audit["minutes"]==35
- rs=client.post("/api/exam/start",headers=sh,json={"student_id":"reopen-student","course_id":"REOPEN","kind":"exam","item_id":"final","payload":{}});assert rs.status_code==200,rs.text;assert rs.json()["resumed"] is True and rs.json()["attempt_id"]==z["attempt_id"] and rs.json()["saved_answers"][qid]==0
+ assert old["status"]=="submitted";assert json.loads(old["payload"])["score"]==100;assert new["status"]=="started";assert json.loads(new["payload"])["draft_answers"][qid]==correct_answer;assert audit["new_attempt_id"]==z["attempt_id"] and audit["reason"]=="Incidencia técnica acreditada" and audit["minutes"]==35
+ rs=client.post("/api/exam/start",headers=sh,json={"student_id":"reopen-student","course_id":"REOPEN","kind":"exam","item_id":"final","payload":{}});assert rs.status_code==200,rs.text;assert rs.json()["resumed"] is True and rs.json()["attempt_id"]==z["attempt_id"] and rs.json()["saved_answers"][qid]==correct_answer
 
 
 def test_exam_reopen_requires_reason_and_closed_source():
