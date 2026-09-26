@@ -898,3 +898,31 @@ def test_ra3_infographic_collection_matches_ra1_design_contract():
         assert '#17365d' in svg
         assert '#168c9e' in svg
         assert 'font-family="Arial"' in svg
+
+
+def test_ra4_infographic_collection_matches_ra1_design_contract():
+    """RA4 must keep all 13 infographics integrated, packaged and RA1-consistent."""
+    from pathlib import Path
+    import re
+
+    root = Path(__file__).resolve().parents[1] / "scorm" / "ut4"
+    html = (root / "index.html").read_text(encoding="utf-8")
+    manifest = (root / "imsmanifest.xml").read_text(encoding="utf-8")
+    files = sorted((root / "assets" / "infografias").glob("*.svg"))
+    assert len(files) == 13
+    refs = set(re.findall(r'assets/infografias/[^"\' )<]+\.svg', html))
+    assert len(refs) == 13
+    for path in files:
+        rel = f"assets/infografias/{path.name}"
+        assert rel in refs
+        assert f'<file href="{rel}"/>' in manifest
+        svg = path.read_text(encoding="utf-8")
+        for marker in (
+            'width="1200" height="675"',
+            'viewBox="0 0 1200 675"',
+            '#f4f7f9', '#17365d', '#168c9e',
+            'font-family="Arial"',
+        ):
+            assert marker in svg
+    assert "dblclick" in html
+    assert "requestFullscreen" in html
