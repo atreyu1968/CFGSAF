@@ -958,3 +958,21 @@ def test_every_contract_field_has_specific_context_help():
     assert not missing, "Contract fields without specific contextual help: " + ", ".join(missing)
     assert "contextmenu" in html
     assert ".contract-form input,.contract-form select,.contract-form textarea" in html
+
+
+def test_every_contract_field_has_specific_context_help():
+    """Every contract input/select/textarea must have explicit right-click guidance."""
+    from pathlib import Path
+    import re
+
+    html = (Path(__file__).resolve().parents[1] / "scorm" / "ut1" / "index.html").read_text(encoding="utf-8")
+    raw = re.findall(r'<(?:input|select|textarea)[^>]+data-contract="([^"]+)"', html)
+    keys = {value.split(":", 1)[1] for value in raw if ":" in value}
+    assert len(raw) >= 100, "Contract field inventory unexpectedly small"
+    assert len(keys) >= 30, "Contract help-key inventory unexpectedly small"
+    help_start = html.index("const CONTRACT_HELP={")
+    help_end = html.index("};", help_start)
+    help_block = html[help_start:help_end]
+    missing = sorted(key for key in keys if (key + ":[") not in help_block)
+    assert not missing, "Contract fields without specific contextual help: " + ", ".join(missing)
+    assert ".contract-form input,.contract-form select,.contract-form textarea" in html
