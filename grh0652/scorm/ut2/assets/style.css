@@ -71,3 +71,6 @@ body.exam-mode .sidebar{pointer-events:none;opacity:.45}body.exam-mode #exitBtn{
 @media(max-width:600px){
   .question .option,.exercise .option{padding:13px 14px;gap:10px;margin:10px 0;line-height:1.4}
 }
+
+/* Visor común de infografías: doble clic/tap abre a pantalla completa */
+.info-card img,.lesson-body img{cursor:zoom-in}.infographic-viewer{position:fixed;inset:0;z-index:5000;background:#07111bea;display:none;align-items:center;justify-content:center;padding:18px}.infographic-viewer.open{display:flex}.infographic-viewer img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain}.infographic-viewer button{position:absolute;top:14px;right:14px;z-index:2;background:#fff;color:#17365d;border:0;border-radius:999px;padding:10px 14px;font-weight:900;cursor:pointer}.infographic-viewer .hint{position:absolute;left:16px;bottom:12px;color:#fff;font-size:.8rem;background:#0008;padding:6px 9px;border-radius:8px}
