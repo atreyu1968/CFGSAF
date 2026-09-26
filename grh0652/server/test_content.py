@@ -253,6 +253,37 @@ def test_ra2_ra3_ra4_public_portfolio_prompts_are_contextual_not_template_filler
   assert all(not x["prompt"].startswith("En 4.") for x in ut4["items"])
 
 
+def test_ra2_ra3_ra4_portfolios_require_student_production_in_every_ce():
+ expected={
+  "ut2":[f"2.{x}" for x in "abcdef"],
+  "ut3":[f"3.{x}" for x in "abcdefgh"],
+  "ut4":[f"4.{x}" for x in "abcdefghij"],
+ }
+ semantic={"free","text","case","calculation"}
+ for unit,ces in expected.items():
+  items=json.loads((ROOT/"server"/"banks"/f"{unit}_portfolio.json").read_text(encoding="utf-8"))["items"]
+  by={ce:[x for x in items if x["ce"]==ce] for ce in ces}
+  for ce,group in by.items():
+   assert any(x["kind"] in semantic for x in group),f"{unit} {ce} sin actividad de producción propia"
+ calculations={
+  "ut2":{"2.b"},
+  "ut3":{"3.b","3.c"},
+  "ut4":{"4.a","4.b","4.c","4.d","4.e","4.f"},
+ }
+ for unit,ces in calculations.items():
+  items=json.loads((ROOT/"server"/"banks"/f"{unit}_portfolio.json").read_text(encoding="utf-8"))["items"]
+  for ce in ces:
+   assert any(x["ce"]==ce and x["kind"]=="calculation" for x in items),f"{unit} {ce} sin cálculo evaluable"
+
+
+def test_semantic_activity_inputs_are_explicit_in_every_scorm():
+ for unit in ("ut1","ut2","ut3","ut4"):
+  js=(ROOT/"scorm"/unit/"assets"/"scorm.js").read_text(encoding="utf-8")
+  assert "type==='calculation'" in js
+  assert 'type="number"' in js
+  assert "Escribe tu respuesta razonada" in js
+
+
 def test_ut4_embedded_questions_follow_official_ce_boundaries():
  html=(ROOT/"scorm"/"ut4"/"index.html").read_text(encoding="utf-8")
  assert html.count('"ce":"4.h","type":"choice"')>=12
