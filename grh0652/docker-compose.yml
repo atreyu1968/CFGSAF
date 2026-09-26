@@ -1,0 +1,12 @@
+services:
+  grh-api:
+    build: ./server
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      GRH_DB: /data/grh0652.db
+    volumes:
+      - ./data:/data
+    ports:
+      - "8080:8080"
