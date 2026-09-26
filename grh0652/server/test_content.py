@@ -167,6 +167,29 @@ def test_all_units_render_and_submit_ordered_portfolio_items():
   assert "list.insertBefore" in js
 
 
+def test_ut1_public_matching_items_have_complete_pairs():
+ data=json.loads((ROOT/"server"/"banks"/"ut1_portfolio.json").read_text(encoding="utf-8"))
+ matches=[x for x in data["items"] if x["kind"]=="match"]
+ assert len(matches)==8
+ for item in matches:
+  pairs=item.get("pairs")
+  assert isinstance(pairs,list) and len(pairs)>=4,item["id"]
+  assert all(isinstance(p,list) and len(p)==2 and all(str(v).strip() for v in p) for p in pairs)
+  assert len({p[0] for p in pairs})==len(pairs)
+  assert len({p[1] for p in pairs})==len(pairs)
+
+
+def test_all_units_render_and_submit_matching_portfolio_items():
+ for ut in ("ut1","ut2","ut3","ut4"):
+  js=(ROOT/"scorm"/ut/"assets"/"scorm.js").read_text(encoding="utf-8")
+  assert "function stableMatchOptions(q,rowIndex)" in js
+  assert "type==='match'" in js
+  assert "pmatch-" in js
+  assert "q.pairs||[]" in js
+  assert "a.map(Number)" in js
+  assert "const a=$(" in js
+
+
 def test_all_units_have_offline_exam_draft_and_sync_status():
  for ut in ("ut1","ut2","ut3","ut4"):
   js=(ROOT/"scorm"/ut/"assets"/"scorm.js").read_text(encoding="utf-8")
