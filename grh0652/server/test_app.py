@@ -271,3 +271,13 @@ def test_teacher_can_override_pending_ai_review_authoritatively(monkeypatch):
  assert done.json()["score"]==82 and done.json()["correct"] is True
  db=module.con();row=db.execute("SELECT score,correct,payload FROM evidence WHERE student_id='review-student' AND course_id='REVIEW' AND item_id='rev1'").fetchone();db.close()
  assert row["score"]==82 and row["correct"]==1 and "Respuesta válida" in row["payload"]
+
+
+def test_ai_rubric_hierarchy_item_over_ce_over_general():
+ course="RUB";ce="4.f";item="nomina-1"
+ assert client.put("/api/teacher/ai-rubrics",headers=H,json={"course_id":course,"name":"Curso","rubric":"general"}).status_code==200
+ assert client.put("/api/teacher/ai-rubrics",headers=H,json={"course_id":course,"ce":ce,"name":"CE","rubric":"criterio"}).status_code==200
+ assert client.put("/api/teacher/ai-rubrics",headers=H,json={"course_id":course,"ce":ce,"item_id":item,"name":"Actividad","rubric":"actividad"}).status_code==200
+ db=module.con();assert module.rubric_for(db,course,ce,item,"fallback")["rubric"]=="actividad";assert module.rubric_for(db,course,ce,"otra","fallback")["rubric"]=="criterio";assert module.rubric_for(db,course,"4.a","otra","fallback")["rubric"]=="general";db.close()
+ rows=client.get("/api/teacher/ai-rubrics?course_id=RUB",headers=H);assert rows.status_code==200 and len(rows.json())==3
+ rid=next(x["id"] for x in rows.json() if x["item_id"]==item);assert client.delete(f"/api/teacher/ai-rubrics/{rid}",headers=H).status_code==200
