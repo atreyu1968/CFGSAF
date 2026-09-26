@@ -17,3 +17,6 @@
 
 ## Criterio de cierre
 No marcar el proyecto como producción hasta resolver 1–5 y superar CI.
+
+## Validación CI actual
+- La condición de cierre exige una ejecución de `GRH0652 tests` sobre el HEAD actual; no se considera válido un rerun de un SHA anterior.
