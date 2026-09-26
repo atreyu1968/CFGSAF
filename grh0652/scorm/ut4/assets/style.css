@@ -93,3 +93,9 @@ body.exam-mode .sidebar{pointer-events:none;opacity:.45}body.exam-mode #exitBtn{
 .payroll-example .net{font-size:1.08rem;font-weight:900;background:#e6f3ef}
 .payroll-example .explanation{padding:12px 14px;background:#fbfcfc;border-top:1px solid #9fb0b8;line-height:1.5}
 @media(max-width:650px){.payroll-meta,.payroll-example .doc-meta{grid-template-columns:1fr}.payroll-row{grid-template-columns:1fr}.payroll-row input{width:calc(100% - 28px);margin:0 14px 10px}.payroll-example{overflow-x:auto}}
+
+/* Ayuda contextual de campos de nómina */
+.payroll-help{position:fixed;z-index:9999;max-width:360px;padding:13px 15px;background:#173441;color:#fff;border-radius:12px;box-shadow:0 10px 32px rgba(0,0,0,.24);font-size:.9rem;line-height:1.45;pointer-events:none}
+.payroll-help::before{content:"";position:absolute;top:-7px;left:20px;border-width:0 7px 7px;border-style:solid;border-color:transparent transparent #173441}
+.payroll-help b{display:block;margin-bottom:4px;color:#dff3f1}.payroll-help .hint-formula{display:block;margin-top:6px;color:#d7e9ed}.payroll-help .hint-error{display:block;margin-top:6px;color:#ffd9a8}
+.payroll-row input[data-pay],.payroll-row input[data-pay2],.payroll-row input[data-pay3],.payroll-row input[data-pay4],.payroll-row input[data-pay5],.payroll-row input[data-pay6],.payroll-row input[data-pay7],.payroll-row input[data-pay8],.payroll-row input[data-rpay]{cursor:help}
