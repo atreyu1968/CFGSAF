@@ -1,9 +1,14 @@
 name: GRH0652 tests
 on:
+  workflow_dispatch:
   push:
-    paths: ['grh0652/**']
+    paths:
+      - 'grh0652/**'
+      - '.github/workflows/grh0652-tests.yml'
   pull_request:
-    paths: ['grh0652/**']
+    paths:
+      - 'grh0652/**'
+      - '.github/workflows/grh0652-tests.yml'
 jobs:
   test:
     runs-on: ubuntu-latest
