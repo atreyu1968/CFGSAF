@@ -674,3 +674,23 @@ def test_exam_integrity_survives_reload_and_cannot_be_lowered_on_submit():
  done=client.post(f"/api/exam/{aid}/submit",headers=hs,json={"payload":{"answers":{qid:0},"integrity":{"incidents":0,"incident_log":[],"auto":False}}});assert done.status_code==200,done.text
  db=module.con();row=db.execute("SELECT payload FROM attempts WHERE id=?",(aid,)).fetchone();db.close();stored=json.loads(row["payload"])["integrity"]
  assert stored["incidents"]==1 and stored["incident_log"]==[event]
+
+
+def test_additio_export_contract_uses_official_results_and_excel_friendly_csv():
+ import csv,io,json
+ course="ADDITIO"
+ body={**module.DEFAULT,"portfolio_weight":100,"exam_weight":0}
+ assert client.put("/api/config/"+course,headers=H,json=body).status_code==200
+ sid="alumno-á;01"
+ created=client.post("/api/teacher/students/"+sid,headers=H);assert created.status_code==200
+ db=module.con();db.execute("INSERT OR REPLACE INTO portfolio_banks(course_id,item_id,ce,kind,answer) VALUES(?,?,?,?,?)",(course,"p1","1.a","choice",json.dumps("A")));db.commit();db.close()
+ hs={"X-Student-Token":created.json()["token"]}
+ ev=client.post("/api/evidence",headers=hs,json={"student_id":sid,"course_id":course,"kind":"portfolio","ce":"1.a","item_id":"p1","attempt":1,"response":"A"});assert ev.status_code==200,ev.text
+ denied=client.get("/api/teacher/export-additio/"+course);assert denied.status_code in (401,403)
+ out=client.get("/api/teacher/export-additio/"+course,headers=H);assert out.status_code==200,out.text
+ assert out.headers["content-type"].startswith("text/csv") and course+"_Additio.csv" in out.headers["content-disposition"]
+ assert out.content.startswith(b"\xef\xbb\xbf") and b"\r\n" in out.content
+ rows=list(csv.reader(io.StringIO(out.content.decode("utf-8-sig"),newline=""),delimiter=";"))
+ assert rows[0]==["Alumno","CE 1.a","Portafolio","Examen","RA"]
+ row=next(x for x in rows[1:] if x[0]==sid)
+ assert float(row[1])==100 and float(row[2])==100 and float(row[4])==100
