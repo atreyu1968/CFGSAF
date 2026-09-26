@@ -509,7 +509,9 @@ def recovery_submit(attempt_id:int,x:SubmitAttempt,x_student_token:str|None=Head
      c.execute("INSERT INTO ai_reviews(student_id,course_id,ce,item_id,attempt,response,reference,score,confidence,verdict,feedback,status,created_at,breakdown,source_kind) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",(a["student_id"],a["course_id"],r["ce"],r["item_id"],a["attempt_no"],json.dumps(given,ensure_ascii=False),json.dumps(expected,ensure_ascii=False),grade["score"],grade["confidence"],grade["verdict"],grade["feedback"],"pending" if review else "accepted",now(),json.dumps(grade.get("criteria",[]),ensure_ascii=False),"recovery"))
     except Exception as e:
      ok=None;score=None;c.execute("INSERT INTO ai_reviews(student_id,course_id,ce,item_id,attempt,response,reference,score,confidence,verdict,feedback,status,created_at,breakdown,source_kind) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",(a["student_id"],a["course_id"],r["ce"],r["item_id"],a["attempt_no"],json.dumps(given,ensure_ascii=False),json.dumps(expected,ensure_ascii=False),None,0,"error",str(e)[:1200],"pending",now(),"[]","recovery"))
-   else:ok=False;score=0
+   else:
+    ok=None;score=None
+    c.execute("INSERT INTO ai_reviews(student_id,course_id,ce,item_id,attempt,response,reference,score,confidence,verdict,feedback,status,created_at,breakdown,source_kind) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",(a["student_id"],a["course_id"],r["ce"],r["item_id"],a["attempt_no"],json.dumps(given,ensure_ascii=False),json.dumps(expected,ensure_ascii=False),None,0,"pending","Pendiente de revisión docente.","pending",now(),"[]","recovery"))
   else:ok=given==expected;score=100 if ok else 0
   if ok is None:d["pending"]=d.get("pending",0)+1
   else:
@@ -737,7 +739,9 @@ def evidence(x:EventIn,x_student_token:str|None=Header(None)):
       rub=rubric_for(c,x.course_id,x.ce or "",x.item_id or "",settings.get("rubric") or "");local_settings=dict(settings);local_settings["rubric"]=rub["rubric"];local_settings["criteria"]=rub.get("criteria",[]);grade=ai_grade(local_settings,given,expected,{"course_id":x.course_id,"ce":x.ce,"item_id":x.item_id,"kind":kind,"rubric_name":rub.get("name","")});review=grade["confidence"]<float(settings.get("confidence",0.75));score=None if review else grade["score"];ok=None if review else grade["score"]>=float(config_row(c,x.course_id)[0].get("ce_pass_score",50))
       c.execute("INSERT INTO ai_reviews(student_id,course_id,ce,item_id,attempt,response,reference,score,confidence,verdict,feedback,status,created_at,breakdown,source_kind) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",(x.student_id,x.course_id,x.ce,x.item_id,x.attempt,json.dumps(given,ensure_ascii=False),json.dumps(expected,ensure_ascii=False),grade["score"],grade["confidence"],grade["verdict"],grade["feedback"],"pending" if review else "accepted",now(),json.dumps(grade.get("criteria",[]),ensure_ascii=False),"portfolio"))
      except Exception as e:ok=None;score=None;c.execute("INSERT INTO ai_reviews(student_id,course_id,ce,item_id,attempt,response,reference,score,confidence,verdict,feedback,status,created_at,breakdown,source_kind) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",(x.student_id,x.course_id,x.ce,x.item_id,x.attempt,json.dumps(given,ensure_ascii=False),json.dumps(expected,ensure_ascii=False),None,0,"error",str(e)[:1200],"pending",now(),"[]","portfolio"))
-    else:ok=False;score=0
+    else:
+     ok=None;score=None
+     c.execute("INSERT INTO ai_reviews(student_id,course_id,ce,item_id,attempt,response,reference,score,confidence,verdict,feedback,status,created_at,breakdown,source_kind) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",(x.student_id,x.course_id,x.ce,x.item_id,x.attempt,json.dumps(given,ensure_ascii=False),json.dumps(expected,ensure_ascii=False),None,0,"pending","Pendiente de revisión docente.","pending",now(),"[]","portfolio"))
    elif kind=="order":ok=given==expected
    elif kind=="match":ok=isinstance(given,list) and isinstance(expected,list) and [str(v) for v in given]==[str(v) for v in expected]
    else:ok=given==expected
