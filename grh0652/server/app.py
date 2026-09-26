@@ -46,6 +46,27 @@ CREATE TABLE IF NOT EXISTS ai_rubrics(id INTEGER PRIMARY KEY AUTOINCREMENT,cours
  vcols={r["name"] for r in c.execute("PRAGMA table_info(ai_reviews)")}
  if "breakdown" not in vcols:c.execute("ALTER TABLE ai_reviews ADD COLUMN breakdown TEXT NOT NULL DEFAULT '[]'")
  if "source_kind" not in vcols:c.execute("ALTER TABLE ai_reviews ADD COLUMN source_kind TEXT NOT NULL DEFAULT 'portfolio'")
+ defaults=[
+  ("GRH0652_UT1","1.g","","Contratos laborales — revisión documental","Valora la corrección profesional del contrato cumplimentado. No premies solo que un campo esté relleno; comprueba coherencia entre modalidad, causa, jornada, convenio, retribución, duración y datos del supuesto.",[
+   {"id":"modalidad","name":"Modalidad y causa","weight":25,"description":"Modalidad contractual adecuada y, cuando proceda, causa concreta, suficiente y coherente."},
+   {"id":"datos","name":"Datos obligatorios","weight":20,"description":"Identificación y campos necesarios completos y consistentes con el supuesto."},
+   {"id":"jornada","name":"Jornada, duración y fechas","weight":20,"description":"Jornada, distribución, duración, fechas y periodo de prueba coherentes y jurídicamente plausibles."},
+   {"id":"convenio","name":"Convenio, clasificación y salario","weight":20,"description":"Convenio, grupo/puesto y retribución guardan coherencia entre sí y con los mínimos aplicables."},
+   {"id":"trazabilidad","name":"Coherencia y trazabilidad","weight":15,"description":"El documento es internamente coherente y permite justificar de dónde proceden los datos relevantes."}]),
+  ("GRH0652_UT4","4.f","","Nóminas — bases y cotización","Valora el procedimiento y los cálculos. Penaliza errores arrastrados de forma proporcionada y distingue error conceptual de error aritmético aislado.",[
+   {"id":"devengos","name":"Devengos computables","weight":20,"description":"Identifica y clasifica correctamente las percepciones que intervienen."},
+   {"id":"bases","name":"Bases de cotización","weight":35,"description":"Construye correctamente las bases, prorratas y reglas especiales del supuesto."},
+   {"id":"cuotas","name":"Cuotas","weight":30,"description":"Aplica tipos y distingue aportación del trabajador y empresarial cuando corresponda."},
+   {"id":"proceso","name":"Procedimiento y trazabilidad","weight":15,"description":"Operaciones ordenadas, verificables y vinculadas a los datos del supuesto."}]),
+  ("GRH0652_UT4","4.g","","Nóminas — confección del recibo","Valora la confección integral del recibo salarial y documentos asociados, atendiendo a coherencia aritmética y documental.",[
+   {"id":"devengos","name":"Devengos","weight":20,"description":"Conceptos, importes y clasificación salarial/no salarial correctos."},
+   {"id":"bases","name":"Bases","weight":20,"description":"Bases de cotización y, cuando proceda, base sujeta a retención correctamente determinadas."},
+   {"id":"deducciones","name":"Cotización e IRPF","weight":25,"description":"Deducciones y retenciones calculadas y aplicadas correctamente."},
+   {"id":"liquido","name":"Líquido y coherencia aritmética","weight":20,"description":"Totales, deducciones y líquido cuadran y son reproducibles."},
+   {"id":"documento","name":"Cumplimentación y trazabilidad","weight":15,"description":"Documento completo, consistente y trazable al supuesto y periodo."}])
+ ]
+ for course,ce,item,name,rubric,criteria in defaults:
+  c.execute("INSERT OR IGNORE INTO ai_rubrics(course_id,ce,item_id,name,rubric,updated_at,criteria) VALUES(?,?,?,?,?,?,?)",(course,ce,item,name,rubric,now(),json.dumps(criteria,ensure_ascii=False)))
  # Portfolio answer keys are intentionally not loaded from repository files.
  # Production keys must be provisioned into SQLite through the authenticated teacher endpoint.
  c.commit();return c
