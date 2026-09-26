@@ -1,7 +1,7 @@
-import os,json,sqlite3,datetime,secrets
+import os,json,sqlite3,datetime,secrets,tempfile,shutil
 import httpx
 from pathlib import Path
-from fastapi import FastAPI,HTTPException,Header
+from fastapi import FastAPI,HTTPException,Header,UploadFile,File
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -274,6 +274,28 @@ def health(): return {"ok":True}
 @app.get("/api/config/{course_id}")
 def get_config(course_id:str):
  c=con();d,v=config_row(c,course_id);closed=c.execute("SELECT closed_at FROM evaluation_closures WHERE course_id=?",(course_id,)).fetchone();c.close();public={k:v for k,v in d.items() if k not in ("exam_pin","exam_allowed_students","exam_exempt_students")};public["exam_pin_required"]=bool(d.get("exam_pin"));return {**public,"version":v,"evaluation_closed":bool(closed)}
+@app.get("/api/teacher/backup")
+def teacher_backup(x_teacher_token:str|None=Header(None)):
+ auth(x_teacher_token);c=con();c.execute("PRAGMA wal_checkpoint(FULL)");dst=tempfile.NamedTemporaryFile(prefix="grh0652-backup-",suffix=".db",delete=False);dst.close();b=sqlite3.connect(dst.name)
+ try:c.backup(b)
+ finally:b.close();c.close()
+ from fastapi.responses import FileResponse
+ return FileResponse(dst.name,media_type="application/vnd.sqlite3",filename="grh0652-backup-"+datetime.datetime.now().strftime("%Y%m%d-%H%M%S")+".db",background=None)
+
+@app.post("/api/teacher/backup/validate")
+async def teacher_validate_backup(file:UploadFile=File(...),x_teacher_token:str|None=Header(None)):
+ auth(x_teacher_token);data=await file.read()
+ if len(data)<100 or data[:16]!=b"SQLite format 3\\x00":raise HTTPException(400,"El archivo no es una copia SQLite válida")
+ p=tempfile.NamedTemporaryFile(suffix=".db",delete=False);p.write(data);p.close()
+ try:
+  c=sqlite3.connect(p.name);tables={r[0] for r in c.execute("SELECT name FROM sqlite_master WHERE type='table'")};required={"students","states","evidence","results","configs","attempts","exam_banks","exam_versions"};missing=sorted(required-tables)
+  integrity=c.execute("PRAGMA integrity_check").fetchone()[0];counts={t:c.execute("SELECT COUNT(*) FROM "+t).fetchone()[0] for t in sorted(required&tables)};c.close()
+ finally:
+  try:os.unlink(p.name)
+  except OSError:pass
+ if integrity!="ok" or missing:raise HTTPException(400,{"integrity":integrity,"missing_tables":missing})
+ return {"ok":True,"integrity":integrity,"size":len(data),"counts":counts}
+
 @app.get("/api/teacher/readiness/{course_id}")
 def teacher_readiness(course_id:str,x_teacher_token:str|None=Header(None)):
  auth(x_teacher_token);c=con();cfg,_=config_row(c,course_id)
