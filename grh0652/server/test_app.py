@@ -715,3 +715,23 @@ def test_private_bank_bootstrap_rejects_invalid_bank(tmp_path,monkeypatch):
  monkeypatch.setattr(module,"PRIVATE_BANK_DIR",str(tmp_path));monkeypatch.setattr(module,"_private_banks_seeded",False)
  with pytest.raises(RuntimeError,match="Banco privado inválido"):module.con()
  monkeypatch.setattr(module,"PRIVATE_BANK_DIR","");monkeypatch.setattr(module,"_private_banks_seeded",False)
+
+
+def test_private_bootstrap_makes_readiness_accept_exam_and_recovery(tmp_path,monkeypatch):
+ import json
+ course="GRH0652_UT1"
+ public=json.loads((module.Path(module.__file__).resolve().parent/"banks"/"ut1_portfolio.json").read_text(encoding="utf-8"))
+ ces=sorted({x["ce"] for x in public["items"]})
+ exam={"course_id":course,"kind":"exam","questions":[{"id":f"boot-{ce}-{n}","ce":ce,"q":f"Pregunta {ce} {n}","options":["A","B"],"answer":0,"type":"choice"} for ce in ces for n in range(3)]}
+ recovery={"course_id":course,"kind":"recovery","items":[{"id":f"rec-{ce}","ce":ce,"kind":"choice","prompt":f"Recuperación {ce}","options":["A","B"],"answer":0,"feedback":"Revisar"} for ce in ces]}
+ (tmp_path/"exam.json").write_text(json.dumps(exam),encoding="utf-8");(tmp_path/"recovery.json").write_text(json.dumps(recovery),encoding="utf-8")
+ monkeypatch.setattr(module,"PRIVATE_BANK_DIR",str(tmp_path));monkeypatch.setattr(module,"_private_banks_seeded",False)
+ db=module.con()
+ for ce in ces:db.execute("INSERT OR REPLACE INTO portfolio_banks(course_id,item_id,ce,kind,answer) VALUES(?,?,?,?,?)",(course,f"k-{ce}",ce,"choice",json.dumps(0)))
+ db.commit();db.close()
+ if client.post("/api/teacher/students/readiness-student",headers=H).status_code not in (200,409):assert False
+ old_origins=module.ORIGINS;monkeypatch.setattr(module,"ORIGINS",["https://example.test"])
+ out=client.get("/api/teacher/readiness/"+course,headers=H);assert out.status_code==200,out.text
+ d=out.json();assert d["checks"]["exam_bank"]["ok"] is True;assert d["checks"]["recovery_bank"]["ok"] is True;assert d["checks"]["portfolio_keys"]["ok"] is True;assert d["ready"] is True
+ assert set(d["checks"]["exam_bank"]["counts"])==set(ces) and all(d["checks"]["exam_bank"]["counts"][ce]>=3 for ce in ces)
+ monkeypatch.setattr(module,"ORIGINS",old_origins);monkeypatch.setattr(module,"PRIVATE_BANK_DIR","");monkeypatch.setattr(module,"_private_banks_seeded",False)
