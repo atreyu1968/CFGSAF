@@ -447,7 +447,7 @@ def put_exam_bank(course_id:str,x:BankIn,x_teacher_token:str|None=Header(None)):
 def exam_start(x:AttemptIn,x_student_token:str|None=Header(None)):
  require_student(x.student_id,x_student_token)
  if x.kind!="exam": raise HTTPException(400,"kind debe ser exam")
- c=con();active=c.execute("SELECT id,attempt_no FROM attempts WHERE student_id=? AND course_id=? AND kind='exam' AND item_id=? AND status='started' ORDER BY attempt_no DESC LIMIT 1",(x.student_id,x.course_id,x.item_id)).fetchone()
+ c=con();active=c.execute("SELECT id,attempt_no,payload FROM attempts WHERE student_id=? AND course_id=? AND kind='exam' AND item_id=? AND status='started' ORDER BY attempt_no DESC LIMIT 1",(x.student_id,x.course_id,x.item_id)).fetchone()
  if active:
   old=c.execute("SELECT * FROM exam_versions WHERE attempt_id=?",(active["id"],)).fetchone()
   if old:c.close();ap=json.loads(active["payload"] or "{}");return {"attempt_id":active["id"],"attempt":active["attempt_no"],"version":old["version"],"questions":json.loads(old["questions"]),"config":json.loads(old["config"]) if old["config"] else {},"deadline_at":old["deadline_at"],"saved_answers":ap.get("draft_answers",{}),"draft_saved_at":ap.get("draft_saved_at"),"resumed":True}
