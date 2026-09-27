@@ -90,11 +90,11 @@ done
 
 CONFIG_DIR="/etc/grh0652"
 INSTALL_CONF="$CONFIG_DIR/install.conf"
-if [[ -f "$INSTALL_CONF" ]]; then
-  # Archivo creado por este instalador y protegido 600.
-  # shellcheck disable=SC1090
-  source "$INSTALL_CONF"
-  DOMAIN="${DOMAIN_ARG:-${DOMAIN:-$DOMAIN}}"
+# En una reinstalación interactiva podemos recuperar el dominio anterior sin
+# permitir que install.conf sobrescriba opciones expresas de la línea de órdenes.
+if [[ -z "$DOMAIN" && -f "$INSTALL_CONF" ]]; then
+  previous_domain="$(sed -n "s/^DOMAIN_ARG='\\(.*\\)'$/\\1/p" "$INSTALL_CONF" | head -n1)"
+  [[ -n "$previous_domain" ]] && DOMAIN="$previous_domain"
 fi
 
 prompt(){
