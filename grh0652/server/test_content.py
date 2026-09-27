@@ -168,7 +168,7 @@ def test_teacher_has_detailed_production_preflight():
 
 def test_release_workflow_is_reproducible_and_excludes_private_banks():
  yml=(ROOT.parent/".github"/"workflows"/"grh0652-release.yml").read_text(encoding="utf-8")
- for marker in ("workflow_dispatch:","pull_request:","grh0652-v*","pytest -q","GRH0652_{unit.upper()}_{ra}_SCORM12.zip","GRH0652_APP_","SHA256SUMS.txt","RELEASE_INFO.txt","private-banks/*.json","actions/upload-artifact@v4"):
+ for marker in ("workflow_dispatch:","pull_request:","branches:","- main","grh0652-v*","pytest -q","GRH0652_{unit.upper()}_{ra}_SCORM12.zip","GRH0652_APP_","SHA256SUMS.txt","RELEASE_INFO.txt","private-banks/*.json","actions/upload-artifact@v4"):
   assert marker in yml,marker
  assert "contents: write" not in yml
 
