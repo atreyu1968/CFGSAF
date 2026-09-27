@@ -6,10 +6,10 @@
       "kind": "choice",
       "prompt": "Un hotel cambia de forma estable el turno fijo de recepción por turnos rotatorios. Antes de tramitarlo, ¿qué debe determinar RR. HH.?",
       "options": [
+        "Elegir la opción que tarde menos",
         "Analizar los datos y la fuente aplicable antes de actuar",
         "Copiar el expediente anterior sin comprobarlo",
-        "Ejecutar el trámite y revisar después",
-        "Elegir la opción que tarde menos"
+        "Ejecutar el trámite y revisar después"
       ]
     },
     {
@@ -25,10 +25,10 @@
       "kind": "multi",
       "prompt": "Un hotel pretende sustituir el turno fijo por turnos rotatorios. Selecciona qué datos debe revisar RR. HH. antes de tramitar la modificación.",
       "options": [
-        "Contrato y convenio aplicables",
         "Condición actual y cambio propuesto",
         "Personas y fechas afectadas",
-        "Una carta antigua de otra empresa"
+        "Una carta antigua de otra empresa",
+        "Contrato y convenio aplicables"
       ]
     },
     {
@@ -37,9 +37,9 @@
       "kind": "order",
       "prompt": "Ordena el análisis profesional de una modificación de condiciones antes de comunicarla.",
       "options": [
-        "Reconstruir la condición vigente",
-        "Consultar norma y convenio",
         "Clasificar jurídicamente el cambio",
+        "Consultar norma y convenio",
+        "Reconstruir la condición vigente",
         "Preparar y acreditar la comunicación"
       ]
     },
@@ -49,10 +49,10 @@
       "kind": "choice",
       "prompt": "La empresa quiere aplicar mañana un cambio permanente sin haber identificado su encaje ni procedimiento. ¿Qué debe hacerse?",
       "options": [
+        "Copiar los datos de otra persona",
         "Detener, comprobar y corregir antes de continuar",
         "Ignorarlo si el sistema permite seguir",
-        "Borrar el expediente",
-        "Copiar los datos de otra persona"
+        "Borrar el expediente"
       ]
     },
     {
@@ -94,10 +94,10 @@
       "kind": "order",
       "prompt": "Ordena el cierre económico de una extinción laboral desde la fecha de baja hasta la verificación final.",
       "options": [
-        "Fijar fecha de extinción",
         "Calcular salario pendiente",
+        "Añadir, si procede, indemnización y verificar",
         "Calcular pagas y vacaciones pendientes",
-        "Añadir, si procede, indemnización y verificar"
+        "Fijar fecha de extinción"
       ]
     },
     {
@@ -107,9 +107,9 @@
       "prompt": "El finiquito se calcula sin revisar vacaciones ya disfrutadas. ¿Cuál es el problema?",
       "options": [
         "Detener, comprobar y corregir antes de continuar",
-        "Ignorarlo si el sistema permite seguir",
         "Borrar el expediente",
-        "Copiar los datos de otra persona"
+        "Copiar los datos de otra persona",
+        "Ignorarlo si el sistema permite seguir"
       ]
     },
     {
@@ -118,10 +118,10 @@
       "kind": "choice",
       "prompt": "¿Qué desglose hace reproducible un finiquito?",
       "options": [
-        "Datos de origen, decisiones, fechas, documentos y justificantes",
         "Solo el resultado final",
-        "Una nota sin fecha",
-        "Ninguna si el trámite terminó"
+        "Ninguna si el trámite terminó",
+        "Datos de origen, decisiones, fechas, documentos y justificantes",
+        "Una nota sin fecha"
       ]
     },
     {
@@ -130,10 +130,10 @@
       "kind": "choice",
       "prompt": "Una empresa asigna durante meses funciones superiores a una trabajadora. ¿Qué debe revisar primero RR. HH.?",
       "options": [
-        "Analizar los datos y la fuente aplicable antes de actuar",
-        "Copiar el expediente anterior sin comprobarlo",
         "Ejecutar el trámite y revisar después",
-        "Elegir la opción que tarde menos"
+        "Elegir la opción que tarde menos",
+        "Copiar el expediente anterior sin comprobarlo",
+        "Analizar los datos y la fuente aplicable antes de actuar"
       ]
     },
     {
@@ -149,10 +149,10 @@
       "kind": "multi",
       "prompt": "Una persona lleva meses realizando funciones superiores. Selecciona las comprobaciones necesarias para analizar la movilidad funcional.",
       "options": [
-        "Funciones realmente encomendadas",
         "Clasificación del convenio",
-        "Titulación/habilitación necesaria",
-        "Color del uniforme"
+        "Funciones realmente encomendadas",
+        "Color del uniforme",
+        "Titulación/habilitación necesaria"
       ]
     },
     {
@@ -161,10 +161,10 @@
       "kind": "order",
       "prompt": "Ordena la revisión de una movilidad funcional antes de documentar la decisión.",
       "options": [
-        "Describir funciones nuevas",
-        "Compararlas con clasificación profesional",
         "Revisar límites y efectos retributivos",
-        "Documentar la decisión"
+        "Documentar la decisión",
+        "Describir funciones nuevas",
+        "Compararlas con clasificación profesional"
       ]
     },
     {
@@ -173,10 +173,10 @@
       "kind": "choice",
       "prompt": "Se ordena una tarea que exige habilitación que la persona no posee. ¿Qué procede?",
       "options": [
-        "Detener, comprobar y corregir antes de continuar",
-        "Ignorarlo si el sistema permite seguir",
         "Borrar el expediente",
-        "Copiar los datos de otra persona"
+        "Copiar los datos de otra persona",
+        "Ignorarlo si el sistema permite seguir",
+        "Detener, comprobar y corregir antes de continuar"
       ]
     },
     {
@@ -193,8 +193,8 @@
       "prompt": "Una empresa traslada de forma estable a una persona a un centro en otra isla. ¿Qué debe distinguirse antes de tramitar?",
       "options": [
         "Analizar los datos y la fuente aplicable antes de actuar",
-        "Copiar el expediente anterior sin comprobarlo",
         "Ejecutar el trámite y revisar después",
+        "Copiar el expediente anterior sin comprobarlo",
         "Elegir la opción que tarde menos"
       ]
     },
@@ -211,10 +211,10 @@
       "kind": "multi",
       "prompt": "La empresa estudia mover a una persona a otro centro. Selecciona los datos que permiten distinguir y tramitar correctamente la movilidad geográfica.",
       "options": [
-        "Centro de origen y destino",
-        "Duración prevista",
         "Causa y fecha",
-        "Marca del ordenador"
+        "Marca del ordenador",
+        "Centro de origen y destino",
+        "Duración prevista"
       ]
     },
     {
@@ -223,10 +223,10 @@
       "kind": "order",
       "prompt": "Ordena la tramitación administrativa de un cambio de centro con posible traslado o desplazamiento.",
       "options": [
-        "Identificar cambio de centro",
         "Determinar si es traslado o desplazamiento",
-        "Revisar procedimiento y compensaciones",
-        "Comunicar y conservar evidencia"
+        "Identificar cambio de centro",
+        "Comunicar y conservar evidencia",
+        "Revisar procedimiento y compensaciones"
       ]
     },
     {
@@ -236,8 +236,8 @@
       "prompt": "La comunicación no indica destino ni fecha de efectos. ¿Por qué debe detenerse?",
       "options": [
         "Detener, comprobar y corregir antes de continuar",
-        "Ignorarlo si el sistema permite seguir",
         "Borrar el expediente",
+        "Ignorarlo si el sistema permite seguir",
         "Copiar los datos de otra persona"
       ]
     },
@@ -254,10 +254,10 @@
       "kind": "choice",
       "prompt": "Una persona inicia una incapacidad temporal. ¿Cómo debe tratar RR. HH. el contrato?",
       "options": [
+        "Elegir la opción que tarde menos",
         "Analizar los datos y la fuente aplicable antes de actuar",
         "Copiar el expediente anterior sin comprobarlo",
-        "Ejecutar el trámite y revisar después",
-        "Elegir la opción que tarde menos"
+        "Ejecutar el trámite y revisar después"
       ]
     },
     {
@@ -273,10 +273,10 @@
       "kind": "multi",
       "prompt": "Ante una suspensión temporal del contrato, selecciona la información que RR. HH. debe controlar durante todo el expediente.",
       "options": [
-        "Causa exacta de suspensión",
         "Fecha de inicio y periodo",
+        "Una baja definitiva automática",
         "Efectos en nómina/cotización",
-        "Una baja definitiva automática"
+        "Causa exacta de suspensión"
       ]
     },
     {
@@ -285,9 +285,9 @@
       "kind": "order",
       "prompt": "Ordena el ciclo administrativo de una suspensión desde su inicio hasta la reincorporación.",
       "options": [
-        "Registrar la causa y fechas",
-        "Aplicar efectos administrativos y económicos",
         "Controlar cambios durante el periodo",
+        "Aplicar efectos administrativos y económicos",
+        "Registrar la causa y fechas",
         "Gestionar la reincorporación"
       ]
     },
@@ -297,10 +297,10 @@
       "kind": "choice",
       "prompt": "Se tramita como baja definitiva una suspensión temporal. ¿Qué error se está cometiendo?",
       "options": [
+        "Copiar los datos de otra persona",
         "Detener, comprobar y corregir antes de continuar",
         "Ignorarlo si el sistema permite seguir",
-        "Borrar el expediente",
-        "Copiar los datos de otra persona"
+        "Borrar el expediente"
       ]
     },
     {
@@ -317,9 +317,9 @@
       "prompt": "Dos personas piden un año de excedencia por causas distintas. ¿Qué debe hacer RR. HH.?",
       "options": [
         "Analizar los datos y la fuente aplicable antes de actuar",
-        "Copiar el expediente anterior sin comprobarlo",
+        "Elegir la opción que tarde menos",
         "Ejecutar el trámite y revisar después",
-        "Elegir la opción que tarde menos"
+        "Copiar el expediente anterior sin comprobarlo"
       ]
     },
     {
@@ -336,8 +336,8 @@
       "prompt": "Una persona solicita excedencia. Selecciona las comprobaciones necesarias antes de responder.",
       "options": [
         "Modalidad solicitada",
-        "Requisitos y duración",
         "Convenio aplicable",
+        "Requisitos y duración",
         "Una respuesta estándar sin revisar"
       ]
     },
@@ -347,10 +347,10 @@
       "kind": "order",
       "prompt": "Ordena la gestión de una excedencia desde la solicitud hasta el control del reingreso.",
       "options": [
-        "Registrar solicitud",
         "Identificar modalidad y requisitos",
         "Resolver indicando efectos y fechas",
-        "Controlar vencimiento/reincorporación"
+        "Controlar vencimiento/reincorporación",
+        "Registrar solicitud"
       ]
     },
     {
@@ -360,9 +360,9 @@
       "prompt": "La resolución promete reserva de puesto sin comprobar la modalidad. ¿Qué falla?",
       "options": [
         "Detener, comprobar y corregir antes de continuar",
-        "Ignorarlo si el sistema permite seguir",
+        "Copiar los datos de otra persona",
         "Borrar el expediente",
-        "Copiar los datos de otra persona"
+        "Ignorarlo si el sistema permite seguir"
       ]
     },
     {
