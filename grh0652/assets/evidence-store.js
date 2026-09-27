@@ -1,5 +1,5 @@
 (function(){
-const API=(new URLSearchParams(location.search).get('api')||localStorage.getItem('grh0652.api')||'').replace(/\/$/,'');
+const API=(new URLSearchParams(location.search).get('api')||localStorage.getItem('grh0652.api')||location.origin).replace(/\/$/,'');
 const student=()=>window.SCORM_STUDENT_ID||localStorage.getItem('grh0652.student')||'';
 const studentKey=()=>window.SCORM_STUDENT_KEY||localStorage.getItem('grh0652.studentKey')||'';
 const course=()=>window.SCORM_COURSE_ID||'GRH0652_UT1';
