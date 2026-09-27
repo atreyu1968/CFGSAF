@@ -1,0 +1,106 @@
+name: GRH0652 release candidate
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'grh0652-v*'
+
+permissions:
+  contents: read
+
+jobs:
+  verify-and-package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact revision
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install backend test dependencies
+        run: pip install -r grh0652/server/requirements.txt
+
+      - name: Run GRH0652 test suite
+        working-directory: grh0652/server
+        run: pytest -q
+
+      - name: Build and validate four SCORM 1.2 packages
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          python3 - <<'PY'
+          import pathlib,re,zipfile
+          root=pathlib.Path("grh0652/scorm")
+          matrix=(("ut1","RA1"),("ut2","RA2"),("ut3","RA3"),("ut4","RA4"))
+          for unit,ra in matrix:
+              src=root/unit
+              manifest=(src/"imsmanifest.xml").read_text(encoding="utf-8")
+              if 'adlcp:scormtype="sco"' not in manifest:
+                  raise SystemExit(f"{unit}: manifest no declara SCO")
+              files=re.findall(r'<file href="([^"]+)"',manifest)
+              missing=[f for f in files if not (src/f).is_file()]
+              if missing:
+                  raise SystemExit(f"{unit}: faltan recursos: {missing}")
+              html=(src/"index.html").read_text(encoding="utf-8")
+              refs=set(re.findall(r'(?:src|href)="(assets/[^"]+)"',html))
+              undeclared=sorted(refs-set(files))
+              if undeclared:
+                  raise SystemExit(f"{unit}: recursos no declarados: {undeclared}")
+              out=pathlib.Path("dist")/f"GRH0652_{unit.upper()}_{ra}_SCORM12.zip"
+              with zipfile.ZipFile(out,"w",zipfile.ZIP_DEFLATED) as z:
+                  z.write(src/"imsmanifest.xml","imsmanifest.xml")
+                  for f in files:
+                      z.write(src/f,f)
+              with zipfile.ZipFile(out) as z:
+                  if not z.namelist() or z.namelist()[0]!="imsmanifest.xml":
+                      raise SystemExit(f"{unit}: imsmanifest.xml no está en la raíz")
+              print(out)
+          PY
+
+      - name: Build deployable application bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          SHORT_SHA="${GITHUB_SHA::12}"
+          APP="dist/GRH0652_APP_${SHORT_SHA}.zip"
+          (
+            cd grh0652
+            zip -r "../${APP}" .               -x 'private-banks/*.json'                  '*.db' '*.db-*' '.env'                  'server/__pycache__/*' 'server/*.pyc'
+          )
+          unzip -l "$APP" | grep -q 'private-banks/README.md'
+          if unzip -Z1 "$APP" | grep -Eq '^private-banks/.*\.json$'; then
+            echo "ERROR: el bundle contiene bancos privados" >&2
+            exit 1
+          fi
+
+      - name: Write immutable release metadata and checksums
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            echo "GRH0652 release candidate"
+            echo "commit=${GITHUB_SHA}"
+            echo "ref=${GITHUB_REF}"
+            echo "run_id=${GITHUB_RUN_ID}"
+            echo "generated_utc=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          } > dist/RELEASE_INFO.txt
+          (
+            cd dist
+            sha256sum *.zip > SHA256SUMS.txt
+          )
+
+      - name: Upload release candidate artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: GRH0652_release_${{ github.sha }}
+          path: |
+            dist/*.zip
+            dist/SHA256SUMS.txt
+            dist/RELEASE_INFO.txt
+          if-no-files-found: error
+          retention-days: 30
