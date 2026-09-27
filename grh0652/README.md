@@ -2,6 +2,37 @@
 
 Implementación completa del módulo **0652 · Gestión de Recursos Humanos** organizada en cuatro RA/UT.
 
+## Instalación automática en Ubuntu
+
+La forma recomendada de desplegar GRH0652 en producción es mediante el instalador incluido en el repositorio:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/atreyu1968/CFGSAF/main/grh0652/install-ubuntu.sh | sudo bash
+```
+
+El instalador configura automáticamente Docker Engine, Docker Compose, FastAPI, SQLite, Nginx, bancos privados, API same-origin, Cloudflare Tunnel opcional, backups diarios y comandos de mantenimiento.
+
+Para una instalación no interactiva con un túnel Cloudflare ya existente:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/atreyu1968/CFGSAF/main/grh0652/install-ubuntu.sh | \
+sudo bash -s -- \
+  --domain grh.midominio.es \
+  --private-banks /root/GRH0652_PRIVATE_BANKS_v1.zip \
+  --cloudflare-mode existing \
+  --non-interactive
+```
+
+El origen local que debe publicar Cloudflare es:
+
+```text
+http://localhost:8080
+```
+
+Los bancos privados deben permanecer fuera de Git y nunca deben ubicarse en el directorio web público.
+
+Documentación detallada: [INSTALL_UBUNTU.md](INSTALL_UBUNTU.md).
+
 ## Flujo del alumnado
 1. Teoría e infografías.
 2. Práctica guiada no evaluable: 3 intentos por ejercicio; al agotarlos se muestra orientación/solución.
