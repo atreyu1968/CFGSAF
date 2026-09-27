@@ -185,16 +185,19 @@ def test_all_units_render_and_submit_ordered_portfolio_items():
   assert "list.insertBefore" in js
 
 
-def test_ut1_public_matching_items_have_complete_pairs():
+def test_ut1_portfolio_is_rotated_and_does_not_expose_matching_pairs():
  data=json.loads((ROOT/"server"/"banks"/"ut1_portfolio.json").read_text(encoding="utf-8"))
- matches=[x for x in data["items"] if x["kind"]=="match"]
- assert len(matches)==8
- for item in matches:
-  pairs=item.get("pairs")
-  assert isinstance(pairs,list) and len(pairs)>=4,item["id"]
-  assert all(isinstance(p,list) and len(p)==2 and all(str(v).strip() for v in p) for p in pairs)
-  assert len({p[0] for p in pairs})==len(pairs)
-  assert len({p[1] for p in pairs})==len(pairs)
+ items=data["items"]
+ assert len(items)==54
+ assert all("-v1-" in x["id"] for x in items)
+ assert all(x["kind"]!="match" for x in items)
+ assert all("answer" not in x and "feedback" not in x for x in items)
+ by={}
+ for x in items:by.setdefault(x["ce"],[]).append(x)
+ assert set(by)=={f"1.{x}" for x in "abcdefghi"}
+ assert all(len(v)==6 for v in by.values())
+ orders=[x for x in items if x["kind"]=="order"]
+ assert len(orders)==9 and all(len(x.get("options",[]))==4 for x in orders)
 
 
 def test_all_units_render_and_submit_matching_portfolio_items():
