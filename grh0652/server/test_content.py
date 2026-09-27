@@ -166,6 +166,13 @@ def test_teacher_has_detailed_production_preflight():
   assert marker in s,marker
 
 
+def test_release_workflow_is_reproducible_and_excludes_private_banks():
+ yml=(ROOT.parent/".github"/"workflows"/"grh0652-release.yml").read_text(encoding="utf-8")
+ for marker in ("workflow_dispatch:","grh0652-v*","pytest -q","GRH0652_UT1_RA1_SCORM12.zip","GRH0652_APP_","SHA256SUMS.txt","RELEASE_INFO.txt","private-banks/*.json","actions/upload-artifact@v4"):
+  assert marker in yml,marker
+ assert "contents: write" not in yml
+
+
 def test_all_units_render_and_submit_ordered_portfolio_items():
  for ut in ("ut1","ut2","ut3","ut4"):
   js=(ROOT/"scorm"/ut/"assets"/"scorm.js").read_text(encoding="utf-8")
