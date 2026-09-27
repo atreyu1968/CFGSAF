@@ -1,4 +1,4 @@
-import re,json
+import re,json,subprocess
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 EXPECTED={"ut1":[f"1.{x}" for x in "abcdefghi"],"ut2":[f"2.{x}" for x in "abcdef"],"ut3":[f"3.{x}" for x in "abcdefgh"],"ut4":[f"4.{x}" for x in "abcdefghij"]}
@@ -384,3 +384,38 @@ def test_ut4_part_time_and_arrears_payroll_cases():
  for needle in ["Caso 29 · Nómina a tiempo parcial","payroll-form-9","data-pay9=\"basep\"","data-pay9=\"liq\"","9:{basep:900","Caso 30 · Atrasos salariales","payroll-form-10","data-pay10=\"monthly\"","data-pay10=\"net\"","10:{monthly:100","9:'4.e',10:'4.e'"]:
   assert needle in html,needle
  assert "recordPayrollEvidence('4.ep-payroll-'+n" in html
+
+
+def test_same_origin_api_is_default_for_one_domain_install():
+ index=(ROOT/"index.html").read_text(encoding="utf-8")
+ evidence=(ROOT/"assets"/"evidence-store.js").read_text(encoding="utf-8")
+ teacher=(ROOT/"teacher.html").read_text(encoding="utf-8")
+ assert "localStorage.getItem('grh0652.api')||location.origin" in index
+ assert "localStorage.getItem('grh0652.api')||location.origin" in evidence
+ assert "localStorage.getItem('grh0652.api')||location.origin" in teacher
+
+
+def test_ubuntu_installer_has_valid_bash_and_production_guards():
+ p=ROOT/"install-ubuntu.sh"
+ run=subprocess.run(["bash","-n",str(p)],capture_output=True,text=True)
+ assert run.returncode==0,run.stderr
+ s=p.read_text(encoding="utf-8")
+ for marker in (
+  "validate_private_banks.py",
+  "docker-compose.prod.yml",
+  "127.0.0.1:$WEB_PORT:80",
+  "GRH_PRIVATE_BANK_DIR: /private-banks",
+  "private-banks:/private-banks:ro",
+  "cloudflared-grh0652.service",
+  "--token-file",
+  "grh0652-backup.timer",
+  "grh0652-update",
+  "pre-update-",
+  "X-Teacher-Token",
+  "https://$DOMAIN/health",
+ ):
+  assert marker in s,marker
+ assert "GRH_TEACHER_TOKEN=$TEACHER_TOKEN" in s
+ assert "GRH_ALLOWED_ORIGINS=https://$DOMAIN" in s
+ assert "chmod 600 \"$INSTALL_DIR/.env\"" in s
+ assert "chmod 600 \"$INSTALL_DIR/private-banks/\"*.json" in s
