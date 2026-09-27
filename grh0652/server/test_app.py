@@ -437,6 +437,21 @@ def test_teacher_ai_decision_recomputes_official_ce_ra_and_recovery():
  body={**module.DEFAULT,"portfolio_weight":100,"exam_weight":0,"ce_pass_percent":100};assert client.put("/api/config/AIRECALC",headers=H,json=body).status_code==200;client.post("/api/teacher/students/ai-recalc",headers=H);db=module.con();tok=db.execute("SELECT token FROM students WHERE student_id='ai-recalc'").fetchone()["token"];db.execute("INSERT OR REPLACE INTO portfolio_banks(course_id,item_id,ce,kind,answer) VALUES(?,?,?,?,?)",("AIRECALC","free1","1.a","free",json.dumps("respuesta modelo")));db.execute("INSERT INTO evidence(student_id,course_id,kind,ce,item_id,attempt,response,correct,score,payload,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)",("ai-recalc","AIRECALC","portfolio","1.a","free1",1,json.dumps("respuesta alumno"),None,None,json.dumps({}),module.now()));eid=db.execute("SELECT last_insert_rowid() id").fetchone()["id"];db.execute("INSERT INTO ai_reviews(student_id,course_id,ce,item_id,attempt,response,reference,score,confidence,verdict,feedback,status,created_at,breakdown) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)",("ai-recalc","AIRECALC","1.a","free1",1,json.dumps("respuesta alumno"),json.dumps("respuesta modelo"),40,0.5,"partial","Pendiente","pending",module.now(),"[]"));rid=db.execute("SELECT last_insert_rowid() id").fetchone()["id"];db.commit();db.close();r=client.put(f"/api/teacher/ai-reviews/{rid}",headers=H,json={"score":80,"feedback":"Corrección docente","status":"accepted"});assert r.status_code==200,r.text;z=r.json();assert z["evidence_id"]==eid and z["result"]["ce"]["1.a"]["final"]==80 and z["result"]["ra_passed"] is True and z["result"]["recovery"]==[];sd=client.get("/api/student/dashboard/AIRECALC",headers={"X-Student-Token":tok}).json();assert sd["result"]["final"]==80 and sd["result"]["ra_passed"] is True
 
 
+def test_calculation_portfolio_accepts_equivalent_numeric_formats_without_ai():
+ course="CALCNUM";sid="calc-num"
+ assert client.put("/api/teacher/portfolio-bank/"+course,headers=H,json={"items":[{"id":"calc1","ce":"x","kind":"calculation","prompt":"Calcula","options":[],"answer":1000}]}).status_code==200
+ for attempt,response in ((1,"1000"),(2,"1000.00")):
+  out=client.post("/api/evidence",headers=SH(sid),json={"student_id":sid,"course_id":course,"kind":"portfolio","ce":"x","item_id":"calc1","attempt":attempt,"response":response,"correct":False,"score":0,"payload":{}})
+  assert out.status_code==200,out.text
+  assert out.json()["correct"] is True and out.json()["score"]==100
+
+
+def test_numeric_equal_supports_spanish_decimal_comma_and_rejects_real_difference():
+ assert module.numeric_equal("94,00",94)
+ assert module.numeric_equal("1530.000",1530)
+ assert not module.numeric_equal("93,98",94)
+
+
 def test_semantic_kinds_use_ai_only_when_enabled_and_objective_kinds_stay_deterministic(monkeypatch):
  body={**module.DEFAULT};assert client.put("/api/config/SEMANTIC",headers=H,json=body).status_code==200;client.post("/api/teacher/students/semantic-student",headers=H);db=module.con();tok=db.execute("SELECT token FROM students WHERE student_id='semantic-student'").fetchone()["token"];db.execute("INSERT OR REPLACE INTO portfolio_banks(course_id,item_id,ce,kind,answer) VALUES(?,?,?,?,?)",("SEMANTIC","case1","1.a","case",json.dumps("Solución razonada")));db.execute("INSERT OR REPLACE INTO portfolio_banks(course_id,item_id,ce,kind,answer) VALUES(?,?,?,?,?)",("SEMANTIC","choice1","1.a","choice",json.dumps("A")));db.commit();db.close();sh={"X-Student-Token":tok};called=[]
  def fake(settings,response,reference,context):

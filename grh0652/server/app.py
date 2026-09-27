@@ -15,6 +15,15 @@ app=FastAPI(title="GRH0652 Evidence API")
 app.add_middleware(CORSMiddleware,allow_origins=ORIGINS or [],allow_credentials=False,allow_methods=["GET","POST","PUT"],allow_headers=["Content-Type","X-Teacher-Token","X-Student-Token"])
 
 def now(): return datetime.datetime.now(datetime.UTC).isoformat()
+def numeric_equal(a,b,tolerance=0.005):
+ try:
+  def n(v):
+   if isinstance(v,(int,float)):return float(v)
+   s=str(v).strip().replace("€","").replace(" ","").replace(",",".")
+   return float(s)
+  return abs(n(a)-n(b))<=tolerance
+ except (TypeError,ValueError):
+  return False
 _schema_ready=False
 _defaults_seeded=False
 _private_banks_seeded=False
@@ -502,6 +511,7 @@ def recovery_submit(attempt_id:int,x:SubmitAttempt,x_student_token:str|None=Head
   if kind=="multi" and isinstance(given,list) and isinstance(expected,list):ok=sorted(given)==sorted(expected);score=100 if ok else 0
   elif kind=="order":ok=given==expected;score=100 if ok else 0
   elif kind=="match":ok=isinstance(given,list) and isinstance(expected,list) and [str(v) for v in given]==[str(v) for v in expected];score=100 if ok else 0
+  elif kind=="calculation" and numeric_equal(given,expected):ok=True;score=100
   elif kind in semantic_kinds:
    exact=str(given or "").strip().casefold()==str(expected or "").strip().casefold();settings=ai_settings_row(c)
    if exact:ok=True;score=100
@@ -733,6 +743,7 @@ def evidence(x:EventIn,x_student_token:str|None=Header(None)):
    expected=json.loads(key["answer"]);given=x.response;kind=key["kind"] or "choice"
    semantic_kinds=SEMANTIC_KINDS
    if kind=="multi" and isinstance(given,list) and isinstance(expected,list):ok=sorted(given)==sorted(expected)
+   elif kind=="calculation" and numeric_equal(given,expected):ok=True;score=100
    elif kind in semantic_kinds:
     exact=str(given or "").strip().casefold()==str(expected or "").strip().casefold();settings=ai_settings_row(c)
     if exact:ok=True;score=100

@@ -6,9 +6,9 @@
       "kind": "choice",
       "prompt": "Una pyme contrata por primera vez personal. ¿Qué debe comprobar antes de comunicar movimientos?",
       "options": [
-        "Analizar datos y fuente aplicable antes de actuar",
-        "Copiar un expediente anterior",
         "Enviar y revisar después",
+        "Copiar un expediente anterior",
+        "Analizar datos y fuente aplicable antes de actuar",
         "Elegir la opción más rápida"
       ]
     },
@@ -26,9 +26,9 @@
       "prompt": "Una pyme va a tramitar su primer movimiento de personal. Selecciona los datos empresariales que debe verificar.",
       "options": [
         "Identificación de empresa",
-        "CCC adecuado",
+        "Una captura antigua",
         "Régimen y actividad",
-        "Una captura antigua"
+        "CCC adecuado"
       ]
     },
     {
@@ -37,10 +37,10 @@
       "kind": "order",
       "prompt": "Ordena la tramitación de un movimiento laboral ante la Seguridad Social desde el hecho causante hasta el justificante.",
       "options": [
+        "Transmitir y conservar respuesta",
         "Identificar el hecho laboral",
         "Comprobar empresa/CCC y persona",
-        "Seleccionar trámite y fecha",
-        "Transmitir y conservar respuesta"
+        "Seleccionar trámite y fecha"
       ]
     },
     {
@@ -49,9 +49,9 @@
       "kind": "choice",
       "prompt": "La fecha comunicada no coincide con el inicio real. ¿Qué debe hacerse?",
       "options": [
-        "Detener, comprobar y corregir antes de continuar",
-        "Ignorarlo si permite seguir",
         "Borrar el expediente",
+        "Ignorarlo si permite seguir",
+        "Detener, comprobar y corregir antes de continuar",
         "Copiar datos de otra persona"
       ]
     },
@@ -82,10 +82,10 @@
       "kind": "multi",
       "prompt": "Antes de calcular una base de cotización, selecciona las comprobaciones correctas.",
       "options": [
-        "Clasificar percepciones",
         "Integrar prorratas cuando proceda",
-        "Aplicar reglas y límites del periodo",
-        "Usar el neto como base"
+        "Clasificar percepciones",
+        "Usar el neto como base",
+        "Aplicar reglas y límites del periodo"
       ]
     },
     {
@@ -94,10 +94,10 @@
       "kind": "order",
       "prompt": "Ordena la construcción de una base de cotización desde la clasificación de percepciones hasta la verificación final.",
       "options": [
-        "Identificar conceptos",
-        "Determinar qué computa",
         "Incorporar prorratas y reglas especiales",
-        "Comprobar límites y resultado"
+        "Comprobar límites y resultado",
+        "Identificar conceptos",
+        "Determinar qué computa"
       ]
     },
     {
@@ -106,10 +106,10 @@
       "kind": "choice",
       "prompt": "Se copia el total devengado como base sin clasificar conceptos. ¿Qué procede?",
       "options": [
-        "Detener, comprobar y corregir antes de continuar",
         "Ignorarlo si permite seguir",
         "Borrar el expediente",
-        "Copiar datos de otra persona"
+        "Copiar datos de otra persona",
+        "Detener, comprobar y corregir antes de continuar"
       ]
     },
     {
@@ -119,8 +119,8 @@
       "prompt": "¿Qué desglose permite verificar una base de cotización?",
       "options": [
         "Datos de origen, decisión, fechas, documentos y justificantes",
-        "Solo el resultado",
         "Una nota sin fecha",
+        "Solo el resultado",
         "Nada si el sistema aceptó"
       ]
     },
@@ -156,10 +156,10 @@
       "kind": "order",
       "prompt": "Ordena el cálculo profesional de una prestación desde la contingencia hasta el resultado documentado.",
       "options": [
-        "Identificar contingencia",
         "Comprobar requisitos y periodo",
+        "Documentar resultado",
         "Determinar base y regla de cálculo",
-        "Documentar resultado"
+        "Identificar contingencia"
       ]
     },
     {
@@ -169,9 +169,9 @@
       "prompt": "Se usa la regla de cálculo de una contingencia diferente. ¿Qué debe hacerse?",
       "options": [
         "Detener, comprobar y corregir antes de continuar",
-        "Ignorarlo si permite seguir",
         "Borrar el expediente",
-        "Copiar datos de otra persona"
+        "Copiar datos de otra persona",
+        "Ignorarlo si permite seguir"
       ]
     },
     {
@@ -180,10 +180,10 @@
       "kind": "choice",
       "prompt": "¿Qué datos hacen reproducible el cálculo de una prestación?",
       "options": [
-        "Datos de origen, decisión, fechas, documentos y justificantes",
         "Solo el resultado",
-        "Una nota sin fecha",
-        "Nada si el sistema aceptó"
+        "Nada si el sistema aceptó",
+        "Datos de origen, decisión, fechas, documentos y justificantes",
+        "Una nota sin fecha"
       ]
     },
     {
@@ -192,10 +192,10 @@
       "kind": "choice",
       "prompt": "Una persona ya afiliada empieza en otra empresa. ¿Qué debe analizar RR. HH.?",
       "options": [
+        "Elegir la opción más rápida",
         "Analizar datos y fuente aplicable antes de actuar",
         "Copiar un expediente anterior",
-        "Enviar y revisar después",
-        "Elegir la opción más rápida"
+        "Enviar y revisar después"
       ]
     },
     {
@@ -211,10 +211,10 @@
       "kind": "multi",
       "prompt": "Una persona ya afiliada comienza a trabajar en otra empresa. Selecciona las comprobaciones necesarias antes de tramitar el alta.",
       "options": [
-        "Número de Seguridad Social existente",
         "Empresa y CCC",
         "Fecha real de inicio",
-        "Un número nuevo inventado"
+        "Un número nuevo inventado",
+        "Número de Seguridad Social existente"
       ]
     },
     {
@@ -223,9 +223,9 @@
       "kind": "order",
       "prompt": "Ordena el alta de una persona ya afiliada desde su identificación hasta la respuesta del sistema.",
       "options": [
-        "Identificar persona",
-        "Comprobar afiliación existente",
         "Preparar alta correcta",
+        "Comprobar afiliación existente",
+        "Identificar persona",
         "Transmitir y verificar respuesta"
       ]
     },
@@ -235,10 +235,10 @@
       "kind": "choice",
       "prompt": "El alta tiene fecha distinta del comienzo real. ¿Qué debe hacerse antes de cerrar?",
       "options": [
+        "Copiar datos de otra persona",
         "Detener, comprobar y corregir antes de continuar",
         "Ignorarlo si permite seguir",
-        "Borrar el expediente",
-        "Copiar datos de otra persona"
+        "Borrar el expediente"
       ]
     },
     {
@@ -273,10 +273,10 @@
       "kind": "multi",
       "prompt": "Tras transmitir un movimiento por el canal autorizado, selecciona qué evidencias deben conservarse.",
       "options": [
-        "Respuesta del sistema",
-        "Datos transmitidos",
         "Fecha/hora y justificante",
-        "Solo una captura previa"
+        "Solo una captura previa",
+        "Respuesta del sistema",
+        "Datos transmitidos"
       ]
     },
     {
@@ -285,10 +285,10 @@
       "kind": "order",
       "prompt": "Ordena una comunicación telemática completa desde la preparación de datos hasta el archivo o la corrección.",
       "options": [
-        "Preparar datos",
         "Transmitir por canal autorizado",
-        "Leer aceptación o rechazo",
-        "Archivar justificante o corregir"
+        "Preparar datos",
+        "Archivar justificante o corregir",
+        "Leer aceptación o rechazo"
       ]
     },
     {
@@ -316,10 +316,10 @@
       "kind": "choice",
       "prompt": "La Inspección requiere documentación de un periodo. ¿Cuál es la primera actuación correcta?",
       "options": [
-        "Analizar datos y fuente aplicable antes de actuar",
         "Copiar un expediente anterior",
+        "Elegir la opción más rápida",
         "Enviar y revisar después",
-        "Elegir la opción más rápida"
+        "Analizar datos y fuente aplicable antes de actuar"
       ]
     },
     {
@@ -335,10 +335,10 @@
       "kind": "multi",
       "prompt": "La Inspección solicita información de un periodo concreto. Selecciona qué debe revisar RR. HH. antes de responder.",
       "options": [
+        "Archivos recreados para ocultar errores",
         "Contenido del requerimiento",
         "Periodo y plazo",
-        "Documentos auténticos",
-        "Archivos recreados para ocultar errores"
+        "Documentos auténticos"
       ]
     },
     {
@@ -348,9 +348,9 @@
       "prompt": "Ordena la gestión interna de un requerimiento inspector hasta su entrega y archivo.",
       "options": [
         "Registrar requerimiento",
-        "Localizar expediente",
         "Verificar y preparar respuesta",
-        "Entregar en plazo y archivar"
+        "Entregar en plazo y archivar",
+        "Localizar expediente"
       ]
     },
     {
@@ -359,10 +359,10 @@
       "kind": "choice",
       "prompt": "Falta un documento y se propone fabricarlo con fecha anterior. ¿Qué debe hacerse?",
       "options": [
-        "Detener, comprobar y corregir antes de continuar",
         "Ignorarlo si permite seguir",
+        "Copiar datos de otra persona",
         "Borrar el expediente",
-        "Copiar datos de otra persona"
+        "Detener, comprobar y corregir antes de continuar"
       ]
     },
     {
@@ -392,9 +392,9 @@
       "kind": "multi",
       "prompt": "Un convenio establece aportaciones a un sistema complementario. Selecciona los datos que deben comprobarse para gestionarlas.",
       "options": [
-        "Personas incluidas",
-        "Instrumento y reglas",
         "Cuantía y periodicidad",
+        "Instrumento y reglas",
+        "Personas incluidas",
         "Eliminar cotización ordinaria"
       ]
     },
@@ -404,10 +404,10 @@
       "kind": "order",
       "prompt": "Ordena la gestión de una aportación de previsión social complementaria desde el compromiso hasta la evidencia.",
       "options": [
-        "Identificar compromiso",
         "Determinar colectivo",
+        "Conservar evidencia",
         "Calcular o registrar aportación",
-        "Conservar evidencia"
+        "Identificar compromiso"
       ]
     },
     {
@@ -417,9 +417,9 @@
       "prompt": "Se deja de cotizar porque existe un plan complementario. ¿Qué error hay?",
       "options": [
         "Detener, comprobar y corregir antes de continuar",
-        "Ignorarlo si permite seguir",
         "Borrar el expediente",
-        "Copiar datos de otra persona"
+        "Copiar datos de otra persona",
+        "Ignorarlo si permite seguir"
       ]
     },
     {
@@ -428,10 +428,10 @@
       "kind": "choice",
       "prompt": "¿Qué evidencia acredita una aportación complementaria?",
       "options": [
-        "Datos de origen, decisión, fechas, documentos y justificantes",
         "Solo el resultado",
-        "Una nota sin fecha",
-        "Nada si el sistema aceptó"
+        "Nada si el sistema aceptó",
+        "Datos de origen, decisión, fechas, documentos y justificantes",
+        "Una nota sin fecha"
       ]
     },
     {
@@ -440,10 +440,10 @@
       "kind": "choice",
       "prompt": "Al corregir un dato en una aplicación de Seguridad Social, ¿qué debe conservarse?",
       "options": [
+        "Elegir la opción más rápida",
         "Analizar datos y fuente aplicable antes de actuar",
         "Copiar un expediente anterior",
-        "Enviar y revisar después",
-        "Elegir la opción más rápida"
+        "Enviar y revisar después"
       ]
     },
     {
@@ -459,10 +459,10 @@
       "kind": "multi",
       "prompt": "Se detecta un dato erróneo en el expediente digital. Selecciona la información que debe quedar registrada al corregirlo.",
       "options": [
-        "Dato anterior y corregido",
         "Usuario responsable",
         "Fecha y motivo",
-        "Solo el valor final"
+        "Solo el valor final",
+        "Dato anterior y corregido"
       ]
     },
     {
@@ -472,8 +472,8 @@
       "prompt": "Ordena la corrección trazable de un dato en una aplicación de gestión de Seguridad Social.",
       "options": [
         "Detectar inconsistencia",
-        "Validar dato correcto",
         "Rectificar por canal autorizado",
+        "Validar dato correcto",
         "Conservar historial y respuesta"
       ]
     },
@@ -483,10 +483,10 @@
       "kind": "choice",
       "prompt": "Una corrección borra completamente la operación anterior. ¿Qué problema genera?",
       "options": [
-        "Detener, comprobar y corregir antes de continuar",
         "Ignorarlo si permite seguir",
-        "Borrar el expediente",
-        "Copiar datos de otra persona"
+        "Detener, comprobar y corregir antes de continuar",
+        "Copiar datos de otra persona",
+        "Borrar el expediente"
       ]
     },
     {

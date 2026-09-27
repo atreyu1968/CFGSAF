@@ -20,10 +20,10 @@
       "kind": "multi",
       "prompt": "Antes de liquidar una retribución fija más variable, selecciona los elementos que RR. HH. debe comprobar.",
       "options": [
-        "Convenio y estructura salarial",
         "Criterio del incentivo",
-        "Periodo de devengo",
-        "El líquido que se desea obtener"
+        "Convenio y estructura salarial",
+        "El líquido que se desea obtener",
+        "Periodo de devengo"
       ]
     },
     {
@@ -32,10 +32,10 @@
       "kind": "order",
       "prompt": "Ordena la parametrización profesional de una estructura retributiva antes de calcular la nómina.",
       "options": [
-        "Identificar puesto y convenio",
-        "Clasificar conceptos salariales",
         "Definir reglas de devengo",
-        "Documentar y parametrizar"
+        "Documentar y parametrizar",
+        "Identificar puesto y convenio",
+        "Clasificar conceptos salariales"
       ]
     },
     {
@@ -44,10 +44,10 @@
       "kind": "choice",
       "prompt": "Un complemento se copia de otra categoría sin revisar el convenio. ¿Qué procede?",
       "options": [
-        "Detener el cierre, comprobar la causa y corregir con trazabilidad",
-        "Ignorarlo si el total parece razonable",
         "Ocultar la diferencia",
-        "Copiar los datos de otra nómina"
+        "Copiar los datos de otra nómina",
+        "Ignorarlo si el total parece razonable",
+        "Detener el cierre, comprobar la causa y corregir con trazabilidad"
       ]
     },
     {
@@ -57,8 +57,8 @@
       "prompt": "¿Qué evidencia demuestra cómo se construyó la retribución?",
       "options": [
         "Datos de origen, reglas, operaciones, resultado y justificantes",
-        "Solo el líquido final",
         "Solo una captura",
+        "Solo el líquido final",
         "Ninguna si el programa no da error"
       ]
     },
@@ -82,10 +82,10 @@
       "kind": "multi",
       "prompt": "Vas a comparar una retribución con una referencia legal anual. Selecciona los datos que debes comprobar.",
       "options": [
-        "Año de referencia",
-        "Importe anual comparable",
         "Número de pagas",
-        "Una tabla sin fecha"
+        "Una tabla sin fecha",
+        "Año de referencia",
+        "Importe anual comparable"
       ]
     },
     {
@@ -94,10 +94,10 @@
       "kind": "order",
       "prompt": "Ordena la comparación profesional con SMI/IPREM desde la identificación de la magnitud hasta la documentación.",
       "options": [
-        "Identificar magnitud necesaria",
         "Consultar fuente oficial vigente",
-        "Homogeneizar unidad anual/mensual",
-        "Comparar y documentar"
+        "Identificar magnitud necesaria",
+        "Comparar y documentar",
+        "Homogeneizar unidad anual/mensual"
       ]
     },
     {
@@ -118,10 +118,10 @@
       "kind": "choice",
       "prompt": "¿Qué datos deben acompañar siempre a un índice legal variable?",
       "options": [
-        "Datos de origen, reglas, operaciones, resultado y justificantes",
-        "Solo el líquido final",
         "Solo una captura",
-        "Ninguna si el programa no da error"
+        "Ninguna si el programa no da error",
+        "Solo el líquido final",
+        "Datos de origen, reglas, operaciones, resultado y justificantes"
       ]
     },
     {
@@ -144,10 +144,10 @@
       "kind": "multi",
       "prompt": "La empresa implanta un bonus por objetivos. Selecciona los elementos que hacen auditable el incentivo.",
       "options": [
-        "Indicador medible",
         "Periodo",
         "Fórmula o tramos",
-        "Preferencia del encargado sin registro"
+        "Preferencia del encargado sin registro",
+        "Indicador medible"
       ]
     },
     {
@@ -157,8 +157,8 @@
       "prompt": "Ordena el cálculo y validación de un incentivo desde la definición del objetivo hasta su registro.",
       "options": [
         "Definir objetivo",
-        "Fijar métrica y periodo",
         "Calcular resultado",
+        "Fijar métrica y periodo",
         "Validar y registrar incentivo"
       ]
     },
@@ -168,10 +168,10 @@
       "kind": "choice",
       "prompt": "Dos personas obtienen distinto incentivo sin poder explicar la métrica. ¿Qué falla?",
       "options": [
-        "Detener el cierre, comprobar la causa y corregir con trazabilidad",
         "Ignorarlo si el total parece razonable",
-        "Ocultar la diferencia",
-        "Copiar los datos de otra nómina"
+        "Detener el cierre, comprobar la causa y corregir con trazabilidad",
+        "Copiar los datos de otra nómina",
+        "Ocultar la diferencia"
       ]
     },
     {
@@ -180,10 +180,10 @@
       "kind": "choice",
       "prompt": "¿Qué evidencia hace auditable una retribución variable?",
       "options": [
-        "Datos de origen, reglas, operaciones, resultado y justificantes",
-        "Solo el líquido final",
         "Solo una captura",
-        "Ninguna si el programa no da error"
+        "Ninguna si el programa no da error",
+        "Datos de origen, reglas, operaciones, resultado y justificantes",
+        "Solo el líquido final"
       ]
     },
     {
@@ -218,10 +218,10 @@
       "kind": "order",
       "prompt": "Ordena la confección de un recibo salarial desde los datos maestros hasta la revisión del cálculo.",
       "options": [
-        "Reunir datos maestros",
-        "Incorporar incidencias",
         "Validar conceptos y periodo",
-        "Calcular y revisar recibo"
+        "Calcular y revisar recibo",
+        "Incorporar incidencias",
+        "Reunir datos maestros"
       ]
     },
     {
@@ -230,10 +230,10 @@
       "kind": "choice",
       "prompt": "La nómina se genera sin incorporar una baja comunicada. ¿Qué debe hacerse?",
       "options": [
-        "Detener el cierre, comprobar la causa y corregir con trazabilidad",
-        "Ignorarlo si el total parece razonable",
         "Ocultar la diferencia",
-        "Copiar los datos de otra nómina"
+        "Copiar los datos de otra nómina",
+        "Detener el cierre, comprobar la causa y corregir con trazabilidad",
+        "Ignorarlo si el total parece razonable"
       ]
     },
     {
@@ -242,10 +242,10 @@
       "kind": "choice",
       "prompt": "¿Qué conjunto documental permite reconstruir una nómina?",
       "options": [
-        "Datos de origen, reglas, operaciones, resultado y justificantes",
         "Solo el líquido final",
-        "Solo una captura",
-        "Ninguna si el programa no da error"
+        "Datos de origen, reglas, operaciones, resultado y justificantes",
+        "Ninguna si el programa no da error",
+        "Solo una captura"
       ]
     },
     {
@@ -268,10 +268,10 @@
       "kind": "multi",
       "prompt": "Antes de validar el líquido a percibir, selecciona los bloques que deben comprobarse.",
       "options": [
+        "El líquido objetivo",
         "Devengos",
         "Deducciones aplicables",
-        "Bases correspondientes",
-        "El líquido objetivo"
+        "Bases correspondientes"
       ]
     },
     {
@@ -281,9 +281,9 @@
       "prompt": "Ordena la confección aritmética de una nómina desde los devengos hasta la verificación del líquido.",
       "options": [
         "Calcular devengos",
-        "Construir bases",
+        "Restar deducciones y verificar líquido",
         "Calcular cuotas y retención",
-        "Restar deducciones y verificar líquido"
+        "Construir bases"
       ]
     },
     {
@@ -292,10 +292,10 @@
       "kind": "choice",
       "prompt": "El líquido se obtiene modificando manualmente una deducción para que cuadre. ¿Qué procede?",
       "options": [
-        "Detener el cierre, comprobar la causa y corregir con trazabilidad",
         "Ignorarlo si el total parece razonable",
         "Ocultar la diferencia",
-        "Copiar los datos de otra nómina"
+        "Copiar los datos de otra nómina",
+        "Detener el cierre, comprobar la causa y corregir con trazabilidad"
       ]
     },
     {
@@ -305,8 +305,8 @@
       "prompt": "¿Qué desglose permite reproducir una nómina completa?",
       "options": [
         "Datos de origen, reglas, operaciones, resultado y justificantes",
-        "Solo el líquido final",
         "Solo una captura",
+        "Solo el líquido final",
         "Ninguna si el programa no da error"
       ]
     },
@@ -331,9 +331,9 @@
       "prompt": "Una base ya está calculada. Selecciona qué dato adicional es imprescindible comprobar antes de obtener una cuota de cotización.",
       "options": [
         "Tipo aplicable y periodo",
-        "Color del recibo",
+        "Número de cuenta bancaria",
         "Líquido de otro trabajador",
-        "Número de cuenta bancaria"
+        "Color del recibo"
       ]
     },
     {
@@ -342,10 +342,10 @@
       "kind": "order",
       "prompt": "Ordena el cálculo de una cuota de Seguridad Social y su comprobación final.",
       "options": [
+        "Separar aportación empresarial/trabajador y verificar",
         "Determinar base correcta",
         "Identificar tipo vigente",
-        "Multiplicar base por tipo",
-        "Separar aportación empresarial/trabajador y verificar"
+        "Multiplicar base por tipo"
       ]
     },
     {
@@ -354,9 +354,9 @@
       "kind": "choice",
       "prompt": "Se aplica un tipo empresarial como deducción del trabajador. ¿Qué debe hacerse?",
       "options": [
-        "Detener el cierre, comprobar la causa y corregir con trazabilidad",
-        "Ignorarlo si el total parece razonable",
         "Ocultar la diferencia",
+        "Ignorarlo si el total parece razonable",
+        "Detener el cierre, comprobar la causa y corregir con trazabilidad",
         "Copiar los datos de otra nómina"
       ]
     },
@@ -366,10 +366,10 @@
       "kind": "choice",
       "prompt": "¿Qué tabla de trabajo permite auditar bases y cuotas?",
       "options": [
-        "Datos de origen, reglas, operaciones, resultado y justificantes",
         "Solo el líquido final",
         "Solo una captura",
-        "Ninguna si el programa no da error"
+        "Ninguna si el programa no da error",
+        "Datos de origen, reglas, operaciones, resultado y justificantes"
       ]
     },
     {
@@ -378,10 +378,10 @@
       "kind": "choice",
       "prompt": "¿Qué debe identificarse antes de tramitar una declaración-liquidación de cotizaciones o retenciones?",
       "options": [
-        "Modelo o procedimiento aplicable, periodo y plazo vigente",
         "Solo el líquido de las nóminas",
-        "Únicamente el banco de la empresa",
-        "El convenio del año anterior"
+        "El convenio del año anterior",
+        "Modelo o procedimiento aplicable, periodo y plazo vigente",
+        "Únicamente el banco de la empresa"
       ]
     },
     {
@@ -391,9 +391,9 @@
       "prompt": "Selecciona los datos que debe contener un control profesional de obligaciones periódicas.",
       "options": [
         "Obligación o trámite",
-        "Periodo",
         "Fecha límite y fuente oficial",
-        "Responsable/estado"
+        "Responsable/estado",
+        "Periodo"
       ]
     },
     {
@@ -421,10 +421,10 @@
       "kind": "choice",
       "prompt": "¿Qué relación debe existir entre un formulario/procedimiento y el expediente mensual?",
       "options": [
-        "Debe quedar identificado con su periodo, estado y justificante cuando proceda",
         "Ninguna",
-        "Solo debe guardarse el nombre",
-        "Basta una captura sin fecha"
+        "Basta una captura sin fecha",
+        "Debe quedar identificado con su periodo, estado y justificante cuando proceda",
+        "Solo debe guardarse el nombre"
       ]
     },
     {
@@ -441,9 +441,9 @@
       "prompt": "Antes de confirmar una declaración-liquidación de cotizaciones, ¿qué control es imprescindible?",
       "options": [
         "Conciliar bases y cuotas con las nóminas del periodo",
-        "Comprobar solo el nombre de empresa",
         "Imprimir un borrador",
-        "Cambiar el periodo"
+        "Cambiar el periodo",
+        "Comprobar solo el nombre de empresa"
       ]
     },
     {
@@ -452,10 +452,10 @@
       "kind": "choice",
       "prompt": "La liquidación incluye once personas y el resumen de nóminas diez. ¿Qué procede?",
       "options": [
-        "Confirmar igualmente",
         "Investigar altas, bajas, periodos y posibles errores antes de cerrar",
-        "Eliminar una persona al azar",
-        "Modificar el resumen"
+        "Modificar el resumen",
+        "Confirmar igualmente",
+        "Eliminar una persona al azar"
       ]
     },
     {
@@ -476,10 +476,10 @@
       "kind": "choice",
       "prompt": "El total de retenciones del periodo no coincide con la declaración preparada. ¿Qué haces?",
       "options": [
-        "Presentarla y corregir después",
         "Localizar la diferencia por perceptores y datos antes de confirmar",
+        "Ignorar importes pequeños",
         "Cambiar el total de nóminas",
-        "Ignorar importes pequeños"
+        "Presentarla y corregir después"
       ]
     },
     {
@@ -496,9 +496,9 @@
       "prompt": "Ordena el cierre profesional de una declaración-liquidación.",
       "options": [
         "Reunir datos del periodo",
-        "Calcular",
         "Conciliar con nóminas/registros",
         "Revisar y confirmar",
+        "Calcular",
         "Presentar y conservar justificante"
       ]
     },
@@ -508,10 +508,10 @@
       "kind": "choice",
       "prompt": "Una comunicación telemática devuelve un justificante con advertencia. ¿Qué debe hacer RR. HH.?",
       "options": [
-        "Analizar los datos y reglas aplicables antes de confirmar",
-        "Copiar el mes anterior",
         "Modificar el resultado final",
-        "Usar un parámetro sin fecha"
+        "Usar un parámetro sin fecha",
+        "Copiar el mes anterior",
+        "Analizar los datos y reglas aplicables antes de confirmar"
       ]
     },
     {
@@ -527,10 +527,10 @@
       "kind": "multi",
       "prompt": "El organismo devuelve una respuesta al envío. Selecciona las actuaciones correctas antes de cerrar el expediente.",
       "options": [
-        "Leer y valorar la respuesta",
         "Relacionarla con el expediente",
-        "Corregir si procede",
-        "Ignorarla porque existe justificante"
+        "Ignorarla porque existe justificante",
+        "Leer y valorar la respuesta",
+        "Corregir si procede"
       ]
     },
     {
@@ -540,9 +540,9 @@
       "prompt": "Ordena el ciclo de una comunicación retributiva o de cotización desde la preparación hasta el archivo o la rectificación.",
       "options": [
         "Preparar información",
-        "Enviar por canal autorizado",
         "Comprobar respuesta",
-        "Archivar o rectificar con trazabilidad"
+        "Archivar o rectificar con trazabilidad",
+        "Enviar por canal autorizado"
       ]
     },
     {
@@ -551,10 +551,10 @@
       "kind": "choice",
       "prompt": "Se guarda solo una captura previa al envío. ¿Qué falta?",
       "options": [
-        "Detener el cierre, comprobar la causa y corregir con trazabilidad",
         "Ignorarlo si el total parece razonable",
+        "Copiar los datos de otra nómina",
         "Ocultar la diferencia",
-        "Copiar los datos de otra nómina"
+        "Detener el cierre, comprobar la causa y corregir con trazabilidad"
       ]
     },
     {
@@ -571,8 +571,8 @@
       "prompt": "El software calcula una nómina distinta del cálculo manual razonado. ¿Qué debe revisarse primero?",
       "options": [
         "Analizar los datos y reglas aplicables antes de confirmar",
-        "Copiar el mes anterior",
         "Modificar el resultado final",
+        "Copiar el mes anterior",
         "Usar un parámetro sin fecha"
       ]
     },
@@ -589,10 +589,10 @@
       "kind": "multi",
       "prompt": "Antes de ejecutar la nómina en una aplicación, selecciona qué configuración debe comprobar el técnico.",
       "options": [
-        "Datos maestros e incidencias",
-        "Parámetros y convenio configurados",
         "Periodo de tablas",
-        "Cambiar el resultado manual para que coincida"
+        "Cambiar el resultado manual para que coincida",
+        "Datos maestros e incidencias",
+        "Parámetros y convenio configurados"
       ]
     },
     {
@@ -601,10 +601,10 @@
       "kind": "order",
       "prompt": "El software arroja un resultado distinto del control manual. Ordena el proceso para localizar y corregir la diferencia.",
       "options": [
-        "Comparar entradas",
         "Revisar parametrización",
-        "Localizar causa de diferencia",
-        "Corregir, recalcular y documentar"
+        "Comparar entradas",
+        "Corregir, recalcular y documentar",
+        "Localizar causa de diferencia"
       ]
     },
     {
@@ -614,8 +614,8 @@
       "prompt": "Un usuario sobrescribe un dato sin registrar el motivo. ¿Qué problema genera?",
       "options": [
         "Detener el cierre, comprobar la causa y corregir con trazabilidad",
-        "Ignorarlo si el total parece razonable",
         "Ocultar la diferencia",
+        "Ignorarlo si el total parece razonable",
         "Copiar los datos de otra nómina"
       ]
     },
