@@ -160,6 +160,12 @@ def test_teacher_has_additio_export():
  assert "exportAdditio" in s and "_Additio.csv" in s and "/api/teacher/export-additio/" in s and "X-Teacher-Token" in s
 
 
+def test_teacher_has_detailed_production_preflight():
+ s=(ROOT/"teacher.html").read_text(encoding="utf-8")
+ for marker in ('id="readinessRefresh"','id="readiness"',"readinessIssues","portfolio_keys.missing","portfolio_keys.stale","portfolio_keys.metadata_mismatch","examMissing","recoveryMissing","LISTO PARA PRODUCCIÓN"):
+  assert marker in s,marker
+
+
 def test_all_units_render_and_submit_ordered_portfolio_items():
  for ut in ("ut1","ut2","ut3","ut4"):
   js=(ROOT/"scorm"/ut/"assets"/"scorm.js").read_text(encoding="utf-8")
