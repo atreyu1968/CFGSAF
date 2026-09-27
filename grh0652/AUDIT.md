@@ -6,7 +6,7 @@
 - Examen desactivado por defecto.
 - Validación de ponderaciones internas Portafolio/Examen al 100 % y versionado de configuración.
 - Cierre de evaluación y recuperación solo para alumnado no superado.
-- CI ejecuta pytest en cambios bajo `grh0652/`.
+- CI ejecuta pytest en cambios bajo `grh0652/`. En el HEAD `052916e53ccddc3abd89e13b5c41f93077cfae3b` la suite completa queda en **119 pruebas superadas, 0 fallidas**.
 - Ayuda contextual por botón derecho validada en todos los campos de nómina y contratos.
 - Los bancos privados del Portafolio quedan vinculados mediante `public_hash` a la versión del banco público; si cambia una actividad, el backend bloquea la corrección hasta reprovisionar sus claves.
 - Las ponderaciones globales de RA no verificadas están desactivadas en el dashboard y no se presentan como oficiales.
@@ -42,24 +42,29 @@
 - El dashboard muestra “Ponderación del RA: pendiente de validar con la programación oficial”.
 - No se calculará ni comunicará una ponderación global de módulo hasta disponer de una fuente documental válida.
 
-## Hallazgo pendiente
+## Hallazgo editorial resuelto
 
-### Variedad de bancos públicos RA2–RA4
-Aunque existen al menos seis actividades por CE, sin duplicados literales y con varios tipos de interacción, parte de los bancos públicos de servidor conserva patrones demasiado repetitivos. Deben evolucionar hacia más:
-- supuestos profesionales contextualizados;
-- cálculos y análisis numéricos cuando el CE lo permita;
-- clasificación y selección razonada;
-- ordenación de procedimientos;
-- detección y corrección de errores;
-- cumplimentación y verificación documental.
-
-La protección `public_hash` y el nuevo aprovisionamiento privado de Portafolio permiten realizar esta renovación sin aceptar silenciosamente claves de una versión anterior.
+### Variedad de bancos públicos RA2–RA4 — RESUELTO
+- Todos los CE de RA2, RA3 y RA4 mantienen al menos seis actividades evaluables.
+- Los enunciados genéricos repetitivos han sido sustituidos por situaciones profesionales contextualizadas.
+- Cada CE de RA2–RA4 exige al menos una producción propia del alumnado mediante respuesta libre, texto, caso o cálculo.
+- Los CE con componente numérico relevante incorporan actividades de cálculo explícitas: 2.b; 3.b–3.c; 4.a–4.f.
+- Se mantienen actividades de selección, V/F, multirrespuesta, ordenación y emparejamiento para combinar evaluación objetiva y aplicación profesional.
+- CI bloquea regresiones mediante pruebas de diversidad, ausencia de duplicados, presencia de actividades semánticas y cobertura de cálculos.
+- Las claves privadas permanecen protegidas por `public_hash`, por lo que cualquier cambio posterior en una actividad pública obliga a reprovisionar su respuesta privada antes de corregirla.
 
 ## Pendiente documental no bloqueante para evaluación por RA
 Para obtener una **calificación global ponderada del módulo**, debe incorporarse al repositorio o documentarse externamente la programación oficial que establezca la ponderación entre RA. Mientras no exista esa fuente, el sistema mantiene esa ponderación desactivada.
 
 ## Criterio de cierre
-No marcar como cerrado editorialmente el banco evaluativo hasta resolver la variedad de RA2–RA4, provisionar los bancos privados reales del despliegue y superar `GRH0652 tests` sobre el HEAD definitivo.
+La base de código cumple ya el criterio técnico de CI para candidata a v1.0. Antes de etiquetar la versión estable deben completarse en el despliegue real los siguientes controles operativos:
+- provisionar los bancos privados definitivos de examen, recuperación y Portafolio;
+- verificar `/api/teacher/readiness/{course_id}` con `ready:true` en GRH0652_UT1, GRH0652_UT2, GRH0652_UT3 y GRH0652_UT4;
+- generar y conservar los cuatro paquetes SCORM 1.2 desde el HEAD de cierre;
+- realizar una prueba de aceptación docente/alumno, incluyendo Additio, examen seguro, recuperación y backup/restauración.
 
 ## Validación CI
-La condición de cierre exige que el workflow `GRH0652 tests` figure como **success** sobre el HEAD definitivo. No se considera suficiente un rerun de un SHA anterior.
+- HEAD validado: `052916e53ccddc3abd89e13b5c41f93077cfae3b`.
+- Workflow `GRH0652 tests`: **success**.
+- Resultado: **119 passed, 0 failed**.
+- La condición para etiquetar v1.0 sigue exigiendo que el HEAD final, después de cualquier ajuste posterior, mantenga el workflow en **success**.
