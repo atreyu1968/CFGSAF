@@ -42,3 +42,23 @@ Al arrancar, el backend:
 - rechaza una evaluación si la actividad pública cambia y la clave privada no ha sido reprovisionada.
 
 Los archivos con respuestas deben copiarse al servidor **fuera de Git** antes de ejecutar `docker compose up -d`. Un archivo inválido impide el arranque para evitar evaluaciones incompletas o desalineadas.
+
+
+## Validación previa a producción
+
+Antes de copiar los bancos al servidor, valide el directorio completo:
+
+```bash
+cd grh0652/server
+python validate_private_banks.py ../private-banks
+```
+
+La candidata v1 exige, por cada RA:
+- un banco privado de Portafolio que coincida exactamente con todos los `id`, CE y tipos del banco público actual;
+- al menos **3 preguntas de examen por CE**;
+- al menos **2 actividades de recuperación por CE**;
+- respuestas con formato compatible con cada tipo;
+- referencias semánticas suficientemente desarrolladas en `free`, `text` y `case`;
+- respuestas numéricas válidas en `calculation`.
+
+El validador no comprueba que una respuesta sea pedagógicamente correcta: esa revisión sigue siendo responsabilidad del autor del banco. Sí impide desplegar paquetes incompletos, con metadatos desalineados, duplicados o respuestas estructuralmente inválidas.
