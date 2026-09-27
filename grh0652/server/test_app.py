@@ -842,7 +842,7 @@ def test_private_bootstrap_makes_readiness_accept_exam_and_recovery(tmp_path,mon
  public=json.loads((module.Path(module.__file__).resolve().parent/"banks"/"ut1_portfolio.json").read_text(encoding="utf-8"))
  ces=sorted({x["ce"] for x in public["items"]})
  exam={"course_id":course,"kind":"exam","questions":[{"id":f"boot-{ce}-{n}","ce":ce,"q":f"Pregunta {ce} {n}","options":["A","B"],"answer":0,"type":"choice"} for ce in ces for n in range(3)]}
- recovery={"course_id":course,"kind":"recovery","items":[{"id":f"rec-{ce}","ce":ce,"kind":"choice","prompt":f"Recuperación {ce}","options":["A","B"],"answer":0,"feedback":"Revisar"} for ce in ces]}
+ recovery={"course_id":course,"kind":"recovery","items":[{"id":f"rec-{ce}-{n}","ce":ce,"kind":"choice","prompt":f"Recuperación {ce} {n}","options":["A","B"],"answer":0,"feedback":"Revisar"} for ce in ces for n in range(2)]}
  (tmp_path/"exam.json").write_text(json.dumps(exam),encoding="utf-8");(tmp_path/"recovery.json").write_text(json.dumps(recovery),encoding="utf-8")
  monkeypatch.setattr(module,"PRIVATE_BANK_DIR","");monkeypatch.setattr(module,"_private_banks_seeded",False)
  db=module.con()
@@ -857,6 +857,8 @@ def test_private_bootstrap_makes_readiness_accept_exam_and_recovery(tmp_path,mon
  d=out.json()
  assert d["checks"]["exam_bank"]["ok"] is True,d
  assert d["checks"]["recovery_bank"]["ok"] is True,d
+ assert d["checks"]["recovery_bank"]["required_per_ce"]==2,d
+ assert all(d["checks"]["recovery_bank"]["counts"][ce]>=2 for ce in ces),d
  assert d["checks"]["portfolio_keys"]["ok"] is True,d
  assert d["ready"] is True,d
  assert set(d["checks"]["exam_bank"]["counts"])==set(ces) and all(d["checks"]["exam_bank"]["counts"][ce]>=3 for ce in ces)

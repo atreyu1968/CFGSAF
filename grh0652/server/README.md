@@ -39,3 +39,29 @@ Al iniciar una convocatoria, el servidor selecciona el número configurado de pr
 
 ## Comprobación previa
 El endpoint docente de `readiness` permite comprobar que existen bancos suficientes y configuración válida antes de habilitar una evaluación real.
+
+
+## Aceptación remota segura de producción
+
+Después de copiar los 12 bancos privados al servidor, validar el directorio y reiniciar el backend, ejecute desde una máquina de administración:
+
+```bash
+cd grh0652/server
+export GRH_API_URL='https://su-servidor'
+export GRH_TEACHER_TOKEN='su-token-docente'
+python production_acceptance.py --save-backup ./grh0652-pre-v1.db
+```
+
+El chequeo es **no destructivo**: no crea alumnos, no abre exámenes, no cambia calificaciones y no restaura copias. Comprueba:
+- `/health`;
+- `readiness=true` para UT1–UT4;
+- claves de Portafolio completas y no obsoletas;
+- capacidad de examen configurada por CE;
+- al menos **2 actividades de recuperación por CE**;
+- CORS;
+- lectura de configuración docente;
+- monitor de examen;
+- exportación Additio con CSV compatible;
+- generación de backup SQLite y validación de integridad.
+
+La restauración de backup y la prueba funcional completa alumno/profesor deben realizarse después en una ventana controlada, porque son operaciones que modifican estado.
