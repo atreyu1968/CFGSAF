@@ -6,7 +6,7 @@
 - Examen desactivado por defecto.
 - Validación de ponderaciones internas Portafolio/Examen al 100 % y versionado de configuración.
 - Cierre de evaluación y recuperación solo para alumnado no superado.
-- CI ejecuta pytest en cambios bajo `grh0652/`. La suite actual contiene **126 pruebas** y el criterio de cierre exige `success` sobre el mismo HEAD que se pretenda desplegar.
+- CI ejecuta pytest en cambios bajo `grh0652/`. La suite actual contiene **130 pruebas** y el criterio de cierre exige `success` sobre el mismo HEAD que se pretenda desplegar.
 - Ayuda contextual por botón derecho validada en todos los campos de nómina y contratos.
 - Los bancos privados del Portafolio quedan vinculados mediante `public_hash` a la versión del banco público; si cambia una actividad, el backend bloquea la corrección hasta reprovisionar sus claves.
 - Las ponderaciones globales de RA no verificadas están desactivadas en el dashboard y no se presentan como oficiales.
@@ -60,6 +60,8 @@
 - Los cambios de opciones modifican `public_hash`, por lo que el backend rechaza cualquier clave privada anterior.
 - `calculation` se corrige numéricamente de forma determinista, aceptando representaciones equivalentes como `94`, `94.0` o `94,00`.
 - Existe `validate_private_banks.py`, que exige los 12 bancos privados, coincidencia exacta del Portfolio, al menos 3 preguntas de examen por CE y al menos 2 actividades de recuperación por CE.
+- El `readiness` del backend y el preflight docente exigen también un mínimo de **2 actividades de recuperación por CE**, de modo que servidor y validador local aplican el mismo criterio.
+- Existe `production_acceptance.py`, que ejecuta una aceptación remota **no destructiva** de producción: salud, readiness UT1–UT4, configuración, monitor, Additio y backup con validación de integridad.
 - Las claves reales continúan fuera de Git y deben copiarse únicamente al servidor de producción.
 
 ## Pendiente documental no bloqueante para evaluación por RA
@@ -70,10 +72,11 @@ La base de código cumple ya el criterio técnico de CI para candidata a v1.0. A
 - copiar al servidor los bancos privados definitivos de examen, recuperación y Portafolio y ejecutar `python validate_private_banks.py ../private-banks`;
 - verificar `/api/teacher/readiness/{course_id}` con `ready:true` en GRH0652_UT1, GRH0652_UT2, GRH0652_UT3 y GRH0652_UT4;
 - conservar el artefacto `GRH0652 release candidate` generado automáticamente desde el HEAD de cierre, que incluye los cuatro SCORM 1.2, el bundle de aplicación, `RELEASE_INFO.txt` y `SHA256SUMS.txt`;
-- realizar una prueba de aceptación docente/alumno, incluyendo Additio, examen seguro, recuperación y backup/restauración.
+- ejecutar `production_acceptance.py` contra el servidor real y conservar su resultado en verde;
+- realizar después la prueba funcional docente/alumno, incluyendo examen seguro, recuperación y una restauración controlada de backup, ya que esas acciones sí modifican estado.
 
 ## Validación CI y release
-- Workflow `GRH0652 tests`: debe figurar como **success** sobre el HEAD final; la suite actual contiene **126 pruebas**.
+- Workflow `GRH0652 tests`: debe figurar como **success** sobre el HEAD final; la suite actual contiene **130 pruebas**.
 - Workflow `GRH0652 release candidate`: se ejecuta automáticamente en cada push a `main`, además de poder ejecutarse manualmente o mediante una etiqueta `grh0652-v*`.
 - El artefacto de release registra el SHA exacto en `RELEASE_INFO.txt`, genera los cuatro SCORM y el bundle desplegable y publica `SHA256SUMS.txt` para verificar integridad.
 - La condición para etiquetar v1.0 exige que **tests y release candidate** correspondan al mismo HEAD final y terminen en **success**.
