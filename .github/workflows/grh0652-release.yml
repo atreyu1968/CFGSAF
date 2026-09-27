@@ -2,6 +2,9 @@ name: GRH0652 release candidate
 
 on:
   workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/grh0652-release.yml'
   push:
     tags:
       - 'grh0652-v*'
