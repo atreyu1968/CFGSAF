@@ -834,7 +834,7 @@ def test_private_bootstrap_makes_readiness_accept_exam_and_recovery(tmp_path,mon
  db.execute("DELETE FROM exam_banks WHERE course_id=?",(course,));db.execute("DELETE FROM recovery_banks WHERE course_id=?",(course,));db.execute("DELETE FROM portfolio_banks WHERE course_id=?",(course,));db.commit();db.close()
  monkeypatch.setattr(module,"PRIVATE_BANK_DIR",str(tmp_path));monkeypatch.setattr(module,"_private_banks_seeded",False)
  db=module.con()
- for item in public["items"]:db.execute("INSERT OR REPLACE INTO portfolio_banks(course_id,item_id,ce,kind,answer) VALUES(?,?,?,?,?)",(course,item["id"],item["ce"],item.get("kind","choice"),json.dumps(0)))
+ for item in public["items"]:db.execute("INSERT OR REPLACE INTO portfolio_banks(course_id,item_id,ce,kind,answer,public_hash) VALUES(?,?,?,?,?,?)",(course,item["id"],item["ce"],item.get("kind","choice"),json.dumps(0),module.portfolio_public_hash(item)))
  db.commit();db.close()
  if client.post("/api/teacher/students/readiness-student",headers=H).status_code not in (200,409):assert False
  old_origins=module.ORIGINS;monkeypatch.setattr(module,"ORIGINS",["https://example.test"])

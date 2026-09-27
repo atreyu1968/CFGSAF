@@ -192,7 +192,8 @@ def test_all_units_render_and_submit_matching_portfolio_items():
   assert "pmatch-" in js
   assert "q.pairs||[]" in js
   assert "a.map(Number)" in js
-  assert "const a=$(" in js
+  assert "document.getElementById(`pmatch-${id}-${j}`)" in js
+  assert "a.some(v=>v===\'\')" in js
 
 
 def test_all_units_have_offline_exam_draft_and_sync_status():
