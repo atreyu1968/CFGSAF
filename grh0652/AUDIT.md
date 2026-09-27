@@ -6,7 +6,7 @@
 - Examen desactivado por defecto.
 - Validación de ponderaciones internas Portafolio/Examen al 100 % y versionado de configuración.
 - Cierre de evaluación y recuperación solo para alumnado no superado.
-- CI ejecuta pytest en cambios bajo `grh0652/`. En el HEAD `052916e53ccddc3abd89e13b5c41f93077cfae3b` la suite completa queda en **119 pruebas superadas, 0 fallidas**.
+- CI ejecuta pytest en cambios bajo `grh0652/`. En el HEAD `b3e3dac8f3eb5b8a906b2a7870245348b403e3ce` la suite completa queda en **126 pruebas superadas, 0 fallidas**.
 - Ayuda contextual por botón derecho validada en todos los campos de nómina y contratos.
 - Los bancos privados del Portafolio quedan vinculados mediante `public_hash` a la versión del banco público; si cambia una actividad, el backend bloquea la corrección hasta reprovisionar sus claves.
 - Las ponderaciones globales de RA no verificadas están desactivadas en el dashboard y no se presentan como oficiales.
@@ -49,22 +49,31 @@
 - Los enunciados genéricos repetitivos han sido sustituidos por situaciones profesionales contextualizadas.
 - Cada CE de RA2–RA4 exige al menos una producción propia del alumnado mediante respuesta libre, texto, caso o cálculo.
 - Los CE con componente numérico relevante incorporan actividades de cálculo explícitas: 2.b; 3.b–3.c; 4.a–4.f.
-- Se mantienen actividades de selección, V/F, multirrespuesta, ordenación y emparejamiento para combinar evaluación objetiva y aplicación profesional.
+- Se mantienen actividades de selección, V/F, multirrespuesta, ordenación, casos y cálculos para combinar evaluación objetiva y aplicación profesional. El motor conserva soporte de emparejamiento, pero RA1 ya no publica pares evaluables que revelen la asociación correcta.
 - CI bloquea regresiones mediante pruebas de diversidad, ausencia de duplicados, presencia de actividades semánticas y cobertura de cálculos.
 - Las claves privadas permanecen protegidas por `public_hash`, por lo que cualquier cambio posterior en una actividad pública obliga a reprovisionar su respuesta privada antes de corregirla.
+
+## Seguridad de bancos evaluables — RESUELTO EN CÓDIGO
+
+- RA1 fue rotado completamente: 54 actividades nuevas, identificadores nuevos y eliminación de `match` evaluable público. Las versiones históricas que llegaron a contener claves ya no corresponden al banco actual.
+- RA2–RA4 ya habían sido reescritos después de retirar las claves; además se han rotado las posiciones públicas de `choice`, `multi` y `order`.
+- Los cambios de opciones modifican `public_hash`, por lo que el backend rechaza cualquier clave privada anterior.
+- `calculation` se corrige numéricamente de forma determinista, aceptando representaciones equivalentes como `94`, `94.0` o `94,00`.
+- Existe `validate_private_banks.py`, que exige los 12 bancos privados, coincidencia exacta del Portfolio, al menos 3 preguntas de examen por CE y al menos 2 actividades de recuperación por CE.
+- Las claves reales continúan fuera de Git y deben copiarse únicamente al servidor de producción.
 
 ## Pendiente documental no bloqueante para evaluación por RA
 Para obtener una **calificación global ponderada del módulo**, debe incorporarse al repositorio o documentarse externamente la programación oficial que establezca la ponderación entre RA. Mientras no exista esa fuente, el sistema mantiene esa ponderación desactivada.
 
 ## Criterio de cierre
 La base de código cumple ya el criterio técnico de CI para candidata a v1.0. Antes de etiquetar la versión estable deben completarse en el despliegue real los siguientes controles operativos:
-- provisionar los bancos privados definitivos de examen, recuperación y Portafolio;
+- copiar al servidor los bancos privados definitivos de examen, recuperación y Portafolio y ejecutar `python validate_private_banks.py ../private-banks`;
 - verificar `/api/teacher/readiness/{course_id}` con `ready:true` en GRH0652_UT1, GRH0652_UT2, GRH0652_UT3 y GRH0652_UT4;
 - generar y conservar los cuatro paquetes SCORM 1.2 desde el HEAD de cierre;
 - realizar una prueba de aceptación docente/alumno, incluyendo Additio, examen seguro, recuperación y backup/restauración.
 
 ## Validación CI
-- HEAD validado: `052916e53ccddc3abd89e13b5c41f93077cfae3b`.
+- HEAD validado: `b3e3dac8f3eb5b8a906b2a7870245348b403e3ce`.
 - Workflow `GRH0652 tests`: **success**.
-- Resultado: **119 passed, 0 failed**.
+- Resultado: **126 passed, 0 failed**.
 - La condición para etiquetar v1.0 sigue exigiendo que el HEAD final, después de cualquier ajuste posterior, mantenga el workflow en **success**.
