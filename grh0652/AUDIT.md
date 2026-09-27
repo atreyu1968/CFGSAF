@@ -6,7 +6,7 @@
 - Examen desactivado por defecto.
 - Validación de ponderaciones internas Portafolio/Examen al 100 % y versionado de configuración.
 - Cierre de evaluación y recuperación solo para alumnado no superado.
-- CI ejecuta pytest en cambios bajo `grh0652/`. En el HEAD `b3e3dac8f3eb5b8a906b2a7870245348b403e3ce` la suite completa queda en **126 pruebas superadas, 0 fallidas**.
+- CI ejecuta pytest en cambios bajo `grh0652/`. La suite actual contiene **126 pruebas** y el criterio de cierre exige `success` sobre el mismo HEAD que se pretenda desplegar.
 - Ayuda contextual por botón derecho validada en todos los campos de nómina y contratos.
 - Los bancos privados del Portafolio quedan vinculados mediante `public_hash` a la versión del banco público; si cambia una actividad, el backend bloquea la corrección hasta reprovisionar sus claves.
 - Las ponderaciones globales de RA no verificadas están desactivadas en el dashboard y no se presentan como oficiales.
@@ -69,11 +69,11 @@ Para obtener una **calificación global ponderada del módulo**, debe incorporar
 La base de código cumple ya el criterio técnico de CI para candidata a v1.0. Antes de etiquetar la versión estable deben completarse en el despliegue real los siguientes controles operativos:
 - copiar al servidor los bancos privados definitivos de examen, recuperación y Portafolio y ejecutar `python validate_private_banks.py ../private-banks`;
 - verificar `/api/teacher/readiness/{course_id}` con `ready:true` en GRH0652_UT1, GRH0652_UT2, GRH0652_UT3 y GRH0652_UT4;
-- generar y conservar los cuatro paquetes SCORM 1.2 desde el HEAD de cierre;
+- conservar el artefacto `GRH0652 release candidate` generado automáticamente desde el HEAD de cierre, que incluye los cuatro SCORM 1.2, el bundle de aplicación, `RELEASE_INFO.txt` y `SHA256SUMS.txt`;
 - realizar una prueba de aceptación docente/alumno, incluyendo Additio, examen seguro, recuperación y backup/restauración.
 
-## Validación CI
-- HEAD validado: `b3e3dac8f3eb5b8a906b2a7870245348b403e3ce`.
-- Workflow `GRH0652 tests`: **success**.
-- Resultado: **126 passed, 0 failed**.
-- La condición para etiquetar v1.0 sigue exigiendo que el HEAD final, después de cualquier ajuste posterior, mantenga el workflow en **success**.
+## Validación CI y release
+- Workflow `GRH0652 tests`: debe figurar como **success** sobre el HEAD final; la suite actual contiene **126 pruebas**.
+- Workflow `GRH0652 release candidate`: se ejecuta automáticamente en cada push a `main`, además de poder ejecutarse manualmente o mediante una etiqueta `grh0652-v*`.
+- El artefacto de release registra el SHA exacto en `RELEASE_INFO.txt`, genera los cuatro SCORM y el bundle desplegable y publica `SHA256SUMS.txt` para verificar integridad.
+- La condición para etiquetar v1.0 exige que **tests y release candidate** correspondan al mismo HEAD final y terminen en **success**.
