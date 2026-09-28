@@ -1171,13 +1171,22 @@ def test_student_full_registration_edit_and_token_regeneration_preserves_groups(
  ah=_admin_headers()
  g=client.post("/api/admin/groups",headers=ah,json={"group_id":"REG-A","name":"Registro A","academic_year":"2026-2027","description":"","active":True})
  assert g.status_code in (200,409),g.text
- create=client.post("/api/admin/students",headers=ah,json={"student_id":"reg-01","first_name":"Ana","last_name":"Pérez","email":"ana@example.test","active":True,"group_ids":["REG-A"]})
+ create=client.post("/api/admin/students",headers=ah,json={"student_id":"reg-01","first_name":"Ana","last_name":"Pérez","email":"ana@example.test","active":True,"group_ids":["REG-A"],"temporary_password":"1234"})
  assert create.status_code==200,create.text
+ assert create.json()["temporary_password"]=="1234" and create.json()["must_change_password"] is True
  first_token=create.json()["token"]
+ login=client.post("/api/student/login",json={"student_id":"reg-01","password":"1234"});assert login.status_code==200,login.text
+ assert login.json()["must_change_password"] is True
+ student_token=login.json()["token"]
+ changed=client.put("/api/student/password",headers={"X-Student-Token":student_token},json={"current_password":"1234","new_password":"NuevaClave123"});assert changed.status_code==200,changed.text
+ assert client.post("/api/student/login",json={"student_id":"reg-01","password":"1234"}).status_code==401
+ relogin=client.post("/api/student/login",json={"student_id":"reg-01","password":"NuevaClave123"});assert relogin.status_code==200 and relogin.json()["must_change_password"] is False
  rows=client.get("/api/admin/students",headers=ah).json();row=next(x for x in rows if x["student_id"]=="reg-01")
  assert row["first_name"]=="Ana" and row["last_name"]=="Pérez" and "REG-A" in row["groups"]
  edit=client.put("/api/admin/students/reg-01",headers=ah,json={"first_name":"Ana María","last_name":"Pérez","email":"ana2@example.test","active":True,"group_ids":["REG-A"]})
  assert edit.status_code==200,edit.text
+ reset=client.put("/api/admin/students/reg-01/password",headers=ah,json={"password":"1234"});assert reset.status_code==200 and reset.json()["temporary_password"]=="1234"
+ relogin_temp=client.post("/api/student/login",json={"student_id":"reg-01","password":"1234"});assert relogin_temp.status_code==200 and relogin_temp.json()["must_change_password"] is True
  regen=client.post("/api/admin/students/reg-01/token",headers=ah);assert regen.status_code==200 and regen.json()["token"]!=first_token
  # La ruta docente histórica puede regenerar la clave, pero no debe borrar la matrícula en grupos.
  legacy=client.post("/api/teacher/students/reg-01",headers={"X-Teacher-Token":"test-token"});assert legacy.status_code==200
