@@ -29,7 +29,7 @@ _schema_ready=False
 _defaults_seeded=False
 _private_banks_seeded=False
 PRIVATE_BANK_DIR=os.getenv("GRH_PRIVATE_BANK_DIR","").strip()
-BACKUP_REQUIRED_TABLES={"students","states","evidence","results","configs","attempts","evaluation_closures","recovery_plans","exam_banks","exam_versions","recovery_banks","portfolio_banks","recovery_results","grade_adjustments","ai_settings","ai_reviews","ai_rubrics","exam_reopen_audit","admins","admin_sessions","admin_audit"}
+BACKUP_REQUIRED_TABLES={"students","states","evidence","results","configs","attempts","evaluation_closures","recovery_plans","exam_banks","exam_versions","recovery_banks","portfolio_banks","recovery_results","grade_adjustments","ai_settings","ai_reviews","ai_rubrics","exam_reopen_audit","admins","admin_sessions","admin_audit","groups","group_members"}
 SEMANTIC_KINDS={"free","text","case","calculation"}
 PORTFOLIO_KINDS={"choice","tf","multi","order","match"}|SEMANTIC_KINDS
 RECOVERY_KINDS=set(PORTFOLIO_KINDS)
@@ -38,7 +38,7 @@ def con():
  global _schema_ready,_defaults_seeded,_private_banks_seeded
  c=sqlite3.connect(DB,timeout=10);c.row_factory=sqlite3.Row;c.execute("PRAGMA journal_mode=WAL");c.execute("PRAGMA foreign_keys=ON");c.execute("PRAGMA busy_timeout=5000")
  if not _schema_ready:
-  c.executescript("""CREATE TABLE IF NOT EXISTS students(student_id TEXT PRIMARY KEY,token TEXT NOT NULL UNIQUE,created_at TEXT);
+  c.executescript("""CREATE TABLE IF NOT EXISTS students(student_id TEXT PRIMARY KEY,token TEXT NOT NULL UNIQUE,first_name TEXT NOT NULL DEFAULT '',last_name TEXT NOT NULL DEFAULT '',email TEXT NOT NULL DEFAULT '',active INTEGER NOT NULL DEFAULT 1,created_at TEXT,updated_at TEXT);
 CREATE TABLE IF NOT EXISTS admins(username TEXT PRIMARY KEY,display_name TEXT NOT NULL,email TEXT NOT NULL DEFAULT '',password_salt TEXT NOT NULL,password_hash TEXT NOT NULL,password_iterations INTEGER NOT NULL DEFAULT 310000,active INTEGER NOT NULL DEFAULT 1,created_at TEXT NOT NULL,last_login_at TEXT);
 CREATE TABLE IF NOT EXISTS admin_sessions(token_hash TEXT PRIMARY KEY,username TEXT NOT NULL,created_at TEXT NOT NULL,expires_at TEXT NOT NULL,last_seen_at TEXT NOT NULL,FOREIGN KEY(username) REFERENCES admins(username));
 CREATE TABLE IF NOT EXISTS admin_audit(id INTEGER PRIMARY KEY AUTOINCREMENT,username TEXT,action TEXT NOT NULL,detail TEXT,created_at TEXT NOT NULL);
@@ -60,6 +60,12 @@ CREATE TABLE IF NOT EXISTS recovery_results(student_id TEXT,course_id TEXT,score
 CREATE TABLE IF NOT EXISTS grade_adjustments(id INTEGER PRIMARY KEY AUTOINCREMENT,student_id TEXT NOT NULL,course_id TEXT NOT NULL,scope TEXT NOT NULL,scope_key TEXT NOT NULL DEFAULT '',old_score REAL,new_score REAL NOT NULL,reason TEXT NOT NULL,created_at TEXT NOT NULL,active INTEGER NOT NULL DEFAULT 1,reversed_at TEXT,reversal_reason TEXT);\nCREATE TABLE IF NOT EXISTS ai_settings(id INTEGER PRIMARY KEY CHECK(id=1),enabled INTEGER NOT NULL DEFAULT 0,base_url TEXT,api_key TEXT,model TEXT,rubric TEXT,confidence REAL NOT NULL DEFAULT 0.75,auto_kinds TEXT,updated_at TEXT);\nCREATE TABLE IF NOT EXISTS ai_reviews(id INTEGER PRIMARY KEY AUTOINCREMENT,student_id TEXT,course_id TEXT,ce TEXT,item_id TEXT,attempt INTEGER,response TEXT,reference TEXT,score REAL,confidence REAL,verdict TEXT,feedback TEXT,status TEXT,created_at TEXT);
 CREATE TABLE IF NOT EXISTS ai_rubrics(id INTEGER PRIMARY KEY AUTOINCREMENT,course_id TEXT NOT NULL,ce TEXT NOT NULL DEFAULT '',item_id TEXT NOT NULL DEFAULT '',name TEXT NOT NULL,rubric TEXT NOT NULL,updated_at TEXT,UNIQUE(course_id,ce,item_id));\nCREATE TABLE IF NOT EXISTS exam_reopen_audit(id INTEGER PRIMARY KEY AUTOINCREMENT,source_attempt_id INTEGER NOT NULL,new_attempt_id INTEGER NOT NULL,student_id TEXT NOT NULL,course_id TEXT NOT NULL,reason TEXT NOT NULL,minutes INTEGER NOT NULL,source_status TEXT NOT NULL,source_payload TEXT,created_at TEXT NOT NULL);""")
   _schema_ready=True
+ scols={r["name"] for r in c.execute("PRAGMA table_info(students)")}
+ if "first_name" not in scols:c.execute("ALTER TABLE students ADD COLUMN first_name TEXT NOT NULL DEFAULT ''")
+ if "last_name" not in scols:c.execute("ALTER TABLE students ADD COLUMN last_name TEXT NOT NULL DEFAULT ''")
+ if "email" not in scols:c.execute("ALTER TABLE students ADD COLUMN email TEXT NOT NULL DEFAULT ''")
+ if "active" not in scols:c.execute("ALTER TABLE students ADD COLUMN active INTEGER NOT NULL DEFAULT 1")
+ if "updated_at" not in scols:c.execute("ALTER TABLE students ADD COLUMN updated_at TEXT")
  cols={r["name"] for r in c.execute("PRAGMA table_info(exam_versions)")}
  if "config" not in cols:c.execute("ALTER TABLE exam_versions ADD COLUMN config TEXT")
  if "deadline_at" not in cols:c.execute("ALTER TABLE exam_versions ADD COLUMN deadline_at TEXT")
@@ -149,6 +155,10 @@ class GroupCreateIn(BaseModel):
  group_id:str;name:str;academic_year:str="";description:str="";active:bool=True
 class GroupUpdateIn(BaseModel):
  name:str;academic_year:str="";description:str="";active:bool=True
+class StudentCreateIn(BaseModel):
+ student_id:str;first_name:str="";last_name:str="";email:str="";active:bool=True;group_ids:list[str]=[]
+class StudentUpdateIn(BaseModel):
+ first_name:str="";last_name:str="";email:str="";active:bool=True;group_ids:list[str]=[]
 class StateIn(BaseModel): course_id:str;state:dict
 class EventIn(BaseModel):
  student_id:str;course_id:str;kind:str;ce:str|None=None;item_id:str|None=None;attempt:int|None=None;response:object|None=None;correct:bool|None=None;score:float|None=None;payload:dict|None=None
@@ -310,7 +320,7 @@ def audit(c,username,action,detail=""):
  c.execute("INSERT INTO admin_audit(username,action,detail,created_at) VALUES(?,?,?,?)",(username,action,detail[:1500],now()))
 def student_auth(token,c=None):
  if not token: raise HTTPException(401,"Student token required")
- own=c is None;db=c or con();r=db.execute("SELECT student_id FROM students WHERE token=?",(token,)).fetchone()
+ own=c is None;db=c or con();r=db.execute("SELECT student_id FROM students WHERE token=? AND active=1",(token,)).fetchone()
  if own:db.close()
  if not r: raise HTTPException(401,"Invalid student token")
  return r["student_id"]
@@ -456,14 +466,61 @@ def teacher_groups(x_teacher_token:str|None=Header(None)):
 def teacher_group_students(group_id:str,x_teacher_token:str|None=Header(None)):
  auth(x_teacher_token);gid=valid_group_id(group_id);c=con();rows=[r["student_id"] for r in c.execute("SELECT student_id FROM group_members WHERE group_id=? ORDER BY student_id",(gid,))];c.close();return {"group_id":gid,"students":rows}
 
+def valid_student_id(value):
+ sid=(value or "").strip()
+ if len(sid)<1 or len(sid)>100 or any(ch in "\r\n\t" for ch in sid):raise HTTPException(400,"Identificador de alumno no válido")
+ return sid
+def set_student_groups(c,student_id,group_ids):
+ gids=[]
+ for raw in group_ids or []:
+  gid=valid_group_id(raw)
+  if gid not in gids:gids.append(gid)
+ if gids:
+  existing={r["group_id"] for r in c.execute("SELECT group_id FROM groups WHERE group_id IN ("+",".join("?" for _ in gids)+")",gids)}
+  missing=[g for g in gids if g not in existing]
+  if missing:raise HTTPException(400,"Grupos inexistentes: "+", ".join(missing))
+ c.execute("DELETE FROM group_members WHERE student_id=?",(student_id,))
+ for gid in gids:c.execute("INSERT INTO group_members(group_id,student_id,created_at) VALUES(?,?,?)",(gid,student_id,now()))
+
 @app.get("/api/admin/students")
 def admin_students(x_admin_token:str|None=Header(None,alias="X-Admin-Token")):
- admin_auth(x_admin_token);c=con();rows=[dict(r) for r in c.execute("""SELECT s.student_id,s.created_at,COUNT(DISTINCT st.course_id) courses,COUNT(DISTINCT r.course_id) results,
+ admin_auth(x_admin_token);c=con();rows=[dict(r) for r in c.execute("""SELECT s.student_id,s.first_name,s.last_name,s.email,s.active,s.created_at,s.updated_at,COUNT(DISTINCT st.course_id) courses,COUNT(DISTINCT r.course_id) results,
  COALESCE(GROUP_CONCAT(DISTINCT gm.group_id),'') group_ids
  FROM students s LEFT JOIN states st ON st.student_id=s.student_id LEFT JOIN results r ON r.student_id=s.student_id LEFT JOIN group_members gm ON gm.student_id=s.student_id
- GROUP BY s.student_id,s.created_at ORDER BY s.student_id""")];c.close()
+ GROUP BY s.student_id,s.first_name,s.last_name,s.email,s.active,s.created_at,s.updated_at ORDER BY s.last_name,s.first_name,s.student_id""")];c.close()
  for row in rows:row["groups"]=[x for x in (row.pop("group_ids","") or "").split(",") if x]
  return rows
+
+@app.post("/api/admin/students")
+def admin_create_student(x:StudentCreateIn,x_admin_token:str|None=Header(None,alias="X-Admin-Token")):
+ actor=admin_auth(x_admin_token);sid=valid_student_id(x.student_id);token=secrets.token_urlsafe(32);c=con()
+ if c.execute("SELECT 1 FROM students WHERE student_id=?",(sid,)).fetchone():c.close();raise HTTPException(409,"Ya existe un alumno con ese identificador")
+ try:
+  c.execute("INSERT INTO students(student_id,token,first_name,last_name,email,active,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?)",(sid,token,x.first_name.strip()[:120],x.last_name.strip()[:160],x.email.strip()[:200],1 if x.active else 0,now(),now()))
+  set_student_groups(c,sid,x.group_ids);audit(c,actor["username"],"student.create",sid);c.commit()
+ except HTTPException:c.rollback();c.close();raise
+ c.close();return {"ok":True,"student_id":sid,"token":token}
+
+@app.put("/api/admin/students/{student_id}")
+def admin_update_student(student_id:str,x:StudentUpdateIn,x_admin_token:str|None=Header(None,alias="X-Admin-Token")):
+ actor=admin_auth(x_admin_token);sid=valid_student_id(student_id);c=con()
+ cur=c.execute("UPDATE students SET first_name=?,last_name=?,email=?,active=?,updated_at=? WHERE student_id=?",(x.first_name.strip()[:120],x.last_name.strip()[:160],x.email.strip()[:200],1 if x.active else 0,now(),sid))
+ if not cur.rowcount:c.close();raise HTTPException(404,"Alumno no encontrado")
+ try:set_student_groups(c,sid,x.group_ids)
+ except HTTPException:c.rollback();c.close();raise
+ audit(c,actor["username"],"student.update",sid);c.commit();c.close();return {"ok":True}
+
+@app.post("/api/admin/students/{student_id}/token")
+def admin_regenerate_student_token(student_id:str,x_admin_token:str|None=Header(None,alias="X-Admin-Token")):
+ actor=admin_auth(x_admin_token);sid=valid_student_id(student_id);token=secrets.token_urlsafe(32);c=con();cur=c.execute("UPDATE students SET token=?,updated_at=? WHERE student_id=?",(token,now(),sid))
+ if not cur.rowcount:c.close();raise HTTPException(404,"Alumno no encontrado")
+ audit(c,actor["username"],"student.token",sid);c.commit();c.close();return {"ok":True,"student_id":sid,"token":token}
+
+@app.put("/api/admin/students/{student_id}/active")
+def admin_set_student_active(student_id:str,x:AdminActiveIn,x_admin_token:str|None=Header(None,alias="X-Admin-Token")):
+ actor=admin_auth(x_admin_token);sid=valid_student_id(student_id);c=con();cur=c.execute("UPDATE students SET active=?,updated_at=? WHERE student_id=?",(1 if x.active else 0,now(),sid))
+ if not cur.rowcount:c.close();raise HTTPException(404,"Alumno no encontrado")
+ audit(c,actor["username"],"student.active",sid+"="+str(bool(x.active)));c.commit();c.close();return {"ok":True}
 
 @app.get("/api/admin/system")
 def admin_system(x_admin_token:str|None=Header(None,alias="X-Admin-Token")):
@@ -540,7 +597,10 @@ def decide_ai_review(review_id:int,x:AIReviewDecision,x_teacher_token:str|None=H
 
 @app.post("/api/teacher/students/{student_id}")
 def create_student(student_id:str,x_teacher_token:str|None=Header(None)):
- auth(x_teacher_token);token=secrets.token_urlsafe(32);c=con();c.execute("INSERT OR REPLACE INTO students(student_id,token,created_at) VALUES(?,?,?)",(student_id,token,now()));c.commit();c.close();return {"student_id":student_id,"token":token}
+ auth(x_teacher_token);sid=valid_student_id(student_id);token=secrets.token_urlsafe(32);c=con();r=c.execute("SELECT 1 FROM students WHERE student_id=?",(sid,)).fetchone()
+ if r:c.execute("UPDATE students SET token=?,active=1,updated_at=? WHERE student_id=?",(token,now(),sid))
+ else:c.execute("INSERT INTO students(student_id,token,first_name,last_name,email,active,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?)",(sid,token,"","","",1,now(),now()))
+ c.commit();c.close();return {"student_id":sid,"token":token}
 
 @app.get("/api/student/session")
 def student_session(x_student_token:str|None=Header(None)):
