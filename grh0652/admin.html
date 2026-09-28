@@ -162,13 +162,13 @@ async function toggleAdmin(u,active){if(!confirm((active?'Activar ':'Desactivar 
 async function loadGroups(){
  try{
   const rows=await json('/api/admin/groups');
-  $('groupsTable').innerHTML=rows.length?rows.map(g=>'<tr><td><b>'+esc(g.group_id)+'</b></td><td>'+esc(g.name)+'</td><td>'+esc(g.academic_year||'—')+'</td><td><span class="pill">'+g.member_count+'</span></td><td><span class="pill '+(g.active?'':'off')+'">'+(g.active?'Activo':'Archivado')+'</span></td><td><button class="btn secondary" onclick="manageMembers(\''+esc(g.group_id)+'\',\''+esc(g.name).replaceAll("'","&#39;")+'\')">Alumnado</button> <button class="btn secondary" onclick="editGroup(\''+esc(g.group_id)+'\')">Editar</button> <button class="btn danger" onclick="deleteGroup(\''+esc(g.group_id)+'\')">Eliminar</button></td></tr>').join(''):'<tr><td colspan="6" class="muted">Todavía no hay grupos. Crea el primero con el formulario superior.</td></tr>';
+  $('groupsTable').innerHTML=rows.length?rows.map(g=>'<tr><td><b>'+esc(g.group_id)+'</b></td><td>'+esc(g.name)+'</td><td>'+esc(g.academic_year||'—')+'</td><td><span class="pill">'+g.member_count+'</span></td><td><span class="pill '+(g.active?'':'off')+'">'+(g.active?'Activo':'Archivado')+'</span></td><td><button class="btn secondary" onclick="manageMembers(\''+esc(g.group_id)+'\',\''+esc(g.name).replaceAll("'","&#39;")+'\')">Alumnado</button> <button class="btn secondary" onclick="editGroup(\''+esc(g.group_id)+'\')">Editar</button> <button class="btn '+(g.active?'amber':'good')+'" onclick="toggleGroup(\''+esc(g.group_id)+'\','+(!g.active)+')">'+(g.active?'Archivar':'Activar')+'</button> <button class="btn danger" onclick="deleteGroup(\''+esc(g.group_id)+'\')">Eliminar</button></td></tr>').join(''):'<tr><td colspan="6" class="muted">Todavía no hay grupos. Crea el primero con el formulario superior.</td></tr>';
  }catch(e){$('groupsTable').innerHTML='<tr><td colspan="6">'+esc(e.message)+'</td></tr>';if($('groupStatus'))$('groupStatus').textContent='Error: '+e.message}
 }
 async function createGroup(){
  const p={group_id:$('groupCode').value.trim(),name:$('groupName').value.trim(),academic_year:$('groupYear').value.trim(),description:$('groupDescription').value.trim(),active:$('groupActive').checked};
  $('groupStatus').textContent='Guardando…';
- try{const d=await json('/api/admin/groups',{method:'POST',body:JSON.stringify(p)});$('groupStatus').textContent='Grupo '+d.group_id+' creado correctamente.';$('groupCode').value='';$('groupName').value='';$('groupDescription').value='';await loadGroups();await loadStudents()}
+ try{const d=await json('/api/admin/groups',{method:'POST',body:JSON.stringify(p)});$('groupStatus').textContent='Grupo '+d.group_id+' creado correctamente.';$('groupCode').value='';$('groupName').value='';$('groupDescription').value='';await Promise.all([loadGroups(),loadStudents(),loadOverview(),loadStudentGroupOptions()])}
  catch(e){$('groupStatus').textContent='Error: '+e.message}
 }
 async function editGroup(gid){
@@ -177,13 +177,23 @@ async function editGroup(gid){
   const name=prompt('Nombre del grupo:',g.name);if(name===null)return;
   const year=prompt('Curso académico:',g.academic_year||'');if(year===null)return;
   const description=prompt('Descripción:',g.description||'');if(description===null)return;
-  const active=confirm('Pulsa Aceptar para mantener el grupo ACTIVO. Pulsa Cancelar para ARCHIVARLO.');
-  await json('/api/admin/groups/'+encodeURIComponent(gid),{method:'PUT',body:JSON.stringify({name,academic_year:year,description,active})});await loadGroups();await loadStudents()
+  await json('/api/admin/groups/'+encodeURIComponent(gid),{method:'PUT',body:JSON.stringify({name,academic_year:year,description,active:!!g.active})});
+  $('groupStatus').textContent='Grupo '+gid+' actualizado.';
+  await Promise.all([loadGroups(),loadStudents(),loadOverview(),loadStudentGroupOptions()])
  }catch(e){alert('No se pudo editar el grupo: '+e.message)}
+}
+async function toggleGroup(gid,active){
+ const verb=active?'activar':'archivar';
+ if(!confirm('¿Quieres '+verb+' el grupo '+gid+'?'))return;
+ try{
+  await json('/api/admin/groups/'+encodeURIComponent(gid)+'/active',{method:'PUT',body:JSON.stringify({active})});
+  $('groupStatus').textContent='Grupo '+gid+' '+(active?'activado':'archivado')+' correctamente.';
+  await Promise.all([loadGroups(),loadStudents(),loadOverview(),loadStudentGroupOptions()])
+ }catch(e){$('groupStatus').textContent='Error al '+verb+' el grupo: '+e.message;alert($('groupStatus').textContent)}
 }
 async function deleteGroup(gid){
  if(!confirm('¿Eliminar definitivamente el grupo '+gid+'? Se eliminarán sus asignaciones de alumnado, pero no los alumnos ni sus resultados.'))return;
- try{await json('/api/admin/groups/'+encodeURIComponent(gid),{method:'DELETE'});$('groupMembersCard').classList.add('hidden');await loadGroups();await loadStudents()}catch(e){alert('No se pudo eliminar: '+e.message)}
+ try{await json('/api/admin/groups/'+encodeURIComponent(gid),{method:'DELETE'});$('groupMembersCard').classList.add('hidden');await Promise.all([loadGroups(),loadStudents(),loadOverview(),loadStudentGroupOptions()])}catch(e){alert('No se pudo eliminar: '+e.message)}
 }
 async function manageMembers(gid,name){
  try{
