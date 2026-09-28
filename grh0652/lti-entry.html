@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GRH0652 · Acceso desde CAMPUS</title>
+<style>
+:root{--navy:#17365d;--teal:#168c9e;--bg:#f3f6f8;--ink:#202b33;--muted:#687983}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;background:linear-gradient(135deg,#eef6fa,#f7fbf8);font-family:Inter,Segoe UI,Arial,sans-serif;color:var(--ink);padding:22px}
+.card{width:min(680px,100%);background:#fff;border-radius:24px;padding:30px;box-shadow:0 20px 60px #17365d20;border:1px solid #dce7ec}
+.badge{display:inline-block;background:#e7f5f4;color:#17646c;padding:6px 10px;border-radius:999px;font-weight:900;font-size:.78rem}
+h1{color:var(--navy);margin:.45em 0}.muted{color:var(--muted);line-height:1.55}.btn{border:0;border-radius:12px;padding:12px 15px;background:var(--navy);color:#fff;font:inherit;font-weight:900;cursor:pointer;text-decoration:none;display:inline-block}.hidden{display:none}
+</style></head>
+<body><main class="card"><span class="badge">LTI 1.3 · CAMPUS</span><h1 id="title">Validando acceso…</h1><p class="muted" id="status">Estamos comprobando la sesión enviada por CAMPUS.</p><div id="teacherActions" class="hidden"><button id="preview" class="btn">Abrir previsualización de la unidad</button></div></main>
+<script>
+const h=new URLSearchParams(location.hash.slice(1)),token=h.get('token')||'',course=h.get('course')||'GRH0652_UT1',role=h.get('role')||'learner';
+history.replaceState({},'',location.pathname);
+const map={GRH0652_UT1:'ut1',GRH0652_UT2:'ut2',GRH0652_UT3:'ut3',GRH0652_UT4:'ut4'};
+async function boot(){
+ if(!token||!map[course]){document.getElementById('title').textContent='Acceso LTI incompleto';document.getElementById('status').textContent='CAMPUS no ha proporcionado una sesión válida.';return}
+ try{
+  const r=await fetch('/api/student/session',{headers:{'X-Student-Token':token}}),d=await r.json();if(!r.ok)throw new Error(d.detail||'Sesión no válida');
+  localStorage.setItem('grh0652.studentKey',token);localStorage.setItem('grh0652.student',d.student_id);localStorage.setItem('grh0652.lti','1');localStorage.setItem('grh0652.ltiCourse',course);
+  if(role==='instructor'){
+   document.getElementById('title').textContent='Herramienta LTI conectada';
+   document.getElementById('status').textContent='El acceso docente desde CAMPUS se ha validado. Puedes previsualizar la unidad sin necesidad de otra contraseña.';
+   document.getElementById('teacherActions').classList.remove('hidden');
+   document.getElementById('preview').onclick=()=>location.href='player.html?unit='+map[course]+'&lti=1';
+  }else{
+   document.getElementById('title').textContent='Acceso correcto';
+   document.getElementById('status').textContent='Entrando en la unidad…';
+   location.replace('player.html?unit='+map[course]+'&lti=1');
+  }
+ }catch(e){document.getElementById('title').textContent='No se pudo validar el acceso';document.getElementById('status').textContent=e.message}
+}
+boot();
+</script></body></html>
