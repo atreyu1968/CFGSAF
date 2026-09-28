@@ -1,5 +1,5 @@
 import csv,io
-import os,json,sqlite3,datetime,secrets,tempfile,shutil,hashlib,time
+import os,json,sqlite3,datetime,secrets,tempfile,shutil,hashlib,time,html
 from urllib.parse import urlencode
 import httpx
 import jwt
@@ -56,7 +56,7 @@ CREATE INDEX IF NOT EXISTS idx_group_members_student ON group_members(student_id
 CREATE TABLE IF NOT EXISTS lti_platforms(id INTEGER PRIMARY KEY AUTOINCREMENT,name TEXT NOT NULL,issuer TEXT NOT NULL,client_id TEXT NOT NULL,deployment_id TEXT NOT NULL DEFAULT '',auth_login_url TEXT NOT NULL,auth_token_url TEXT NOT NULL,jwks_url TEXT NOT NULL,identity_mode TEXT NOT NULL DEFAULT 'sub',active INTEGER NOT NULL DEFAULT 1,created_at TEXT NOT NULL,updated_at TEXT NOT NULL,UNIQUE(issuer,client_id,deployment_id));
 CREATE TABLE IF NOT EXISTS lti_states(state TEXT PRIMARY KEY,nonce TEXT NOT NULL,issuer TEXT NOT NULL,client_id TEXT NOT NULL,target_link_uri TEXT,lti_message_hint TEXT,created_at TEXT NOT NULL,expires_at TEXT NOT NULL,used INTEGER NOT NULL DEFAULT 0);
 CREATE TABLE IF NOT EXISTS lti_users(id INTEGER PRIMARY KEY AUTOINCREMENT,issuer TEXT NOT NULL,subject TEXT NOT NULL,student_id TEXT NOT NULL,external_key_hash TEXT NOT NULL DEFAULT '',created_at TEXT NOT NULL,updated_at TEXT NOT NULL,UNIQUE(issuer,subject),UNIQUE(student_id));
-CREATE TABLE IF NOT EXISTS lti_sessions(token_hash TEXT PRIMARY KEY,student_id TEXT NOT NULL,issuer TEXT NOT NULL,subject TEXT NOT NULL,course_id TEXT NOT NULL,context_id TEXT NOT NULL DEFAULT '',resource_link_id TEXT NOT NULL DEFAULT '',lineitem TEXT NOT NULL DEFAULT '',lineitems TEXT NOT NULL DEFAULT '',ags_scopes TEXT NOT NULL DEFAULT '[]',nrps_url TEXT NOT NULL DEFAULT '',nrps_versions TEXT NOT NULL DEFAULT '[]',created_at TEXT NOT NULL,expires_at TEXT NOT NULL,last_seen_at TEXT NOT NULL,FOREIGN KEY(student_id) REFERENCES students(student_id));
+CREATE TABLE IF NOT EXISTS lti_sessions(token_hash TEXT PRIMARY KEY,student_id TEXT NOT NULL,issuer TEXT NOT NULL,subject TEXT NOT NULL,course_id TEXT NOT NULL,context_id TEXT NOT NULL DEFAULT '',resource_link_id TEXT NOT NULL DEFAULT '',lineitem TEXT NOT NULL DEFAULT '',lineitems TEXT NOT NULL DEFAULT '',ags_scopes TEXT NOT NULL DEFAULT '[]',roles TEXT NOT NULL DEFAULT '[]',nrps_url TEXT NOT NULL DEFAULT '',nrps_versions TEXT NOT NULL DEFAULT '[]',created_at TEXT NOT NULL,expires_at TEXT NOT NULL,last_seen_at TEXT NOT NULL,FOREIGN KEY(student_id) REFERENCES students(student_id));
 CREATE TABLE IF NOT EXISTS lti_contexts(id INTEGER PRIMARY KEY AUTOINCREMENT,issuer TEXT NOT NULL,deployment_id TEXT NOT NULL,context_id TEXT NOT NULL,group_id TEXT NOT NULL,label TEXT NOT NULL DEFAULT '',title TEXT NOT NULL DEFAULT '',nrps_url TEXT NOT NULL DEFAULT '',nrps_versions TEXT NOT NULL DEFAULT '[]',last_sync_at TEXT,created_at TEXT NOT NULL,updated_at TEXT NOT NULL,UNIQUE(issuer,deployment_id,context_id));
 CREATE TABLE IF NOT EXISTS lti_links(id INTEGER PRIMARY KEY AUTOINCREMENT,issuer TEXT NOT NULL,deployment_id TEXT NOT NULL,resource_link_id TEXT NOT NULL,course_id TEXT NOT NULL,context_id TEXT NOT NULL DEFAULT '',created_at TEXT NOT NULL,updated_at TEXT NOT NULL,UNIQUE(issuer,deployment_id,resource_link_id));
 CREATE TABLE IF NOT EXISTS lti_grade_log(id INTEGER PRIMARY KEY AUTOINCREMENT,student_id TEXT NOT NULL,course_id TEXT NOT NULL,issuer TEXT NOT NULL,lineitem TEXT NOT NULL,score REAL NOT NULL,status TEXT NOT NULL,detail TEXT,created_at TEXT NOT NULL);
@@ -85,6 +85,8 @@ CREATE TABLE IF NOT EXISTS ai_rubrics(id INTEGER PRIMARY KEY AUTOINCREMENT,cours
  if "password_hash" not in scols:c.execute("ALTER TABLE students ADD COLUMN password_hash TEXT NOT NULL DEFAULT ''")
  if "password_iterations" not in scols:c.execute("ALTER TABLE students ADD COLUMN password_iterations INTEGER NOT NULL DEFAULT 210000")
  if "must_change_password" not in scols:c.execute("ALTER TABLE students ADD COLUMN must_change_password INTEGER NOT NULL DEFAULT 0")
+ lcols={r["name"] for r in c.execute("PRAGMA table_info(lti_sessions)")}
+ if "roles" not in lcols:c.execute("ALTER TABLE lti_sessions ADD COLUMN roles TEXT NOT NULL DEFAULT '[]'")
  cols={r["name"] for r in c.execute("PRAGMA table_info(exam_versions)")}
  if "config" not in cols:c.execute("ALTER TABLE exam_versions ADD COLUMN config TEXT")
  if "deadline_at" not in cols:c.execute("ALTER TABLE exam_versions ADD COLUMN deadline_at TEXT")
