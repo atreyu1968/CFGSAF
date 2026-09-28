@@ -2,6 +2,65 @@
 
 Implementación completa del módulo **0652 · Gestión de Recursos Humanos** organizada en cuatro RA/UT.
 
+## 0. Preparar un servidor Ubuntu/Debian completamente limpio
+
+Si el servidor acaba de instalarse y no dispone todavía de herramientas básicas, ejecuta primero estos pasos desde una consola SSH.
+
+> Si has iniciado sesión directamente como `root`, puedes quitar `sudo` de los comandos.
+
+### 0.1. Actualizar el sistema
+
+```bash
+sudo apt update
+sudo apt -y full-upgrade
+```
+
+Si durante la actualización se instala un kernel nuevo o el sistema indica que es necesario reiniciar:
+
+```bash
+sudo reboot
+```
+
+Después del reinicio, vuelve a conectarte por SSH y continúa con el siguiente paso.
+
+### 0.2. Instalar Git, curl y utilidades básicas
+
+```bash
+sudo apt update
+sudo apt -y install git curl ca-certificates unzip
+```
+
+Estas herramientas se utilizan para descargar el instalador, clonar o actualizar el repositorio y trabajar con los paquetes de despliegue.
+
+Comprueba que Git y curl han quedado instalados:
+
+```bash
+git --version
+curl --version
+```
+
+### 0.3. Opción recomendada: clonar el repositorio
+
+Si quieres conservar una copia local del proyecto en el servidor:
+
+```bash
+cd /opt
+sudo git clone https://github.com/atreyu1968/CFGSAF.git
+sudo chown -R "$USER":"$USER" /opt/CFGSAF
+cd /opt/CFGSAF/grh0652
+```
+
+Para actualizar posteriormente esa copia con los últimos cambios publicados en GitHub:
+
+```bash
+cd /opt/CFGSAF
+git pull --ff-only
+```
+
+Si solo quieres ejecutar el instalador automático, no es obligatorio clonar antes el repositorio; basta con tener `curl` instalado y usar el comando de la siguiente sección.
+
+---
+
 ## Instalación automática en Ubuntu
 
 La forma recomendada de desplegar GRH0652 en producción es mediante el instalador incluido en el repositorio:
