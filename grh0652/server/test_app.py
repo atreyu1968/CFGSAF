@@ -1161,3 +1161,44 @@ def test_groups_crud_and_student_membership():
  remove=client.delete("/api/admin/groups/2AF-A/members/grupo-alumno",headers=ah);assert remove.status_code==200
  delete=client.delete("/api/admin/groups/2AF-A",headers=ah);assert delete.status_code==200
  assert all(x["group_id"]!="2AF-A" for x in client.get("/api/admin/groups",headers=ah).json())
+
+
+def test_student_full_registration_edit_and_token_regeneration_preserves_groups():
+ ah=_admin_headers()
+ g=client.post("/api/admin/groups",headers=ah,json={"group_id":"REG-A","name":"Registro A","academic_year":"2026-2027","description":"","active":True})
+ assert g.status_code in (200,409),g.text
+ create=client.post("/api/admin/students",headers=ah,json={"student_id":"reg-01","first_name":"Ana","last_name":"Pérez","email":"ana@example.test","active":True,"group_ids":["REG-A"]})
+ assert create.status_code==200,create.text
+ first_token=create.json()["token"]
+ rows=client.get("/api/admin/students",headers=ah).json();row=next(x for x in rows if x["student_id"]=="reg-01")
+ assert row["first_name"]=="Ana" and row["last_name"]=="Pérez" and "REG-A" in row["groups"]
+ edit=client.put("/api/admin/students/reg-01",headers=ah,json={"first_name":"Ana María","last_name":"Pérez","email":"ana2@example.test","active":True,"group_ids":["REG-A"]})
+ assert edit.status_code==200,edit.text
+ regen=client.post("/api/admin/students/reg-01/token",headers=ah);assert regen.status_code==200 and regen.json()["token"]!=first_token
+ # La ruta docente histórica puede regenerar la clave, pero no debe borrar la matrícula en grupos.
+ legacy=client.post("/api/teacher/students/reg-01",headers={"X-Teacher-Token":"test-token"});assert legacy.status_code==200
+ members=client.get("/api/admin/groups/REG-A/members",headers=ah).json();m=next(x for x in members if x["student_id"]=="reg-01");assert m["member"]==1
+ off=client.put("/api/admin/students/reg-01/active",headers=ah,json={"active":False});assert off.status_code==200
+ assert client.get("/api/student/session",headers={"X-Student-Token":legacy.json()["token"]}).status_code==401
+
+
+def test_individual_bank_registration_crud():
+ h={"X-Teacher-Token":"test-token"}
+ # Examen
+ q={"id":"qx1","ce":"X.a","q":"Pregunta de prueba","options":["A","B"],"answer":0,"type":"choice"}
+ assert client.post("/api/teacher/exam-bank/TESTBANK/question",headers=h,json=q).status_code==200
+ exam=client.get("/api/teacher/exam-bank/TESTBANK",headers=h);assert exam.status_code==200 and exam.json()[0]["question_id"]=="qx1"
+ q["q"]="Pregunta editada";q["answer"]=1
+ assert client.post("/api/teacher/exam-bank/TESTBANK/question",headers=h,json=q).status_code==200
+ assert client.get("/api/teacher/exam-bank/TESTBANK",headers=h).json()[0]["answer"]==1
+ assert client.delete("/api/teacher/exam-bank/TESTBANK/question/qx1",headers=h).status_code==200
+ # Recuperación
+ rec={"id":"rx1","ce":"X.a","kind":"tf","prompt":"Verdadero o falso","options":[],"pairs":[],"answer":True,"feedback":"Correcto"}
+ assert client.post("/api/teacher/recovery-bank/TESTBANK/item",headers=h,json=rec).status_code==200
+ rr=client.get("/api/teacher/recovery-bank/TESTBANK",headers=h);assert rr.status_code==200 and rr.json()[0]["item_id"]=="rx1"
+ assert client.delete("/api/teacher/recovery-bank/TESTBANK/item/rx1",headers=h).status_code==200
+ # Portafolio en un curso sin banco público, para comprobar alta manual.
+ pf={"id":"px1","ce":"X.a","kind":"choice","answer":0}
+ assert client.post("/api/teacher/portfolio-bank/TESTPORT/item",headers=h,json=pf).status_code==200
+ pr=client.get("/api/teacher/portfolio-bank/TESTPORT",headers=h);assert pr.status_code==200 and pr.json()[0]["item_id"]=="px1"
+ assert client.delete("/api/teacher/portfolio-bank/TESTPORT/item/px1",headers=h).status_code==200
