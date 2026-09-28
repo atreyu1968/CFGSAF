@@ -433,6 +433,14 @@ def admin_update_group(group_id:str,x:GroupUpdateIn,x_admin_token:str|None=Heade
  if not cur.rowcount:c.close();raise HTTPException(404,"Grupo no encontrado")
  audit(c,actor["username"],"group.update",gid);c.commit();c.close();return {"ok":True}
 
+@app.put("/api/admin/groups/{group_id}/active")
+def admin_set_group_active(group_id:str,x:AdminActiveIn,x_admin_token:str|None=Header(None,alias="X-Admin-Token")):
+ actor=admin_auth(x_admin_token);gid=valid_group_id(group_id);c=con()
+ cur=c.execute("UPDATE groups SET active=?,updated_at=? WHERE group_id=?",(1 if x.active else 0,now(),gid))
+ if not cur.rowcount:c.close();raise HTTPException(404,"Grupo no encontrado")
+ audit(c,actor["username"],"group.active",gid+"="+str(bool(x.active)));c.commit();c.close()
+ return {"ok":True,"group_id":gid,"active":bool(x.active)}
+
 @app.delete("/api/admin/groups/{group_id}")
 def admin_delete_group(group_id:str,x_admin_token:str|None=Header(None,alias="X-Admin-Token")):
  actor=admin_auth(x_admin_token);gid=valid_group_id(group_id);c=con();r=c.execute("SELECT name FROM groups WHERE group_id=?",(gid,)).fetchone()
