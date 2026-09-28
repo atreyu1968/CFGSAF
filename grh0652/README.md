@@ -61,6 +61,40 @@ Si solo quieres ejecutar el instalador automático, no es obligatorio clonar ant
 
 ---
 
+## Credenciales de administración y primer arranque
+
+La aplicación utiliza ahora **cuentas de administrador con usuario y contraseña**. En una instalación nueva, el instalador comprueba el backend después de arrancarlo y, si no existe ningún administrador activo, abre obligatoriamente el asistente de creación de credenciales.
+
+También se aplica la misma regla durante una **actualización**: si la base de datos existente no contiene ningún administrador activo, `grh0652-update` detiene el proceso normal y solicita la creación de uno antes de dar la actualización por terminada.
+
+El asistente solicita:
+
+- usuario administrador;
+- nombre visible;
+- correo electrónico opcional;
+- contraseña y confirmación.
+
+La contraseña debe tener al menos 12 caracteres y combinar al menos tres grupos entre mayúsculas, minúsculas, números y símbolos. **La contraseña no se guarda en archivos de texto del servidor.**
+
+Panel de administración:
+
+```text
+https://TU_DOMINIO/admin.html
+```
+
+Desde este panel se puede consultar el estado global, gestionar administradores, crear accesos de alumnado, revisar información técnica, descargar copias de seguridad y abrir el panel docente.
+
+Para instalaciones totalmente desatendidas se pueden suministrar las credenciales por argumentos:
+
+```bash
+--admin-user admin \
+--admin-password 'UnaClaveLargaYSegura123!' \
+--admin-name 'Administrador GRH0652' \
+--admin-email admin@centro.es
+```
+
+Si la actualización se ejecuta sin terminal interactivo y no existe administrador, el proceso se detendrá con un mensaje claro en lugar de dejar la aplicación sin acceso administrativo.
+
 ## Instalación automática en Ubuntu
 
 La forma recomendada de desplegar GRH0652 en producción es mediante el instalador incluido en el repositorio:
@@ -120,6 +154,7 @@ Las respuestas de examen, recuperación y Portafolio no se versionan. `docker-co
 - `index.html`: acceso del alumnado.
 - `course.html`: dashboard de los cuatro RA.
 - `player.html`: reproductor SCORM 1.2.
+- `admin.html`: panel de administración y gestión de credenciales.
 - `teacher.html`: panel docente.
 - `assets/scorm-api.js`: API SCORM 1.2.
 - `assets/evidence-store.js`: adaptador de persistencia.
