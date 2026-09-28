@@ -1158,6 +1158,10 @@ def test_groups_crud_and_student_membership():
  teacher_groups=client.get("/api/teacher/groups",headers={"X-Teacher-Token":"test-token"});assert teacher_groups.status_code==200
  assert any(x["group_id"]=="2AF-A" and x["member_count"]>=1 for x in teacher_groups.json())
  update=client.put("/api/admin/groups/2AF-A",headers=ah,json={"name":"2º AF A","academic_year":"2026-2027","description":"Actualizado","active":False});assert update.status_code==200
+ archived=next(x for x in client.get("/api/admin/groups",headers=ah).json() if x["group_id"]=="2AF-A");assert archived["active"]==0
+ activate=client.put("/api/admin/groups/2AF-A/active",headers=ah,json={"active":True});assert activate.status_code==200,activate.text
+ active=next(x for x in client.get("/api/admin/groups",headers=ah).json() if x["group_id"]=="2AF-A");assert active["active"]==1
+ archive=client.put("/api/admin/groups/2AF-A/active",headers=ah,json={"active":False});assert archive.status_code==200,archive.text
  remove=client.delete("/api/admin/groups/2AF-A/members/grupo-alumno",headers=ah);assert remove.status_code==200
  delete=client.delete("/api/admin/groups/2AF-A",headers=ah);assert delete.status_code==200
  assert all(x["group_id"]!="2AF-A" for x in client.get("/api/admin/groups",headers=ah).json())
