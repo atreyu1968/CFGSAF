@@ -983,7 +983,9 @@ def student_session(x_student_token:str|None=Header(None)):
 
 @app.get("/api/student/dashboard/{course_id}")
 def student_dashboard(course_id:str,x_student_token:str|None=Header(None)):
- sid=student_auth(x_student_token);c=con();official=recompute_official(c,sid,course_id);plan=c.execute("SELECT criteria,status,created_at FROM recovery_plans WHERE student_id=? AND course_id=?",(sid,course_id)).fetchone();c.commit();c.close();return {"result":official,"ce":official["ce"],"recovery_plan":({"criteria":json.loads(plan["criteria"] or "[]"),"status":plan["status"],"created_at":plan["created_at"]} if plan else None)}
+ sid=student_auth(x_student_token);c=con();official=recompute_official(c,sid,course_id);plan=c.execute("SELECT criteria,status,created_at FROM recovery_plans WHERE student_id=? AND course_id=?",(sid,course_id)).fetchone();c.commit();c.close()
+ lti_grade=lti_push_grade(sid,course_id,float(official.get("final",0))) if lti_session_row(x_student_token) else None
+ return {"result":official,"ce":official["ce"],"recovery_plan":({"criteria":json.loads(plan["criteria"] or "[]"),"status":plan["status"],"created_at":plan["created_at"]} if plan else None),"lti_grade":lti_grade}
 
 @app.get("/api/student/feedback/{course_id}")
 def student_feedback(course_id:str,x_student_token:str|None=Header(None)):
