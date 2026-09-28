@@ -1215,3 +1215,37 @@ def test_individual_bank_registration_crud():
  assert client.post("/api/teacher/portfolio-bank/TESTPORT/item",headers=h,json=pf).status_code==200
  pr=client.get("/api/teacher/portfolio-bank/TESTPORT",headers=h);assert pr.status_code==200 and pr.json()[0]["item_id"]=="px1"
  assert client.delete("/api/teacher/portfolio-bank/TESTPORT/item/px1",headers=h).status_code==200
+
+
+def test_lti_tool_configuration_and_platform_registration():
+ ah=_admin_headers()
+ cfg=client.get("/api/lti/configuration");assert cfg.status_code==200,cfg.text
+ j=cfg.json();assert j["oidc_initiation_url"].endswith("/api/lti/login") and j["jwks_url"].endswith("/api/lti/jwks")
+ jwks=client.get("/api/lti/jwks");assert jwks.status_code==200 and jwks.json()["keys"][0]["kty"]=="RSA"
+ payload={"name":"Campus Test","issuer":"https://campus.example.test","client_id":"client-123","deployment_id":"dep-1","auth_login_url":"https://campus.example.test/oidc","auth_token_url":"https://campus.example.test/token","jwks_url":"https://campus.example.test/jwks","identity_mode":"sub","active":True}
+ r=client.post("/api/admin/lti/platforms",headers=ah,json=payload);assert r.status_code==200,r.text
+ rows=client.get("/api/admin/lti/platforms",headers=ah);assert rows.status_code==200 and any(x["client_id"]=="client-123" for x in rows.json())
+ login=client.get("/api/lti/login",params={"iss":payload["issuer"],"client_id":payload["client_id"],"login_hint":"hint-1","target_link_uri":"https://tool.example.test/api/lti/launch","lti_message_hint":"msg-1"},follow_redirects=False)
+ assert login.status_code in (302,307)
+ assert login.headers["location"].startswith(payload["auth_login_url"])
+ assert "response_type=id_token" in login.headers["location"] and "state=" in login.headers["location"] and "nonce=" in login.headers["location"]
+
+
+def test_lti_deep_link_response_contains_selected_ut1():
+ ah=_admin_headers()
+ ts=int(module.time.time())
+ ticket=module.lti_sign({"iss":"grh0652","aud":"grh0652-deeplink","iat":ts,"exp":ts+300,"platform_issuer":"https://campus.example.test","client_id":"client-123","deployment_id":"dep-1","return_url":"https://campus.example.test/deep-return","data":"abc"})
+ r=client.post("/api/lti/deep-link/return",data={"ticket":ticket,"course_id":"GRH0652_UT1"})
+ assert r.status_code==200,r.text
+ assert "GRH0652_UT1" in r.text and "JWT" in r.text and "campus.example.test/deep-return" in r.text
+
+
+def test_lti_local_student_is_pseudonymous_and_context_creates_group():
+ c=module.con()
+ platform={"issuer":"https://campus.example.test","client_id":"client-123","deployment_id":"dep-1","identity_mode":"sub"}
+ claims={"sub":"opaque-subject-777","given_name":"Ana","family_name":"Prueba","https://purl.imsglobal.org/spec/lti/claim/deployment_id":"dep-1","https://purl.imsglobal.org/spec/lti/claim/context":{"id":"ctx-1","label":"2AF","title":"2º Administración y Finanzas"}}
+ sid=module.lti_local_student(c,platform,claims);gid=module.lti_context_group(c,platform,claims,sid);c.commit()
+ assert sid.startswith("lti-") and "opaque-subject-777" not in sid
+ assert gid.startswith("LTI-")
+ assert c.execute("SELECT 1 FROM group_members WHERE group_id=? AND student_id=?",(gid,sid)).fetchone()
+ c.close()
