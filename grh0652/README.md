@@ -126,6 +126,27 @@ Los bancos privados deben permanecer fuera de Git y nunca deben ubicarse en el d
 
 Documentación detallada: [INSTALL_UBUNTU.md](INSTALL_UBUNTU.md).
 
+## Registros disponibles desde la aplicación
+
+Se ha revisado el modelo de datos para que las entidades que requieren alta manual dispongan de una vía de registro desde la interfaz, no solamente desde la API o desde SQLite.
+
+| Registro | Alta | Edición / mantenimiento | Ubicación |
+|---|---|---|---|
+| Administradores | Sí | contraseña, estado, nuevas cuentas | `admin.html` |
+| Grupos | Sí | nombre, curso, descripción, estado, miembros | `admin.html` |
+| Alumnado | Sí, individual y masiva | datos, grupos, estado, regeneración de clave | `admin.html` |
+| Matrícula alumno-grupo | Sí | añadir y retirar alumnado | `admin.html` |
+| Preguntas de examen | Sí | alta, edición, borrado e importación JSON | `banks.html` |
+| Actividades de recuperación | Sí | alta, edición, borrado e importación JSON | `banks.html` |
+| Claves privadas de Portafolio | Sí | alta, edición, borrado e importación JSON | `banks.html` |
+| Rúbricas de IA | Sí | alta, edición y borrado | `teacher.html` |
+| Configuración de evaluación | Sí | edición por RA | `teacher.html` |
+| Rectificaciones de calificación | Sí | registro motivado y reversión | `teacher.html` |
+
+Los intentos, evidencias, resultados, planes de recuperación, versiones de examen y auditorías **no se dan de alta manualmente**, porque son registros transaccionales que genera automáticamente la aplicación como consecuencia del trabajo del alumnado o de una actuación docente. Esto evita crear resultados artificiales sin trazabilidad.
+
+Al regenerar la clave de un alumno se conserva su ficha, grupos, progreso y resultados. Desactivar un alumno impide su acceso sin borrar su historial.
+
 ## Flujo del alumnado
 1. Teoría e infografías.
 2. Práctica guiada no evaluable: 3 intentos por ejercicio; al agotarlos se muestra orientación/solución.
@@ -154,7 +175,8 @@ Las respuestas de examen, recuperación y Portafolio no se versionan. `docker-co
 - `index.html`: acceso del alumnado.
 - `course.html`: dashboard de los cuatro RA.
 - `player.html`: reproductor SCORM 1.2.
-- `admin.html`: panel de administración y gestión de credenciales.
+- `admin.html`: panel de administración, administradores, grupos y alumnado.
+- `banks.html`: registro y mantenimiento de bancos de examen, recuperación y Portafolio.
 - `teacher.html`: panel docente.
 - `assets/scorm-api.js`: API SCORM 1.2.
 - `assets/evidence-store.js`: adaptador de persistencia.
