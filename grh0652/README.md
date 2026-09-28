@@ -147,6 +147,112 @@ Los intentos, evidencias, resultados, planes de recuperación, versiones de exam
 
 Al regenerar la clave de un alumno se conserva su ficha, grupos, progreso y resultados. Desactivar un alumno impide su acceso sin borrar su historial.
 
+## Integración con CAMPUS mediante LTI 1.3
+
+GRH0652 puede funcionar como **herramienta LTI 1.3 / LTI Advantage** para Moodle/CAMPUS. En este modo el alumnado entra desde el aula virtual y no necesita volver a autenticarse con la contraseña temporal `1234`.
+
+La integración incluye:
+
+- OIDC Login de LTI 1.3.
+- Validación de `id_token` mediante el JWKS de CAMPUS.
+- Clave RSA propia persistente y publicación de JWKS.
+- Deep Linking para seleccionar UT1, UT2, UT3 o UT4 desde el aula.
+- Assignment and Grade Services (AGS) para devolver a CAMPUS la nota final del RA cuando la plataforma concede el scope correspondiente.
+- Names and Role Provisioning Services (NRPS) para sincronizar el alumnado de un aula cuando CAMPUS concede ese servicio.
+- Creación automática de un grupo local para cada contexto/aula LTI.
+- Identificación por `sub` LTI de forma predeterminada. Existe un modo opcional CIAL si CAMPUS lo proporciona mediante un custom claim llamado `cial`; GRH0652 utiliza una huella criptográfica para la correspondencia y no necesita mostrar el CIAL en la interfaz.
+
+### 1. Datos de GRH0652 que deben registrarse en CAMPUS
+
+Después de instalar o actualizar el servidor, entra como administrador en:
+
+```text
+https://TU_DOMINIO/lti-admin.html
+```
+
+La pantalla muestra automáticamente:
+
+```text
+OIDC Initiation URL: https://TU_DOMINIO/api/lti/login
+Target / Tool URL:   https://TU_DOMINIO/api/lti/launch
+Redirect URI:        https://TU_DOMINIO/api/lti/launch
+JWKS URL:            https://TU_DOMINIO/api/lti/jwks
+```
+
+También puede consultarse en formato JSON:
+
+```text
+https://TU_DOMINIO/api/lti/configuration
+```
+
+La clave privada RSA se genera automáticamente en el volumen persistente de datos y **nunca se publica**. CAMPUS solo necesita la URL JWKS.
+
+### 2. Datos que CAMPUS debe facilitar a GRH0652
+
+Una vez registrada la herramienta en Moodle/CAMPUS, introduce en `lti-admin.html`:
+
+- Issuer (`iss`).
+- Client ID.
+- Deployment ID, si ya está disponible.
+- Authentication request / OIDC login URL.
+- OAuth2 access token URL.
+- Public keyset / JWKS URL de CAMPUS.
+
+Si el Deployment ID todavía no se conoce, puede dejarse vacío inicialmente y completarse después.
+
+### 3. Vincular específicamente UT1 a un aula
+
+La opción recomendada es **Deep Linking**. Al añadir GRH0652 como herramienta externa en el aula, el selector devuelve cuatro recursos:
+
+- UT1 · Gestión de la contratación laboral.
+- UT2 · Modificación, suspensión y extinción.
+- UT3 · Seguridad Social.
+- UT4 · Retribución, nóminas, cotización e IRPF.
+
+Selecciona **UT1**. GRH0652 devuelve a CAMPUS un `ltiResourceLink` con:
+
+```text
+grh_course_id=GRH0652_UT1
+```
+
+y solicita un elemento de calificación de 100 puntos para que AGS pueda devolver la nota.
+
+Si se configura la actividad manualmente sin Deep Linking, debe enviarse como parámetro personalizado:
+
+```text
+grh_course_id=GRH0652_UT1
+```
+
+Si no se recibe ningún parámetro, GRH0652 utiliza UT1 como valor predeterminado.
+
+### 4. Identidad, grupos y matrícula
+
+En el primer lanzamiento de un alumno desde CAMPUS:
+
+1. se valida la firma LTI;
+2. se crea una identidad local pseudónima basada en el `sub` de LTI;
+3. se crea o actualiza el grupo local correspondiente al contexto del aula;
+4. el alumno queda asignado al grupo;
+5. se crea una sesión LTI temporal de GRH0652.
+
+Si CAMPUS concede NRPS, desde **Administración → LTI 1.3 · CAMPUS** aparece el aula detectada y el botón **Sincronizar alumnado**. La sincronización incorpora al grupo local las personas con rol Learner.
+
+### 5. Calificaciones
+
+Si CAMPUS concede AGS y proporciona un `lineitem`, GRH0652 envía automáticamente la nota final del RA sobre 100. Si el recurso no trae un `lineitem` pero la plataforma permite crearlo, GRH0652 intenta crear uno.
+
+Los envíos se auditan en la tabla `lti_grade_log` y no se repite un envío cuando la nota no ha cambiado.
+
+### 6. Acceso alternativo
+
+La integración LTI no elimina el acceso independiente. Los dos sistemas pueden coexistir:
+
+- CAMPUS → LTI 1.3 → acceso sin contraseña adicional.
+- Acceso directo → usuario del alumno + contraseña temporal `1234`, con cambio obligatorio en el primer acceso.
+- Código legado → se conserva para compatibilidad con cuentas creadas por versiones anteriores.
+
+> El registro de una herramienta LTI 1.3 suele requerir permisos de administración o la intervención de quien administre las herramientas externas en la plataforma Moodle/CAMPUS. GRH0652 deja preparada toda la parte correspondiente a la herramienta.
+
 ## Flujo del alumnado
 1. Teoría e infografías.
 2. Práctica guiada no evaluable: 3 intentos por ejercicio; al agotarlos se muestra orientación/solución.
