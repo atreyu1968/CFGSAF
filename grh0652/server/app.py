@@ -38,7 +38,7 @@ def con():
  global _schema_ready,_defaults_seeded,_private_banks_seeded
  c=sqlite3.connect(DB,timeout=10);c.row_factory=sqlite3.Row;c.execute("PRAGMA journal_mode=WAL");c.execute("PRAGMA foreign_keys=ON");c.execute("PRAGMA busy_timeout=5000")
  if not _schema_ready:
-  c.executescript("""CREATE TABLE IF NOT EXISTS students(student_id TEXT PRIMARY KEY,token TEXT NOT NULL UNIQUE,first_name TEXT NOT NULL DEFAULT '',last_name TEXT NOT NULL DEFAULT '',email TEXT NOT NULL DEFAULT '',active INTEGER NOT NULL DEFAULT 1,created_at TEXT,updated_at TEXT);
+  c.executescript("""CREATE TABLE IF NOT EXISTS students(student_id TEXT PRIMARY KEY,token TEXT NOT NULL UNIQUE,first_name TEXT NOT NULL DEFAULT '',last_name TEXT NOT NULL DEFAULT '',email TEXT NOT NULL DEFAULT '',active INTEGER NOT NULL DEFAULT 1,password_salt TEXT NOT NULL DEFAULT '',password_hash TEXT NOT NULL DEFAULT '',password_iterations INTEGER NOT NULL DEFAULT 210000,must_change_password INTEGER NOT NULL DEFAULT 0,created_at TEXT,updated_at TEXT);
 CREATE TABLE IF NOT EXISTS admins(username TEXT PRIMARY KEY,display_name TEXT NOT NULL,email TEXT NOT NULL DEFAULT '',password_salt TEXT NOT NULL,password_hash TEXT NOT NULL,password_iterations INTEGER NOT NULL DEFAULT 310000,active INTEGER NOT NULL DEFAULT 1,created_at TEXT NOT NULL,last_login_at TEXT);
 CREATE TABLE IF NOT EXISTS admin_sessions(token_hash TEXT PRIMARY KEY,username TEXT NOT NULL,created_at TEXT NOT NULL,expires_at TEXT NOT NULL,last_seen_at TEXT NOT NULL,FOREIGN KEY(username) REFERENCES admins(username));
 CREATE TABLE IF NOT EXISTS admin_audit(id INTEGER PRIMARY KEY AUTOINCREMENT,username TEXT,action TEXT NOT NULL,detail TEXT,created_at TEXT NOT NULL);
@@ -66,6 +66,10 @@ CREATE TABLE IF NOT EXISTS ai_rubrics(id INTEGER PRIMARY KEY AUTOINCREMENT,cours
  if "email" not in scols:c.execute("ALTER TABLE students ADD COLUMN email TEXT NOT NULL DEFAULT ''")
  if "active" not in scols:c.execute("ALTER TABLE students ADD COLUMN active INTEGER NOT NULL DEFAULT 1")
  if "updated_at" not in scols:c.execute("ALTER TABLE students ADD COLUMN updated_at TEXT")
+ if "password_salt" not in scols:c.execute("ALTER TABLE students ADD COLUMN password_salt TEXT NOT NULL DEFAULT ''")
+ if "password_hash" not in scols:c.execute("ALTER TABLE students ADD COLUMN password_hash TEXT NOT NULL DEFAULT ''")
+ if "password_iterations" not in scols:c.execute("ALTER TABLE students ADD COLUMN password_iterations INTEGER NOT NULL DEFAULT 210000")
+ if "must_change_password" not in scols:c.execute("ALTER TABLE students ADD COLUMN must_change_password INTEGER NOT NULL DEFAULT 0")
  cols={r["name"] for r in c.execute("PRAGMA table_info(exam_versions)")}
  if "config" not in cols:c.execute("ALTER TABLE exam_versions ADD COLUMN config TEXT")
  if "deadline_at" not in cols:c.execute("ALTER TABLE exam_versions ADD COLUMN deadline_at TEXT")
@@ -156,9 +160,15 @@ class GroupCreateIn(BaseModel):
 class GroupUpdateIn(BaseModel):
  name:str;academic_year:str="";description:str="";active:bool=True
 class StudentCreateIn(BaseModel):
- student_id:str;first_name:str="";last_name:str="";email:str="";active:bool=True;group_ids:list[str]=[]
+ student_id:str;first_name:str="";last_name:str="";email:str="";active:bool=True;group_ids:list[str]=[];temporary_password:str="1234"
 class StudentUpdateIn(BaseModel):
  first_name:str="";last_name:str="";email:str="";active:bool=True;group_ids:list[str]=[]
+class StudentLoginIn(BaseModel):
+ student_id:str;password:str
+class StudentPasswordIn(BaseModel):
+ password:str="1234"
+class StudentPasswordChangeIn(BaseModel):
+ current_password:str;new_password:str
 class StateIn(BaseModel): course_id:str;state:dict
 class EventIn(BaseModel):
  student_id:str;course_id:str;kind:str;ce:str|None=None;item_id:str|None=None;attempt:int|None=None;response:object|None=None;correct:bool|None=None;score:float|None=None;payload:dict|None=None
@@ -269,6 +279,24 @@ def ai_grade(settings,response,reference,context):
   score=round(total,2)
  else:score=max(0,min(100,float(g["score"])))
  return {"score":score,"confidence":conf,"verdict":str(g.get("verdict","partial")),"feedback":str(g.get("feedback",""))[:1200],"criteria":breakdown}
+
+def student_password_policy(password,temporary=False):
+ p=str(password or "")
+ if temporary:
+  if len(p)<4:raise HTTPException(400,"La contraseña temporal debe tener al menos 4 caracteres")
+ else:
+  if len(p)<8:raise HTTPException(400,"La nueva contraseña debe tener al menos 8 caracteres")
+ return p
+def hash_student_password(password,salt_hex=None,iterations=210000,temporary=False):
+ p=student_password_policy(password,temporary);salt=bytes.fromhex(salt_hex) if salt_hex else secrets.token_bytes(16)
+ digest=hashlib.pbkdf2_hmac("sha256",p.encode("utf-8"),salt,iterations)
+ return salt.hex(),digest.hex(),iterations
+def verify_student_password(password,row):
+ try:
+  if not row["password_salt"] or not row["password_hash"]:return False
+  digest=hashlib.pbkdf2_hmac("sha256",(password or "").encode("utf-8"),bytes.fromhex(row["password_salt"]),int(row["password_iterations"]))
+  return secrets.compare_digest(digest.hex(),row["password_hash"])
+ except Exception:return False
 
 def password_policy(password):
  p=password or ""
@@ -492,22 +520,22 @@ def set_student_groups(c,student_id,group_ids):
 
 @app.get("/api/admin/students")
 def admin_students(x_admin_token:str|None=Header(None,alias="X-Admin-Token")):
- admin_auth(x_admin_token);c=con();rows=[dict(r) for r in c.execute("""SELECT s.student_id,s.first_name,s.last_name,s.email,s.active,s.created_at,s.updated_at,COUNT(DISTINCT st.course_id) courses,COUNT(DISTINCT r.course_id) results,
+ admin_auth(x_admin_token);c=con();rows=[dict(r) for r in c.execute("""SELECT s.student_id,s.first_name,s.last_name,s.email,s.active,s.must_change_password,s.created_at,s.updated_at,COUNT(DISTINCT st.course_id) courses,COUNT(DISTINCT r.course_id) results,
  COALESCE(GROUP_CONCAT(DISTINCT gm.group_id),'') group_ids
  FROM students s LEFT JOIN states st ON st.student_id=s.student_id LEFT JOIN results r ON r.student_id=s.student_id LEFT JOIN group_members gm ON gm.student_id=s.student_id
- GROUP BY s.student_id,s.first_name,s.last_name,s.email,s.active,s.created_at,s.updated_at ORDER BY s.last_name,s.first_name,s.student_id""")];c.close()
+ GROUP BY s.student_id,s.first_name,s.last_name,s.email,s.active,s.must_change_password,s.created_at,s.updated_at ORDER BY s.last_name,s.first_name,s.student_id""")];c.close()
  for row in rows:row["groups"]=[x for x in (row.pop("group_ids","") or "").split(",") if x]
  return rows
 
 @app.post("/api/admin/students")
 def admin_create_student(x:StudentCreateIn,x_admin_token:str|None=Header(None,alias="X-Admin-Token")):
- actor=admin_auth(x_admin_token);sid=valid_student_id(x.student_id);token=secrets.token_urlsafe(32);c=con()
+ actor=admin_auth(x_admin_token);sid=valid_student_id(x.student_id);token=secrets.token_urlsafe(32);temp=x.temporary_password or "1234";salt,digest,it=hash_student_password(temp,temporary=True);c=con()
  if c.execute("SELECT 1 FROM students WHERE student_id=?",(sid,)).fetchone():c.close();raise HTTPException(409,"Ya existe un alumno con ese identificador")
  try:
-  c.execute("INSERT INTO students(student_id,token,first_name,last_name,email,active,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?)",(sid,token,x.first_name.strip()[:120],x.last_name.strip()[:160],x.email.strip()[:200],1 if x.active else 0,now(),now()))
+  c.execute("INSERT INTO students(student_id,token,first_name,last_name,email,active,password_salt,password_hash,password_iterations,must_change_password,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",(sid,token,x.first_name.strip()[:120],x.last_name.strip()[:160],x.email.strip()[:200],1 if x.active else 0,salt,digest,it,1,now(),now()))
   set_student_groups(c,sid,x.group_ids);audit(c,actor["username"],"student.create",sid);c.commit()
  except HTTPException:c.rollback();c.close();raise
- c.close();return {"ok":True,"student_id":sid,"token":token}
+ c.close();return {"ok":True,"student_id":sid,"token":token,"temporary_password":temp,"must_change_password":True}
 
 @app.put("/api/admin/students/{student_id}")
 def admin_update_student(student_id:str,x:StudentUpdateIn,x_admin_token:str|None=Header(None,alias="X-Admin-Token")):
@@ -517,6 +545,14 @@ def admin_update_student(student_id:str,x:StudentUpdateIn,x_admin_token:str|None
  try:set_student_groups(c,sid,x.group_ids)
  except HTTPException:c.rollback();c.close();raise
  audit(c,actor["username"],"student.update",sid);c.commit();c.close();return {"ok":True}
+
+@app.put("/api/admin/students/{student_id}/password")
+def admin_reset_student_password(student_id:str,x:StudentPasswordIn,x_admin_token:str|None=Header(None,alias="X-Admin-Token")):
+ actor=admin_auth(x_admin_token);sid=valid_student_id(student_id);temp=x.password or "1234";salt,digest,it=hash_student_password(temp,temporary=True);c=con()
+ cur=c.execute("UPDATE students SET password_salt=?,password_hash=?,password_iterations=?,must_change_password=1,updated_at=? WHERE student_id=?",(salt,digest,it,now(),sid))
+ if not cur.rowcount:c.close();raise HTTPException(404,"Alumno no encontrado")
+ audit(c,actor["username"],"student.password.reset",sid);c.commit();c.close()
+ return {"ok":True,"student_id":sid,"temporary_password":temp,"must_change_password":True}
 
 @app.post("/api/admin/students/{student_id}/token")
 def admin_regenerate_student_token(student_id:str,x_admin_token:str|None=Header(None,alias="X-Admin-Token")):
@@ -607,12 +643,29 @@ def decide_ai_review(review_id:int,x:AIReviewDecision,x_teacher_token:str|None=H
 def create_student(student_id:str,x_teacher_token:str|None=Header(None)):
  auth(x_teacher_token);sid=valid_student_id(student_id);token=secrets.token_urlsafe(32);c=con();r=c.execute("SELECT 1 FROM students WHERE student_id=?",(sid,)).fetchone()
  if r:c.execute("UPDATE students SET token=?,active=1,updated_at=? WHERE student_id=?",(token,now(),sid))
- else:c.execute("INSERT INTO students(student_id,token,first_name,last_name,email,active,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?)",(sid,token,"","","",1,now(),now()))
+ else:
+  salt,digest,it=hash_student_password("1234",temporary=True)
+  c.execute("INSERT INTO students(student_id,token,first_name,last_name,email,active,password_salt,password_hash,password_iterations,must_change_password,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",(sid,token,"","","",1,salt,digest,it,1,now(),now()))
  c.commit();c.close();return {"student_id":sid,"token":token}
+
+@app.post("/api/student/login")
+def student_login(x:StudentLoginIn):
+ sid=valid_student_id(x.student_id);c=con();r=c.execute("SELECT * FROM students WHERE student_id=? AND active=1",(sid,)).fetchone()
+ if not r or not verify_student_password(x.password,r):c.close();raise HTTPException(401,"Usuario o contraseña incorrectos")
+ d={"ok":True,"student_id":sid,"token":r["token"],"must_change_password":bool(r["must_change_password"]),"first_name":r["first_name"],"last_name":r["last_name"]};c.close();return d
+
+@app.put("/api/student/password")
+def student_change_password(x:StudentPasswordChangeIn,x_student_token:str|None=Header(None)):
+ sid=student_auth(x_student_token);c=con();r=c.execute("SELECT * FROM students WHERE student_id=?",(sid,)).fetchone()
+ if not r or not verify_student_password(x.current_password,r):c.close();raise HTTPException(401,"La contraseña actual no es correcta")
+ if x.new_password=="1234":c.close();raise HTTPException(400,"La nueva contraseña no puede ser 1234")
+ salt,digest,it=hash_student_password(x.new_password,temporary=False);c.execute("UPDATE students SET password_salt=?,password_hash=?,password_iterations=?,must_change_password=0,updated_at=? WHERE student_id=?",(salt,digest,it,now(),sid));c.commit();c.close()
+ return {"ok":True}
 
 @app.get("/api/student/session")
 def student_session(x_student_token:str|None=Header(None)):
- sid=student_auth(x_student_token);return {"ok":True,"student_id":sid}
+ sid=student_auth(x_student_token);c=con();r=c.execute("SELECT first_name,last_name,must_change_password FROM students WHERE student_id=?",(sid,)).fetchone();c.close()
+ return {"ok":True,"student_id":sid,"first_name":r["first_name"] if r else "","last_name":r["last_name"] if r else "","must_change_password":bool(r["must_change_password"]) if r else False}
 
 @app.get("/api/student/dashboard/{course_id}")
 def student_dashboard(course_id:str,x_student_token:str|None=Header(None)):
