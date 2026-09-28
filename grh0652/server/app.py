@@ -447,7 +447,7 @@ def lti_context_group(c,platform,claims,student_id):
  nrps=claims.get("https://purl.imsglobal.org/spec/lti-nrps/claim/namesroleservice") or {}
  c.execute("""INSERT INTO lti_contexts(issuer,client_id,deployment_id,context_id,group_id,label,title,nrps_url,nrps_versions,created_at,updated_at)
  VALUES(?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(issuer,deployment_id,context_id) DO UPDATE SET client_id=excluded.client_id,group_id=excluded.group_id,label=excluded.label,title=excluded.title,nrps_url=excluded.nrps_url,nrps_versions=excluded.nrps_versions,updated_at=excluded.updated_at""",(platform["issuer"],platform["client_id"],dep,context_id,gid,label,title,str(nrps.get("context_memberships_url") or ""),json.dumps(nrps.get("service_versions") or []),now(),now()))
- c.execute("INSERT OR IGNORE INTO group_members(group_id,student_id,created_at) VALUES(?,?,?)",(gid,student_id))
+ c.execute("INSERT OR IGNORE INTO group_members(group_id,student_id,created_at) VALUES(?,?,?)",(gid,student_id,now()))
  return gid
 
 def lti_oauth_token(platform,scopes):
