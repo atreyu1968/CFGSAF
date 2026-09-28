@@ -1237,7 +1237,13 @@ def test_lti_deep_link_response_contains_selected_ut1():
  ticket=module.lti_sign({"iss":"grh0652","aud":"grh0652-deeplink","iat":ts,"exp":ts+300,"platform_issuer":"https://campus.example.test","client_id":"client-123","deployment_id":"dep-1","return_url":"https://campus.example.test/deep-return","data":"abc"})
  r=client.post("/api/lti/deep-link/return",data={"ticket":ticket,"course_id":"GRH0652_UT1"})
  assert r.status_code==200,r.text
- assert "GRH0652_UT1" in r.text and "JWT" in r.text and "campus.example.test/deep-return" in r.text
+ assert "JWT" in r.text and "campus.example.test/deep-return" in r.text
+ import re,html as _html
+ m=re.search(r'name="JWT" value="([^"]+)"',r.text);assert m
+ response_token=_html.unescape(m.group(1))
+ payload=module.jwt.decode(response_token,module.ensure_lti_key().public_key(),algorithms=["RS256"],audience="https://campus.example.test")
+ items=payload["https://purl.imsglobal.org/spec/lti-dl/claim/content_items"]
+ assert items[0]["custom"]["grh_course_id"]=="GRH0652_UT1"
 
 
 def test_lti_local_student_is_pseudonymous_and_context_creates_group():
