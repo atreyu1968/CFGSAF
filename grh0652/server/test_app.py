@@ -1106,3 +1106,28 @@ def test_every_contract_field_has_specific_context_help():
     assert not missing, "Contract fields without specific contextual help: " + ", ".join(missing)
     assert "contextmenu" in html
     assert ".contract-form input,.contract-form select,.contract-form textarea" in html
+
+
+def test_admin_bootstrap_login_and_session_can_authorize_teacher_api():
+ status=client.get("/api/setup/status");assert status.status_code==200
+ if status.json()["needs_admin"]:
+  bad=client.post("/api/setup/admin",headers={"X-Setup-Token":"wrong"},json={"username":"admin","password":"ClaveMuySegura123!","display_name":"Administrador","email":"admin@example.test"})
+  assert bad.status_code==401
+  created=client.post("/api/setup/admin",headers={"X-Setup-Token":"test-token"},json={"username":"admin","password":"ClaveMuySegura123!","display_name":"Administrador","email":"admin@example.test"})
+  assert created.status_code==200,created.text
+ second=client.post("/api/setup/admin",headers={"X-Setup-Token":"test-token"},json={"username":"otro","password":"OtraClaveSegura123!","display_name":"Otro"})
+ assert second.status_code==409
+ wrong=client.post("/api/admin/login",json={"username":"admin","password":"incorrecta"})
+ assert wrong.status_code==401
+ login=client.post("/api/admin/login",json={"username":"admin","password":"ClaveMuySegura123!"})
+ assert login.status_code==200,login.text
+ token=login.json()["token"];AH={"X-Admin-Token":token};TH={"X-Teacher-Token":token}
+ session=client.get("/api/admin/session",headers=AH);assert session.status_code==200 and session.json()["admin"]["username"]=="admin"
+ cfg=client.get("/api/teacher/config/GRH0652_UT1",headers=TH);assert cfg.status_code==200,cfg.text
+ created2=client.post("/api/admin/admins",headers=AH,json={"username":"admin2","password":"SegundaClave123!","display_name":"Administrador 2","email":""})
+ assert created2.status_code==200,created2.text
+ rows=client.get("/api/admin/admins",headers=AH);assert rows.status_code==200 and len(rows.json())>=2
+ disabled=client.put("/api/admin/admins/admin2/active",headers=AH,json={"active":False});assert disabled.status_code==200
+ self_disable=client.put("/api/admin/admins/admin/active",headers=AH,json={"active":False});assert self_disable.status_code==409
+ logout=client.post("/api/admin/logout",headers=AH);assert logout.status_code==200
+ assert client.get("/api/admin/session",headers=AH).status_code==401
