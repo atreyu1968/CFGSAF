@@ -261,7 +261,7 @@ log "Desplegando backend y web pública..."
 rm -rf "$INSTALL_DIR/server.new" "$INSTALL_DIR/web.new"
 cp -a "$SRC/server" "$INSTALL_DIR/server.new"
 mkdir -p "$INSTALL_DIR/web.new"
-for f in index.html course.html player.html teacher.html admin.html banks.html ut1.html; do
+for f in index.html course.html player.html teacher.html admin.html banks.html lti-admin.html lti-entry.html ut1.html; do
   [[ -f "$SRC/$f" ]] && cp -a "$SRC/$f" "$INSTALL_DIR/web.new/"
 done
 cp -a "$SRC/assets" "$SRC/scorm" "$INSTALL_DIR/web.new/"
@@ -324,6 +324,7 @@ cat >"$INSTALL_DIR/.env" <<EOF
 GRH_TEACHER_TOKEN=$TEACHER_TOKEN
 GRH_SETUP_TOKEN=$SETUP_TOKEN
 GRH_ALLOWED_ORIGINS=https://$DOMAIN
+GRH_PUBLIC_URL=https://$DOMAIN
 EOF
 chmod 600 "$INSTALL_DIR/.env"
 
@@ -338,7 +339,7 @@ server {
 
     add_header X-Content-Type-Options "nosniff" always;
     add_header Referrer-Policy "strict-origin-when-cross-origin" always;
-    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header Content-Security-Policy "frame-ancestors 'self' https://*.gobiernodecanarias.org https://*.canariaseducacion.es https://*.gobcan.es" always;
 
     location = /health {
         proxy_pass http://grh-api:8080/health;
