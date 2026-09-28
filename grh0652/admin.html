@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GRH0652 · Administración</title>
+<style>
+:root{--navy:#17365d;--blue:#2f5597;--teal:#168c9e;--green:#2e7d5b;--amber:#e5a72d;--red:#b54343;--bg:#f3f6f8;--ink:#202b33;--muted:#6c7c86;--line:#dbe5ea}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:Inter,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--ink)}button,input{font:inherit}
+.hidden{display:none!important}.login{min-height:100vh;display:grid;place-items:center;padding:24px;background:radial-gradient(circle at 15% 20%,#168c9e25,transparent 35%),linear-gradient(135deg,#112d4d,#17365d 55%,#0f6f7d)}
+.login-card{width:min(520px,100%);background:#fff;border-radius:26px;padding:34px;box-shadow:0 28px 80px #0005}.logo{width:58px;height:58px;display:grid;place-items:center;border-radius:18px;background:linear-gradient(135deg,var(--navy),var(--teal));color:#fff;font-weight:950;letter-spacing:.03em}.login h1{color:var(--navy);margin:.5em 0 .2em}.muted{color:var(--muted);line-height:1.5}.field{margin:14px 0}.field label{display:block;font-weight:800;margin-bottom:6px}.field input{width:100%;padding:12px 13px;border:1px solid #cbd9e0;border-radius:11px;outline:none}.field input:focus{border-color:var(--teal);box-shadow:0 0 0 3px #168c9e18}
+.btn{border:0;border-radius:11px;padding:11px 14px;font-weight:850;cursor:pointer}.btn.primary{background:var(--navy);color:#fff}.btn.secondary{background:#e8f1f4;color:var(--navy)}.btn.good{background:var(--green);color:#fff}.btn.danger{background:#f8e8e8;color:#9e3333}.btn.amber{background:#fff4d9;color:#8a5c00}.login .btn{width:100%;padding:13px;margin-top:6px}.error{background:#fff0f0;border:1px solid #efcccc;color:#963939;padding:11px 13px;border-radius:10px}.okbox{background:#edf8f2;border:1px solid #c7e5d4;color:#246344;padding:11px 13px;border-radius:10px}
+.app{display:grid;grid-template-columns:260px 1fr;min-height:100vh}.side{background:#102b49;color:#fff;padding:20px 14px;position:sticky;top:0;height:100vh}.brand{display:flex;gap:11px;align-items:center;padding:4px 7px 18px}.brand .logo{width:42px;height:42px;border-radius:12px}.brand b{display:block}.brand small{color:#a8cad6}
+.nav-title{padding:17px 9px 7px;font-size:.69rem;color:#88b8c6;text-transform:uppercase;letter-spacing:.1em;font-weight:900}.nav{width:100%;display:flex;align-items:center;gap:9px;border:0;background:transparent;color:#eaf5f7;text-align:left;padding:10px;border-radius:10px;cursor:pointer}.nav:hover,.nav.active{background:#ffffff15}.side-foot{position:absolute;left:14px;right:14px;bottom:18px}.side-foot .nav{color:#ffdede}
+.main{min-width:0}.topbar{height:66px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 22px;gap:12px;position:sticky;top:0;z-index:20}.topbar h2{font-size:1rem;color:var(--navy);margin:0}.spacer{flex:1}.profile{text-align:right}.profile b{display:block;color:var(--navy)}.profile small{color:var(--muted)}.hamb{display:none}
+.content{max-width:1250px;margin:auto;padding:24px}.view{display:none}.view.active{display:block}.view h1{color:var(--navy);margin-top:0}.lead{color:var(--muted);margin-top:-8px}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:18px 0}.metric{background:#fff;border:1px solid var(--line);border-radius:17px;padding:18px;box-shadow:0 6px 20px #17365d0b}.metric .n{font-size:2rem;font-weight:950;color:var(--navy)}.metric .l{font-size:.82rem;color:var(--muted);font-weight:800}.metric .sub{font-size:.75rem;color:var(--teal);margin-top:5px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:19px;margin:14px 0}.card h3{margin-top:0;color:var(--navy)}.tools{display:flex;gap:8px;flex-wrap:wrap}.tablewrap{overflow:auto}table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:10px 9px;border-bottom:1px solid #e7edf0;font-size:.9rem;vertical-align:top}th{color:#50616c;font-size:.76rem;text-transform:uppercase;letter-spacing:.04em}.pill{display:inline-block;padding:5px 8px;border-radius:999px;background:#e8f4f4;color:#17636b;font-size:.74rem;font-weight:900}.pill.off{background:#f4e9e9;color:#914040}.audit{display:grid;gap:8px}.audit-row{padding:10px 12px;border-radius:11px;background:#f7fafb;display:grid;grid-template-columns:160px 150px 1fr;gap:10px;font-size:.84rem}.audit-row b{color:var(--navy)}.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.formgrid .wide{grid-column:1/-1}.statusline{padding:10px 12px;border-radius:10px;background:#eef5f7;color:#38505d;margin:10px 0}.system-list{display:grid;grid-template-columns:180px 1fr;gap:8px 14px}.system-list dt{font-weight:900;color:var(--navy)}.system-list dd{margin:0;word-break:break-word}
+@media(max-width:950px){.cards{grid-template-columns:repeat(2,1fr)}.grid2{grid-template-columns:1fr}.app{grid-template-columns:1fr}.side{position:fixed;left:-280px;width:260px;z-index:50;transition:.2s}.side.open{left:0}.hamb{display:inline-block}.profile{display:none}.content{padding:18px}.audit-row{grid-template-columns:1fr}.formgrid{grid-template-columns:1fr}.formgrid .wide{grid-column:auto}}
+@media(max-width:560px){.cards{grid-template-columns:1fr}.system-list{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<section class="login" id="loginView">
+ <div class="login-card">
+  <div class="logo">GRH</div>
+  <h1>Administración GRH0652</h1>
+  <p class="muted">Acceso reservado a la administración de la plataforma. Las credenciales se crean durante la instalación o actualización si el sistema todavía no dispone de administrador.</p>
+  <div id="setupWarning" class="error hidden"></div>
+  <div class="field"><label>Usuario</label><input id="loginUser" autocomplete="username"></div>
+  <div class="field"><label>Contraseña</label><input id="loginPass" type="password" autocomplete="current-password"></div>
+  <button class="btn primary" id="loginBtn">Entrar</button>
+  <div id="loginStatus" class="muted" style="margin-top:12px"></div>
+ </div>
+</section>
+
+<div class="app hidden" id="app">
+<aside class="side" id="side">
+ <div class="brand"><div class="logo">GRH</div><div><b>GRH0652</b><small>Administración</small></div></div>
+ <div class="nav-title">Sistema</div>
+ <button class="nav active" data-view="dashboard">▦ &nbsp;Resumen</button>
+ <button class="nav" data-view="admins">♙ &nbsp;Administradores</button>
+ <button class="nav" data-view="students">👥 &nbsp;Alumnado</button>
+ <button class="nav" data-view="system">⚙ &nbsp;Sistema</button>
+ <div class="nav-title">Trabajo docente</div>
+ <button class="nav" id="teacherBtn">▣ &nbsp;Panel docente</button>
+ <button class="nav" id="courseBtn">▷ &nbsp;Aula del alumnado</button>
+ <div class="side-foot"><button class="nav" id="logoutBtn">↪ &nbsp;Cerrar sesión</button></div>
+</aside>
+<div class="main">
+<header class="topbar"><button class="btn secondary hamb" id="hamb">☰</button><h2 id="viewTitle">Resumen del sistema</h2><span class="spacer"></span><div class="profile"><b id="profileName">Administrador</b><small id="profileUser"></small></div></header>
+<main class="content">
+
+<section class="view active" id="dashboard">
+ <h1>Panel de administración</h1><p class="lead">Estado global de GRH0652, accesos y actividad administrativa reciente.</p>
+ <div class="cards">
+  <div class="metric"><div class="n" id="mAdmins">—</div><div class="l">Administradores activos</div><div class="sub">Acceso al sistema</div></div>
+  <div class="metric"><div class="n" id="mStudents">—</div><div class="l">Alumnos registrados</div><div class="sub">Identidades persistentes</div></div>
+  <div class="metric"><div class="n" id="mExams">—</div><div class="l">Exámenes en curso</div><div class="sub">Supervisión activa</div></div>
+  <div class="metric"><div class="n" id="mAI">—</div><div class="l">Revisiones IA pendientes</div><div class="sub">Requieren intervención</div></div>
+ </div>
+ <div class="grid2">
+  <div class="card"><h3>Acciones rápidas</h3><div class="tools"><button class="btn primary" id="dashTeacher">Abrir panel docente</button><button class="btn secondary" id="dashCourse">Abrir aula</button><button class="btn secondary" id="backupBtn">Descargar backup</button><button class="btn amber" id="refreshBtn">Actualizar estado</button></div><div id="quickStatus" class="statusline">Sesión administrativa activa.</div></div>
+  <div class="card"><h3>Indicadores</h3><div class="system-list"><dt>Resultados registrados</dt><dd id="mResults">—</dd><dt>RA configurados</dt><dd id="mCourses">—</dd><dt>Base de datos</dt><dd id="mDb">—</dd></div></div>
+ </div>
+ <div class="card"><h3>Actividad administrativa reciente</h3><div class="audit" id="audit"><p class="muted">Cargando…</p></div></div>
+</section>
+
+<section class="view" id="admins">
+ <h1>Administradores</h1><p class="lead">Gestión de las personas con acceso administrativo. El sistema impide desactivar el último administrador activo.</p>
+ <div class="card"><h3>Crear administrador</h3>
+  <div class="formgrid">
+   <div class="field"><label>Usuario</label><input id="newUser" placeholder="nombre.usuario"></div>
+   <div class="field"><label>Nombre visible</label><input id="newName" placeholder="Nombre y apellidos"></div>
+   <div class="field"><label>Correo</label><input id="newEmail" type="email" placeholder="correo@centro.es"></div>
+   <div class="field"><label>Contraseña inicial</label><input id="newPass" type="password" placeholder="Mínimo 12 caracteres"></div>
+  </div>
+  <button class="btn primary" id="createAdmin">Crear administrador</button><span id="adminStatus" class="muted"></span>
+ </div>
+ <div class="card"><h3>Cuentas existentes</h3><div class="tablewrap"><table><thead><tr><th>Usuario</th><th>Nombre</th><th>Correo</th><th>Estado</th><th>Último acceso</th><th>Acciones</th></tr></thead><tbody id="adminsTable"></tbody></table></div></div>
+</section>
+
+<section class="view" id="students">
+ <h1>Alumnado</h1><p class="lead">Vista administrativa de las identidades registradas en la plataforma.</p>
+ <div class="card"><h3>Crear código de alumno</h3><div class="tools"><input id="studentId" placeholder="Identificador, por ejemplo AF2-01" style="max-width:330px;padding:10px;border:1px solid var(--line);border-radius:10px"><button class="btn primary" id="createStudent">Crear / regenerar acceso</button></div><div id="studentCreated" class="statusline hidden"></div></div>
+ <div class="card"><h3>Registros</h3><div class="tablewrap"><table><thead><tr><th>Alumno</th><th>Creado</th><th>RA con progreso</th><th>RA con resultado</th></tr></thead><tbody id="studentsTable"></tbody></table></div></div>
+</section>
+
+<section class="view" id="system">
+ <h1>Sistema</h1><p class="lead">Información técnica útil para comprobar que la instalación está operativa.</p>
+ <div class="grid2">
+  <div class="card"><h3>Backend</h3><dl class="system-list" id="systemData"></dl></div>
+  <div class="card"><h3>Operaciones</h3><div class="tools"><button class="btn secondary" id="systemRefresh">Actualizar</button><button class="btn primary" id="systemBackup">Descargar backup</button></div><p class="muted">Las actualizaciones del software se realizan en el servidor con <code>sudo grh0652-update</code>. Si durante una actualización no existe ningún administrador activo, el instalador obliga a crear uno antes de finalizar.</p></div>
+ </div>
+</section>
+</main></div></div>
+
+<script>
+const $=id=>document.getElementById(id), API=location.origin;
+let token=sessionStorage.getItem('grh0652.adminToken')||'';
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function json(path,opt={}){
+ const headers={'Content-Type':'application/json',...(opt.headers||{})};if(token)headers['X-Admin-Token']=token;
+ const r=await fetch(API+path,{...opt,headers});let d=null;try{d=await r.json()}catch(e){d={detail:await r.text()}}
+ if(!r.ok)throw new Error(typeof d.detail==='string'?d.detail:JSON.stringify(d.detail||d));
+ return d;
+}
+async function setupCheck(){
+ try{const s=await json('/api/setup/status');if(s.needs_admin){$('setupWarning').classList.remove('hidden');$('setupWarning').innerHTML='<b>No existe administrador activo.</b><br>Ejecuta de nuevo el instalador o <code>sudo grh0652-update</code>. El proceso solicitará la creación obligatoria de las credenciales administrativas.';return false}return true}catch(e){$('loginStatus').textContent='No se puede conectar con el backend: '+e.message;return false}
+}
+async function login(){
+ $('loginStatus').textContent='Comprobando credenciales…';
+ try{const r=await fetch(API+'/api/admin/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:$('loginUser').value.trim(),password:$('loginPass').value})});const d=await r.json();if(!r.ok)throw new Error(d.detail||'Acceso denegado');token=d.token;sessionStorage.setItem('grh0652.adminToken',token);sessionStorage.setItem('grh0652.teacherToken',token);showApp(d.admin);await refreshAll()}
+ catch(e){$('loginStatus').textContent='Acceso no válido: '+e.message}
+}
+function showApp(a){$('loginView').classList.add('hidden');$('app').classList.remove('hidden');$('profileName').textContent=a.display_name||a.username;$('profileUser').textContent='@'+a.username}
+async function resume(){
+ if(!token)return;try{const d=await json('/api/admin/session');sessionStorage.setItem('grh0652.teacherToken',token);showApp(d.admin);await refreshAll()}catch(e){token='';sessionStorage.removeItem('grh0652.adminToken')}
+}
+async function refreshAll(){await Promise.all([loadOverview(),loadAdmins(),loadStudents(),loadSystem()])}
+async function loadOverview(){
+ try{const d=await json('/api/admin/overview'),s=d.stats;$('mAdmins').textContent=s.admins;$('mStudents').textContent=s.students;$('mExams').textContent=s.active_exams;$('mAI').textContent=s.pending_ai;$('mResults').textContent=s.results;$('mCourses').textContent=s.courses;$('mDb').textContent=formatBytes(s.db_bytes);
+ $('audit').innerHTML=d.recent.length?d.recent.map(x=>'<div class="audit-row"><span>'+esc(fmtDate(x.created_at))+'</span><b>'+esc(x.username||'sistema')+'</b><span><strong>'+esc(x.action)+'</strong> '+esc(x.detail||'')+'</span></div>').join(''):'<p class="muted">No hay actividad registrada.</p>'}catch(e){$('quickStatus').textContent='Error de estado: '+e.message}
+}
+async function loadAdmins(){
+ try{const rows=await json('/api/admin/admins');$('adminsTable').innerHTML=rows.map(x=>'<tr><td><b>'+esc(x.username)+'</b></td><td>'+esc(x.display_name)+'</td><td>'+esc(x.email||'—')+'</td><td><span class="pill '+(x.active?'':'off')+'">'+(x.active?'Activo':'Inactivo')+'</span></td><td>'+esc(fmtDate(x.last_login_at))+'</td><td><button class="btn secondary" onclick="resetPass(\''+esc(x.username)+'\')">Contraseña</button> <button class="btn '+(x.active?'danger':'good')+'" onclick="toggleAdmin(\''+esc(x.username)+'\','+(!x.active)+')">'+(x.active?'Desactivar':'Activar')+'</button></td></tr>').join('')}catch(e){$('adminStatus').textContent=e.message}
+}
+async function createAdmin(){
+ try{const p={username:$('newUser').value.trim(),display_name:$('newName').value.trim(),email:$('newEmail').value.trim(),password:$('newPass').value};const d=await json('/api/admin/admins',{method:'POST',body:JSON.stringify(p)});$('adminStatus').textContent='Administrador '+d.username+' creado.';$('newPass').value='';await loadAdmins();await loadOverview()}catch(e){$('adminStatus').textContent='Error: '+e.message}
+}
+async function resetPass(u){const p=prompt('Nueva contraseña para '+u+' (mínimo 12 caracteres):');if(!p)return;try{await json('/api/admin/admins/'+encodeURIComponent(u)+'/password',{method:'PUT',body:JSON.stringify({password:p})});alert('Contraseña actualizada. Las sesiones de '+u+' han sido cerradas.')}catch(e){alert(e.message)}}
+async function toggleAdmin(u,active){if(!confirm((active?'Activar ':'Desactivar ')+u+'?'))return;try{await json('/api/admin/admins/'+encodeURIComponent(u)+'/active',{method:'PUT',body:JSON.stringify({active})});await loadAdmins();await loadOverview()}catch(e){alert(e.message)}}
+async function loadStudents(){try{const rows=await json('/api/admin/students');$('studentsTable').innerHTML=rows.map(x=>'<tr><td><b>'+esc(x.student_id)+'</b></td><td>'+esc(fmtDate(x.created_at))+'</td><td>'+x.courses+'</td><td>'+x.results+'</td></tr>').join('')}catch(e){$('studentsTable').innerHTML='<tr><td colspan="4">'+esc(e.message)+'</td></tr>'}}
+async function createStudent(){const id=$('studentId').value.trim();if(!id)return;try{const d=await teacherReq('/api/teacher/students/'+encodeURIComponent(id),{method:'POST'});$('studentCreated').classList.remove('hidden');$('studentCreated').innerHTML='<b>Acceso generado para '+esc(d.student_id)+'</b><br><code>'+esc(d.token)+'</code><br><small>Guarda este código y entrégalo de forma privada al alumno.</small>';await loadStudents();await loadOverview()}catch(e){alert(e.message)}}
+async function loadSystem(){try{const d=await json('/api/admin/system');$('systemData').innerHTML='<dt>Hora del servidor</dt><dd>'+esc(fmtDate(d.server_time))+'</dd><dt>Base de datos</dt><dd>'+esc(d.database)+'</dd><dt>Tamaño</dt><dd>'+formatBytes(d.database_bytes)+'</dd><dt>Bancos privados</dt><dd>'+d.private_bank_files+' archivos · '+esc(d.private_bank_dir||'sin configurar')+'</dd><dt>Orígenes permitidos</dt><dd>'+esc((d.allowed_origins||[]).join(', ')||'ninguno')+'</dd>'}catch(e){$('systemData').innerHTML='<dt>Error</dt><dd>'+esc(e.message)+'</dd>'}}
+async function teacherReq(path,opt={}){const r=await fetch(API+path,{...opt,headers:{'Content-Type':'application/json','X-Teacher-Token':token,...(opt.headers||{})}});if(!r.ok)throw new Error(await r.text());return r.json()}
+async function backup(){try{const r=await fetch(API+'/api/teacher/backup',{headers:{'X-Teacher-Token':token}});if(!r.ok)throw new Error(await r.text());const b=await r.blob(),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='grh0652-backup-'+new Date().toISOString().slice(0,19).replaceAll(':','-')+'.db';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}catch(e){alert(e.message)}}
+function openTeacher(){sessionStorage.setItem('grh0652.teacherToken',token);location.href='teacher.html'}
+function openCourse(){window.open('index.html','_blank')}
+async function logout(){try{await json('/api/admin/logout',{method:'POST'})}catch(e){}sessionStorage.removeItem('grh0652.adminToken');sessionStorage.removeItem('grh0652.teacherToken');location.reload()}
+function fmtDate(v){if(!v)return'—';try{return new Date(v).toLocaleString('es-ES')}catch(e){return v}}
+function formatBytes(n){n=Number(n||0);if(n<1024)return n+' B';if(n<1048576)return(n/1024).toFixed(1)+' KB';return(n/1048576).toFixed(1)+' MB'}
+document.querySelectorAll('.nav[data-view]').forEach(b=>b.onclick=()=>{document.querySelectorAll('.nav[data-view]').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.view').forEach(x=>x.classList.toggle('active',x.id===b.dataset.view));$('viewTitle').textContent=b.textContent.trim();$('side').classList.remove('open')});
+$('loginBtn').onclick=login;$('loginPass').addEventListener('keydown',e=>{if(e.key==='Enter')login()});$('createAdmin').onclick=createAdmin;$('createStudent').onclick=createStudent;$('logoutBtn').onclick=logout;$('teacherBtn').onclick=openTeacher;$('dashTeacher').onclick=openTeacher;$('courseBtn').onclick=openCourse;$('dashCourse').onclick=openCourse;$('backupBtn').onclick=backup;$('systemBackup').onclick=backup;$('refreshBtn').onclick=refreshAll;$('systemRefresh').onclick=loadSystem;$('hamb').onclick=()=>$('side').classList.toggle('open');
+setupCheck().then(()=>resume());
+</script>
+</body></html>
