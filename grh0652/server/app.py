@@ -184,6 +184,10 @@ class StudentPasswordIn(BaseModel):
  password:str="1234"
 class StudentPasswordChangeIn(BaseModel):
  current_password:str;new_password:str
+class LTIPlatformIn(BaseModel):
+ name:str;issuer:str;client_id:str;deployment_id:str="";auth_login_url:str;auth_token_url:str;jwks_url:str;identity_mode:str="sub";active:bool=True
+class LTIGradePushIn(BaseModel):
+ course_id:str;student_id:str
 class StateIn(BaseModel): course_id:str;state:dict
 class EventIn(BaseModel):
  student_id:str;course_id:str;kind:str;ce:str|None=None;item_id:str|None=None;attempt:int|None=None;response:object|None=None;correct:bool|None=None;score:float|None=None;payload:dict|None=None
@@ -361,9 +365,131 @@ def admin_auth(token):
  return u
 def audit(c,username,action,detail=""):
  c.execute("INSERT INTO admin_audit(username,action,detail,created_at) VALUES(?,?,?,?)",(username,action,detail[:1500],now()))
+def lti_public_url(request:Request|None=None):
+ if PUBLIC_URL:return PUBLIC_URL
+ if request is None:return ""
+ proto=request.headers.get("x-forwarded-proto") or request.url.scheme
+ host=request.headers.get("host") or request.url.netloc
+ return f"{proto}://{host}".rstrip("/")
+
+def ensure_lti_key():
+ p=Path(LTI_KEY_PATH);p.parent.mkdir(parents=True,exist_ok=True)
+ if not p.exists():
+  key=rsa.generate_private_key(public_exponent=65537,key_size=2048)
+  p.write_bytes(key.private_bytes(serialization.Encoding.PEM,serialization.PrivateFormat.PKCS8,serialization.NoEncryption()))
+  try:os.chmod(p,0o600)
+  except Exception:pass
+ return serialization.load_pem_private_key(p.read_bytes(),password=None)
+
+def lti_key_id():
+ pub=ensure_lti_key().public_key().public_bytes(serialization.Encoding.DER,serialization.PublicFormat.SubjectPublicKeyInfo)
+ return hashlib.sha256(pub).hexdigest()[:16]
+
+def lti_jwk():
+ pub=ensure_lti_key().public_key().public_numbers()
+ def b64u(n):
+  raw=n.to_bytes((n.bit_length()+7)//8,"big")
+  import base64
+  return base64.urlsafe_b64encode(raw).rstrip(b"=").decode()
+ return {"kty":"RSA","use":"sig","alg":"RS256","kid":lti_key_id(),"n":b64u(pub.n),"e":b64u(pub.e)}
+
+def lti_sign(claims):
+ return jwt.encode(claims,ensure_lti_key(),algorithm="RS256",headers={"kid":lti_key_id(),"typ":"JWT"})
+
+def lti_platform(c,issuer,client_id=None,deployment_id=None):
+ sql="SELECT * FROM lti_platforms WHERE issuer=? AND active=1";args=[issuer]
+ if client_id:sql+=" AND client_id=?";args.append(client_id)
+ rows=c.execute(sql,args).fetchall()
+ if deployment_id:
+  exact=[r for r in rows if not r["deployment_id"] or r["deployment_id"]==deployment_id]
+  if exact:rows=exact
+ if len(rows)!=1:return None
+ return dict(rows[0])
+
+def lti_subject_key(platform,claims):
+ sub=str(claims.get("sub","")).strip()
+ if not sub:raise HTTPException(400,"LTI launch without sub")
+ if platform.get("identity_mode")=="cial":
+  custom=claims.get("https://purl.imsglobal.org/spec/lti/claim/custom") or {}
+  cial=""
+  if isinstance(custom,dict):
+   for k,v in custom.items():
+    if str(k).lower()=="cial":cial=str(v).strip();break
+  if cial:return "cial|"+cial
+ return platform["issuer"]+"|"+sub
+
+def lti_local_student(c,platform,claims):
+ issuer=platform["issuer"];sub=str(claims.get("sub","")).strip()
+ linked=c.execute("SELECT student_id FROM lti_users WHERE issuer=? AND subject=?",(issuer,sub)).fetchone()
+ if linked:return linked["student_id"]
+ key=lti_subject_key(platform,claims);kh=hashlib.sha256(key.encode()).hexdigest();sid="lti-"+kh[:20]
+ name=str(claims.get("given_name") or "")[:120];surname=str(claims.get("family_name") or "")[:160];email=str(claims.get("email") or "")[:200]
+ row=c.execute("SELECT 1 FROM students WHERE student_id=?",(sid,)).fetchone()
+ if not row:
+  token=secrets.token_urlsafe(32);c.execute("INSERT INTO students(student_id,token,first_name,last_name,email,active,password_salt,password_hash,password_iterations,must_change_password,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",(sid,token,name,surname,email,1,"","",210000,0,now(),now()))
+ else:c.execute("UPDATE students SET first_name=COALESCE(NULLIF(?,''),first_name),last_name=COALESCE(NULLIF(?,''),last_name),email=COALESCE(NULLIF(?,''),email),active=1,updated_at=? WHERE student_id=?",(name,surname,email,now(),sid))
+ c.execute("INSERT OR REPLACE INTO lti_users(issuer,subject,student_id,external_key_hash,created_at,updated_at) VALUES(?,?,?,?,COALESCE((SELECT created_at FROM lti_users WHERE issuer=? AND subject=?),?),?)",(issuer,sub,sid,kh,issuer,sub,now(),now()))
+ return sid
+
+def lti_context_group(c,platform,claims,student_id):
+ ctx=claims.get("https://purl.imsglobal.org/spec/lti/claim/context") or {};context_id=str(ctx.get("id") or "")
+ if not context_id:return ""
+ dep=str(claims.get("https://purl.imsglobal.org/spec/lti/claim/deployment_id") or platform.get("deployment_id") or "")
+ key=platform["issuer"]+"|"+dep+"|"+context_id;gid="LTI-"+hashlib.sha256(key.encode()).hexdigest()[:12].upper()
+ label=str(ctx.get("label") or "")[:80];title=str(ctx.get("title") or label or "Aula CAMPUS")[:120]
+ c.execute("INSERT OR IGNORE INTO groups(group_id,name,academic_year,description,active,created_at,updated_at) VALUES(?,?,?,?,1,?,?)",(gid,title,"","Grupo sincronizado mediante LTI 1.3",now(),now()))
+ nrps=claims.get("https://purl.imsglobal.org/spec/lti-nrps/claim/namesroleservice") or {}
+ c.execute("""INSERT INTO lti_contexts(issuer,deployment_id,context_id,group_id,label,title,nrps_url,nrps_versions,created_at,updated_at)
+ VALUES(?,?,?,?,?,?,?,?,?,?) ON CONFLICT(issuer,deployment_id,context_id) DO UPDATE SET group_id=excluded.group_id,label=excluded.label,title=excluded.title,nrps_url=excluded.nrps_url,nrps_versions=excluded.nrps_versions,updated_at=excluded.updated_at""",(platform["issuer"],dep,context_id,gid,label,title,str(nrps.get("context_memberships_url") or ""),json.dumps(nrps.get("service_versions") or []),now(),now()))
+ c.execute("INSERT OR IGNORE INTO group_members(group_id,student_id,created_at) VALUES(?,?,?)",(gid,student_id))
+ return gid
+
+def lti_oauth_token(platform,scopes):
+ scopes=[s for s in scopes if s]
+ if not scopes:raise RuntimeError("No hay scopes LTI disponibles")
+ ts=int(time.time());assertion=lti_sign({"iss":platform["client_id"],"sub":platform["client_id"],"aud":platform["auth_token_url"],"iat":ts,"exp":ts+300,"jti":secrets.token_urlsafe(16)})
+ data={"grant_type":"client_credentials","client_assertion_type":"urn:ietf:params:oauth:client-assertion-type:jwt-bearer","client_assertion":assertion,"scope":" ".join(scopes),"client_id":platform["client_id"]}
+ with httpx.Client(timeout=20,follow_redirects=True) as h:r=h.post(platform["auth_token_url"],data=data);r.raise_for_status();return r.json()["access_token"]
+
+def lti_session_row(token):
+ if not token:return None
+ th=hashlib.sha256(token.encode()).hexdigest();c=con();r=c.execute("SELECT * FROM lti_sessions WHERE token_hash=?",(th,)).fetchone()
+ if not r:c.close();return None
+ try:valid=datetime.datetime.fromisoformat(r["expires_at"])>datetime.datetime.now(datetime.timezone.utc)
+ except Exception:valid=False
+ if not valid:c.execute("DELETE FROM lti_sessions WHERE token_hash=?",(th,));c.commit();c.close();return None
+ d=dict(r);c.close();return d
+
+def lti_push_grade(student_id,course_id,score=None):
+ c=con();s=c.execute("SELECT * FROM lti_sessions WHERE student_id=? AND course_id=? AND lineitem<>'' ORDER BY created_at DESC LIMIT 1",(student_id,course_id)).fetchone()
+ if not s:c.close();return {"ok":False,"reason":"Sin sesión LTI con lineitem"}
+ platform=lti_platform(c,s["issuer"])
+ if not platform:c.close();return {"ok":False,"reason":"Plataforma LTI no disponible"}
+ if score is None:
+  result=recompute_official(c,student_id,course_id);score=float(result.get("final",0))
+ lineitem=s["lineitem"];scopes=json.loads(s["ags_scopes"] or "[]");c.close()
+ scope="https://purl.imsglobal.org/spec/lti-ags/scope/score"
+ if scope not in scopes:return {"ok":False,"reason":"CAMPUS no concedió scope AGS de puntuación"}
+ try:
+  access=lti_oauth_token(platform,[scope]);payload={"userId":s["subject"],"scoreGiven":float(score),"scoreMaximum":100.0,"activityProgress":"Completed","gradingProgress":"FullyGraded","timestamp":now()}
+  url=lineitem.rstrip("/")+"/scores"
+  with httpx.Client(timeout=20) as h:r=h.post(url,headers={"Authorization":"Bearer "+access,"Content-Type":"application/vnd.ims.lis.v1.score+json"},json=payload);r.raise_for_status()
+  c=con();c.execute("INSERT INTO lti_grade_log(student_id,course_id,issuer,lineitem,score,status,detail,created_at) VALUES(?,?,?,?,?,?,?,?)",(student_id,course_id,platform["issuer"],lineitem,float(score),"sent",str(r.status_code),now()));c.commit();c.close();return {"ok":True,"score":score}
+ except Exception as e:
+  c=con();c.execute("INSERT INTO lti_grade_log(student_id,course_id,issuer,lineitem,score,status,detail,created_at) VALUES(?,?,?,?,?,?,?,?)",(student_id,course_id,platform["issuer"],lineitem,float(score or 0),"error",str(e)[:1000],now()));c.commit();c.close();return {"ok":False,"reason":str(e)}
+
 def student_auth(token,c=None):
  if not token: raise HTTPException(401,"Student token required")
  own=c is None;db=c or con();r=db.execute("SELECT student_id FROM students WHERE token=? AND active=1",(token,)).fetchone()
+ if not r:
+  th=hashlib.sha256(token.encode("utf-8")).hexdigest()
+  s=db.execute("SELECT student_id,expires_at FROM lti_sessions WHERE token_hash=?",(th,)).fetchone()
+  if s:
+   try:valid=datetime.datetime.fromisoformat(s["expires_at"])>datetime.datetime.now(datetime.timezone.utc)
+   except Exception:valid=False
+   if valid:
+    r={"student_id":s["student_id"]};db.execute("UPDATE lti_sessions SET last_seen_at=? WHERE token_hash=?",(now(),th));db.commit()
+   else:db.execute("DELETE FROM lti_sessions WHERE token_hash=?",(th,));db.commit()
  if own:db.close()
  if not r: raise HTTPException(401,"Invalid student token")
  return r["student_id"]
