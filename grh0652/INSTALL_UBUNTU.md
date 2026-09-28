@@ -2,6 +2,43 @@
 
 El repositorio incluye `install-ubuntu.sh`, pensado para dejar la aplicación completa en producción con una sola ejecución.
 
+## Creación obligatoria del administrador
+
+Después de arrancar el backend, el instalador consulta:
+
+```text
+/api/setup/status
+```
+
+Si no existe ningún administrador activo, la instalación **no se considera terminada** hasta crear uno. Esto se aplica tanto a la primera instalación como a las actualizaciones.
+
+En modo interactivo se solicitarán usuario, nombre visible, correo opcional y contraseña dos veces. La contraseña debe tener como mínimo 12 caracteres y combinar al menos tres tipos de caracteres.
+
+En una actualización normal con:
+
+```bash
+sudo grh0652-update
+```
+
+si ya existe un administrador, sus credenciales se conservan y no se pregunta nada. Si no existe, se abre el asistente obligatorio. Incluso si una versión antigua del comando de actualización invoca el instalador con `--non-interactive`, el nuevo instalador intentará abrir el asistente por `/dev/tty` para evitar dejar el sistema sin administrador.
+
+Para un despliegue completamente desatendido sin terminal, añada:
+
+```bash
+--admin-user admin \
+--admin-password 'UnaClaveLargaYSegura123!' \
+--admin-name 'Administrador GRH0652' \
+--admin-email admin@centro.es
+```
+
+El panel queda disponible en:
+
+```text
+https://TU_DOMINIO/admin.html
+```
+
+La contraseña no se guarda en `/root/GRH0652_CREDENTIALS.txt`; ese archivo conserva únicamente información operativa y el token de recuperación reservado a `root`.
+
 ## Requisitos previos
 
 - Ubuntu 22.04, 24.04 o 26.04.
