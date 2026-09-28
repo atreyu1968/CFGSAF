@@ -374,7 +374,7 @@ def admin_session(x_admin_token:str|None=Header(None,alias="X-Admin-Token")):
 def admin_overview(x_admin_token:str|None=Header(None,alias="X-Admin-Token")):
  u=admin_auth(x_admin_token);c=con()
  q=lambda sql,*a:c.execute(sql,a).fetchone()[0]
- data={"admins":q("SELECT COUNT(*) FROM admins WHERE active=1"),"students":q("SELECT COUNT(*) FROM students"),"results":q("SELECT COUNT(*) FROM results"),"active_exams":q("SELECT COUNT(*) FROM attempts WHERE kind='exam' AND status='started'"),"pending_ai":q("SELECT COUNT(*) FROM ai_reviews WHERE status='pending'"),"courses":q("SELECT COUNT(*) FROM configs"),"db_bytes":os.path.getsize(DB) if os.path.exists(DB) else 0}
+ data={"admins":q("SELECT COUNT(*) FROM admins WHERE active=1"),"groups":q("SELECT COUNT(*) FROM groups WHERE active=1"),"students":q("SELECT COUNT(*) FROM students"),"active_students":q("SELECT COUNT(*) FROM students WHERE active=1"),"results":q("SELECT COUNT(*) FROM results"),"active_exams":q("SELECT COUNT(*) FROM attempts WHERE kind='exam' AND status='started'"),"pending_ai":q("SELECT COUNT(*) FROM ai_reviews WHERE status='pending'"),"courses":q("SELECT COUNT(*) FROM configs"),"db_bytes":os.path.getsize(DB) if os.path.exists(DB) else 0}
  recent=[dict(r) for r in c.execute("SELECT username,action,detail,created_at FROM admin_audit ORDER BY id DESC LIMIT 20")];c.close()
  return {"ok":True,"admin":u["username"],"stats":data,"recent":recent}
 
