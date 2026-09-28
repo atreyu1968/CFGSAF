@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GRH0652 · Integración LTI 1.3</title>
+<style>
+:root{--navy:#17365d;--teal:#168c9e;--green:#2e7d5b;--red:#b54343;--bg:#f3f6f8;--line:#dbe5ea;--ink:#202b33;--muted:#6a7a84}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--ink)}button,input,select{font:inherit}.top{background:#17365d;color:#fff;padding:14px 18px;display:flex;gap:10px;align-items:center;position:sticky;top:0;z-index:10}.top h1{font-size:1.05rem;margin:0}.spacer{flex:1}.btn{border:0;border-radius:10px;padding:10px 13px;font-weight:850;cursor:pointer}.primary{background:var(--navy);color:#fff}.secondary{background:#e8f1f4;color:var(--navy)}.danger{background:#f8e8e8;color:#973333}.good{background:var(--green);color:#fff}
+main{max-width:1180px;margin:auto;padding:22px}.hero{background:linear-gradient(125deg,#17365d,#0e7180);color:#fff;border-radius:22px;padding:24px}.hero h2{margin:.1em 0}.hero p{max-width:900px;line-height:1.55}.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:19px;margin:14px 0}.card h3{color:var(--navy);margin-top:0}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.field label{display:block;font-weight:800;margin:5px 0}.field input,.field select{width:100%;padding:10px 11px;border:1px solid #cbd9e0;border-radius:9px}.wide{grid-column:1/-1}.muted{color:var(--muted);font-size:.88rem;line-height:1.5}.status{padding:10px 12px;background:#eef5f7;border-radius:10px;margin-top:10px}.tablewrap{overflow:auto}table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:9px;border-bottom:1px solid #e6edef;vertical-align:top;font-size:.88rem}th{font-size:.75rem;text-transform:uppercase;color:#596a74}.pill{display:inline-block;padding:5px 8px;border-radius:999px;background:#e7f4f3;color:#17646c;font-weight:900;font-size:.72rem}.pill.off{background:#f2e7e7;color:#913c3c}.endpoint{display:grid;grid-template-columns:210px 1fr auto;gap:8px;align-items:center;margin:8px 0}.endpoint code{background:#f5f8fa;border:1px solid #e2eaee;padding:9px;border-radius:8px;word-break:break-all}.tools{display:flex;gap:8px;flex-wrap:wrap}.hidden{display:none!important}
+@media(max-width:760px){.grid{grid-template-columns:1fr}.wide{grid-column:auto}.endpoint{grid-template-columns:1fr}.top{flex-wrap:wrap}}
+</style></head>
+<body>
+<header class="top"><button class="btn secondary" onclick="location.href='admin.html'">← Administración</button><h1>LTI 1.3 · CAMPUS</h1><span class="spacer"></span><button class="btn secondary" id="refresh">Actualizar</button></header>
+<main>
+<section class="hero"><h2>Integración con CAMPUS mediante LTI 1.3</h2><p>CAMPUS autentica al alumnado. GRH0652 recibe un identificador LTI, crea la vinculación con el aula, puede sincronizar la matrícula mediante NRPS y devolver la nota mediante AGS. No es necesario que el alumnado utilice la contraseña 1234 cuando entra desde CAMPUS.</p></section>
+
+<section class="card"><h3>Datos que debes registrar en CAMPUS</h3><div id="toolConfig">Cargando…</div><p class="muted">En Moodle/CAMPUS estos datos corresponden al inicio OIDC, URL de lanzamiento/redirección y conjunto de claves públicas de la herramienta. La plataforma deberá devolver después sus propios datos: Issuer, Client ID, Deployment ID, URL de autenticación, URL de token y JWKS.</p></section>
+
+<section class="card"><h3>Registrar plataforma CAMPUS</h3>
+<div class="grid">
+ <div class="field"><label>Nombre</label><input id="name" value="CAMPUS · Gobierno de Canarias"></div>
+ <div class="field"><label>Identificación del alumno</label><select id="identity"><option value="sub">LTI sub (recomendado)</option><option value="cial">CIAL, si CAMPUS lo envía como custom claim</option></select></div>
+ <div class="field wide"><label>Issuer *</label><input id="issuer" placeholder="Valor iss facilitado por CAMPUS"></div>
+ <div class="field"><label>Client ID *</label><input id="clientId"></div>
+ <div class="field"><label>Deployment ID</label><input id="deploymentId"></div>
+ <div class="field wide"><label>Authentication request URL *</label><input id="loginUrl" placeholder="OIDC authorization/login URL de CAMPUS"></div>
+ <div class="field wide"><label>Access token URL *</label><input id="tokenUrl" placeholder="OAuth2 token endpoint de CAMPUS"></div>
+ <div class="field wide"><label>Public keyset / JWKS URL *</label><input id="jwksUrl" placeholder="JWKS de CAMPUS"></div>
+ <div class="field"><label>Estado</label><label style="font-weight:600"><input id="active" type="checkbox" checked style="width:auto"> Activa</label></div>
+</div>
+<div class="tools"><button class="btn primary" id="save">Guardar plataforma</button><button class="btn secondary" id="clear">Limpiar</button><span id="saveStatus" class="muted"></span></div>
+</section>
+
+<section class="card"><h3>Plataformas registradas</h3><div class="tablewrap"><table><thead><tr><th>Nombre</th><th>Issuer</th><th>Client / Deployment</th><th>Identidad</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="platforms"></tbody></table></div></section>
+
+<section class="card"><h3>Aulas detectadas por LTI</h3><p class="muted">Cada aula CAMPUS que lance una unidad se crea automáticamente como grupo local. Si CAMPUS concede NRPS, puedes sincronizar de una vez el alumnado matriculado.</p><div class="tablewrap"><table><thead><tr><th>Aula</th><th>Grupo local</th><th>NRPS</th><th>Última sincronización</th><th></th></tr></thead><tbody id="contexts"></tbody></table></div></section>
+</main>
+<script>
+const $=id=>document.getElementById(id);let token=sessionStorage.getItem('grh0652.adminToken')||'',editing=null,cache=[];
+if(!token)location.href='admin.html';
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function req(path,opt={}){const r=await fetch(location.origin+path,{...opt,headers:{'Content-Type':'application/json','X-Admin-Token':token,...(opt.headers||{})}});let d;try{d=await r.json()}catch(e){d={detail:await r.text()}}if(r.status===401){sessionStorage.removeItem('grh0652.adminToken');location.href='admin.html';throw new Error('Sesión caducada')}if(!r.ok)throw new Error(typeof d.detail==='string'?d.detail:JSON.stringify(d.detail||d));return d}
+function copy(v){navigator.clipboard?.writeText(v)}
+async function config(){try{const d=await fetch('/api/lti/configuration').then(r=>r.json());const rows=[['URL de inicio OIDC',d.oidc_initiation_url],['Target / Tool URL',d.target_link_uri],['Redirect URI',d.redirect_uris[0]],['JWKS URL',d.jwks_url]];$('toolConfig').innerHTML=rows.map(x=>'<div class="endpoint"><b>'+esc(x[0])+'</b><code>'+esc(x[1])+'</code><button class="btn secondary" onclick="copy(\''+esc(x[1]).replaceAll("'","&#39;")+'\')">Copiar</button></div>').join('')}catch(e){$('toolConfig').textContent='No se pudo obtener la configuración: '+e.message}}
+async function loadPlatforms(){try{cache=await req('/api/admin/lti/platforms');$('platforms').innerHTML=cache.length?cache.map(x=>'<tr><td><b>'+esc(x.name)+'</b></td><td>'+esc(x.issuer)+'</td><td>'+esc(x.client_id)+'<br><small>'+esc(x.deployment_id||'sin deployment')+'</small></td><td>'+esc(x.identity_mode)+'</td><td><span class="pill '+(x.active?'':'off')+'">'+(x.active?'Activa':'Inactiva')+'</span></td><td><button class="btn secondary" onclick="editPlatform('+x.id+')">Editar</button> <button class="btn danger" onclick="deletePlatform('+x.id+')">Eliminar</button></td></tr>').join(''):'<tr><td colspan="6" class="muted">No hay ninguna plataforma registrada.</td></tr>'}catch(e){$('platforms').innerHTML='<tr><td colspan="6">'+esc(e.message)+'</td></tr>'}}
+async function loadContexts(){try{const rows=await req('/api/admin/lti/contexts');$('contexts').innerHTML=rows.length?rows.map(x=>'<tr><td><b>'+esc(x.title||x.label||x.context_id)+'</b><br><small>'+esc(x.context_id)+'</small></td><td><span class="pill">'+esc(x.group_id)+'</span></td><td>'+(x.nrps_url?'<span class="pill">Disponible</span>':'<span class="pill off">No concedido</span>')+'</td><td>'+esc(x.last_sync_at||'—')+'</td><td>'+(x.nrps_url?'<button class="btn good" onclick="syncContext('+x.id+')">Sincronizar alumnado</button>':'')+'</td></tr>').join(''):'<tr><td colspan="5" class="muted">Todavía no se ha lanzado GRH0652 desde ningún aula CAMPUS.</td></tr>'}catch(e){$('contexts').innerHTML='<tr><td colspan="5">'+esc(e.message)+'</td></tr>'}}
+function payload(){return{name:$('name').value.trim(),issuer:$('issuer').value.trim(),client_id:$('clientId').value.trim(),deployment_id:$('deploymentId').value.trim(),auth_login_url:$('loginUrl').value.trim(),auth_token_url:$('tokenUrl').value.trim(),jwks_url:$('jwksUrl').value.trim(),identity_mode:$('identity').value,active:$('active').checked}}
+async function save(){try{const path=editing?'/api/admin/lti/platforms/'+editing:'/api/admin/lti/platforms',method=editing?'PUT':'POST';await req(path,{method,body:JSON.stringify(payload())});$('saveStatus').textContent=editing?'Plataforma actualizada.':'Plataforma registrada.';clear();await Promise.all([loadPlatforms(),loadContexts()])}catch(e){$('saveStatus').textContent='Error: '+e.message}}
+function editPlatform(id){const x=cache.find(v=>v.id===id);if(!x)return;editing=id;$('name').value=x.name;$('issuer').value=x.issuer;$('clientId').value=x.client_id;$('deploymentId').value=x.deployment_id||'';$('loginUrl').value=x.auth_login_url;$('tokenUrl').value=x.auth_token_url;$('jwksUrl').value=x.jwks_url;$('identity').value=x.identity_mode||'sub';$('active').checked=!!x.active;$('saveStatus').textContent='Editando '+x.name;scrollTo({top:document.querySelector('section.card:nth-of-type(2)')?.offsetTop||0,behavior:'smooth'})}
+function clear(){editing=null;$('issuer').value='';$('clientId').value='';$('deploymentId').value='';$('loginUrl').value='';$('tokenUrl').value='';$('jwksUrl').value='';$('identity').value='sub';$('active').checked=true}
+async function deletePlatform(id){if(!confirm('¿Eliminar esta configuración LTI?'))return;try{await req('/api/admin/lti/platforms/'+id,{method:'DELETE'});await Promise.all([loadPlatforms(),loadContexts()])}catch(e){alert(e.message)}}
+async function syncContext(id){try{const d=await req('/api/admin/lti/contexts/'+id+'/sync',{method:'POST'});alert('Sincronización terminada: '+d.learners+' alumnos procesados.');await loadContexts()}catch(e){alert(e.message)}}
+$('save').onclick=save;$('clear').onclick=clear;$('refresh').onclick=()=>Promise.all([config(),loadPlatforms(),loadContexts()]);
+Promise.all([config(),loadPlatforms(),loadContexts()]);
+</script></body></html>
