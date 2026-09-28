@@ -10,9 +10,10 @@ DB=os.getenv("GRH_DB","grh0652.db")
 TEACHER_TOKEN=os.getenv("GRH_TEACHER_TOKEN")
 if not TEACHER_TOKEN:
     raise RuntimeError("Define GRH_TEACHER_TOKEN antes de iniciar el servidor")
+SETUP_TOKEN=os.getenv("GRH_SETUP_TOKEN") or TEACHER_TOKEN
 ORIGINS=[x.strip() for x in os.getenv("GRH_ALLOWED_ORIGINS","").split(",") if x.strip()]
 app=FastAPI(title="GRH0652 Evidence API")
-app.add_middleware(CORSMiddleware,allow_origins=ORIGINS or [],allow_credentials=False,allow_methods=["GET","POST","PUT"],allow_headers=["Content-Type","X-Teacher-Token","X-Student-Token"])
+app.add_middleware(CORSMiddleware,allow_origins=ORIGINS or [],allow_credentials=False,allow_methods=["GET","POST","PUT"],allow_headers=["Content-Type","X-Teacher-Token","X-Admin-Token","X-Student-Token","X-Setup-Token"])
 
 def now(): return datetime.datetime.now(datetime.UTC).isoformat()
 def numeric_equal(a,b,tolerance=0.005):
@@ -28,7 +29,7 @@ _schema_ready=False
 _defaults_seeded=False
 _private_banks_seeded=False
 PRIVATE_BANK_DIR=os.getenv("GRH_PRIVATE_BANK_DIR","").strip()
-BACKUP_REQUIRED_TABLES={"students","states","evidence","results","configs","attempts","evaluation_closures","recovery_plans","exam_banks","exam_versions","recovery_banks","portfolio_banks","recovery_results","grade_adjustments","ai_settings","ai_reviews","ai_rubrics","exam_reopen_audit"}
+BACKUP_REQUIRED_TABLES={"students","states","evidence","results","configs","attempts","evaluation_closures","recovery_plans","exam_banks","exam_versions","recovery_banks","portfolio_banks","recovery_results","grade_adjustments","ai_settings","ai_reviews","ai_rubrics","exam_reopen_audit","admins","admin_sessions","admin_audit"}
 SEMANTIC_KINDS={"free","text","case","calculation"}
 PORTFOLIO_KINDS={"choice","tf","multi","order","match"}|SEMANTIC_KINDS
 RECOVERY_KINDS=set(PORTFOLIO_KINDS)
@@ -38,6 +39,9 @@ def con():
  c=sqlite3.connect(DB,timeout=10);c.row_factory=sqlite3.Row;c.execute("PRAGMA journal_mode=WAL");c.execute("PRAGMA foreign_keys=ON");c.execute("PRAGMA busy_timeout=5000")
  if not _schema_ready:
   c.executescript("""CREATE TABLE IF NOT EXISTS students(student_id TEXT PRIMARY KEY,token TEXT NOT NULL UNIQUE,created_at TEXT);
+CREATE TABLE IF NOT EXISTS admins(username TEXT PRIMARY KEY,display_name TEXT NOT NULL,email TEXT NOT NULL DEFAULT '',password_salt TEXT NOT NULL,password_hash TEXT NOT NULL,password_iterations INTEGER NOT NULL DEFAULT 310000,active INTEGER NOT NULL DEFAULT 1,created_at TEXT NOT NULL,last_login_at TEXT);
+CREATE TABLE IF NOT EXISTS admin_sessions(token_hash TEXT PRIMARY KEY,username TEXT NOT NULL,created_at TEXT NOT NULL,expires_at TEXT NOT NULL,last_seen_at TEXT NOT NULL,FOREIGN KEY(username) REFERENCES admins(username));
+CREATE TABLE IF NOT EXISTS admin_audit(id INTEGER PRIMARY KEY AUTOINCREMENT,username TEXT,action TEXT NOT NULL,detail TEXT,created_at TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS states(student_id TEXT,course_id TEXT,state TEXT,updated_at TEXT,PRIMARY KEY(student_id,course_id));
 CREATE TABLE IF NOT EXISTS evidence(id INTEGER PRIMARY KEY AUTOINCREMENT,student_id TEXT,course_id TEXT,kind TEXT,ce TEXT,item_id TEXT,attempt INTEGER,response TEXT,correct INTEGER,score REAL,payload TEXT,created_at TEXT);
 CREATE TABLE IF NOT EXISTS results(student_id TEXT,course_id TEXT,portfolio REAL,exam REAL,final REAL,ce_passed INTEGER,ce_total INTEGER,ra_passed INTEGER,recovery TEXT,updated_at TEXT,PRIMARY KEY(student_id,course_id));
@@ -128,6 +132,16 @@ CREATE TABLE IF NOT EXISTS ai_rubrics(id INTEGER PRIMARY KEY AUTOINCREMENT,cours
 
 DEFAULT={"portfolio_weight":40,"exam_weight":60,"pass_score":50,"ce_pass_percent":80,"ce_pass_score":50,"exam_enabled":False,"exam_questions_per_ce":3,"exam_minutes":45,"require_both_instruments":False,"exam_integrity_enabled":True,"exam_fullscreen_required":True,"exam_incident_limit":3,"exam_incident_policy":"submit","exam_exempt_students":[],"exam_open_at":"","exam_close_at":"","exam_pin":"","exam_allowed_students":[]}
 LIMITS={"practice":3,"portfolio":2,"exam":1,"recovery":1}
+class AdminSetupIn(BaseModel):
+ username:str;password:str;display_name:str="Administrador";email:str=""
+class AdminLoginIn(BaseModel):
+ username:str;password:str
+class AdminCreateIn(BaseModel):
+ username:str;password:str;display_name:str="Administrador";email:str=""
+class AdminPasswordIn(BaseModel):
+ password:str
+class AdminActiveIn(BaseModel):
+ active:bool
 class StateIn(BaseModel): course_id:str;state:dict
 class EventIn(BaseModel):
  student_id:str;course_id:str;kind:str;ce:str|None=None;item_id:str|None=None;attempt:int|None=None;response:object|None=None;correct:bool|None=None;score:float|None=None;payload:dict|None=None
@@ -239,8 +253,54 @@ def ai_grade(settings,response,reference,context):
  else:score=max(0,min(100,float(g["score"])))
  return {"score":score,"confidence":conf,"verdict":str(g.get("verdict","partial")),"feedback":str(g.get("feedback",""))[:1200],"criteria":breakdown}
 
+def password_policy(password):
+ p=password or ""
+ if len(p)<12:raise HTTPException(400,"La contraseña debe tener al menos 12 caracteres")
+ classes=sum([any(ch.islower() for ch in p),any(ch.isupper() for ch in p),any(ch.isdigit() for ch in p),any(not ch.isalnum() for ch in p)])
+ if classes<3:raise HTTPException(400,"La contraseña debe combinar al menos tres tipos: mayúsculas, minúsculas, números y símbolos")
+ return p
+def valid_username(username):
+ u=(username or "").strip().lower()
+ if len(u)<3 or len(u)>64 or any(ch not in "abcdefghijklmnopqrstuvwxyz0123456789._-" for ch in u):raise HTTPException(400,"Usuario de administrador no válido")
+ return u
+def hash_password(password,salt_hex=None,iterations=310000):
+ password_policy(password);salt=bytes.fromhex(salt_hex) if salt_hex else secrets.token_bytes(16)
+ digest=hashlib.pbkdf2_hmac("sha256",password.encode("utf-8"),salt,iterations)
+ return salt.hex(),digest.hex(),iterations
+def verify_password(password,row):
+ try:
+  digest=hashlib.pbkdf2_hmac("sha256",(password or "").encode("utf-8"),bytes.fromhex(row["password_salt"]),int(row["password_iterations"]))
+  return secrets.compare_digest(digest.hex(),row["password_hash"])
+ except Exception:return False
+def admin_session_user(token,c=None):
+ if not token:return None
+ own=c is None;db=c or con();th=hashlib.sha256(token.encode("utf-8")).hexdigest()
+ r=db.execute("""SELECT s.username,s.expires_at,a.display_name,a.email,a.active
+ FROM admin_sessions s JOIN admins a ON a.username=s.username WHERE s.token_hash=?""",(th,)).fetchone()
+ if not r:
+  if own:db.close()
+  return None
+ try:expires=datetime.datetime.fromisoformat(r["expires_at"])
+ except Exception:expires=datetime.datetime.min.replace(tzinfo=datetime.timezone.utc)
+ if not r["active"] or expires<=datetime.datetime.now(datetime.timezone.utc):
+  db.execute("DELETE FROM admin_sessions WHERE token_hash=?",(th,));db.commit()
+  if own:db.close()
+  return None
+ db.execute("UPDATE admin_sessions SET last_seen_at=? WHERE token_hash=?",(now(),th));db.commit()
+ d=dict(r)
+ if own:db.close()
+ return d
 def auth(token):
- if not secrets.compare_digest(token or "",TEACHER_TOKEN): raise HTTPException(401,"Teacher token required")
+ if secrets.compare_digest(token or "",TEACHER_TOKEN):return {"username":"recovery-token","display_name":"Token de recuperación","legacy":True}
+ u=admin_session_user(token)
+ if not u:raise HTTPException(401,"Sesión de administración requerida")
+ return u
+def admin_auth(token):
+ u=admin_session_user(token)
+ if not u:raise HTTPException(401,"Sesión de administración requerida")
+ return u
+def audit(c,username,action,detail=""):
+ c.execute("INSERT INTO admin_audit(username,action,detail,created_at) VALUES(?,?,?,?)",(username,action,detail[:1500],now()))
 def student_auth(token,c=None):
  if not token: raise HTTPException(401,"Student token required")
  own=c is None;db=c or con();r=db.execute("SELECT student_id FROM students WHERE token=?",(token,)).fetchone()
@@ -257,6 +317,85 @@ def config_row(c,course):
  r=c.execute("SELECT config,version FROM configs WHERE course_id=?",(course,)).fetchone()
  return (json.loads(r["config"]),r["version"]) if r else (DEFAULT,0)
 
+
+@app.get("/api/setup/status")
+def setup_status():
+ c=con();n=c.execute("SELECT COUNT(*) n FROM admins WHERE active=1").fetchone()["n"];total=c.execute("SELECT COUNT(*) n FROM admins").fetchone()["n"];c.close()
+ return {"ok":True,"needs_admin":n==0,"active_admins":n,"admins":total}
+
+@app.post("/api/setup/admin")
+def setup_admin(x:AdminSetupIn,x_setup_token:str|None=Header(None,alias="X-Setup-Token")):
+ if not secrets.compare_digest(x_setup_token or "",SETUP_TOKEN):raise HTTPException(401,"Token de instalación requerido")
+ c=con();existing=c.execute("SELECT COUNT(*) n FROM admins WHERE active=1").fetchone()["n"]
+ if existing:c.close();raise HTTPException(409,"Ya existe un administrador activo")
+ u=valid_username(x.username);salt,digest,it=hash_password(x.password)
+ c.execute("INSERT INTO admins(username,display_name,email,password_salt,password_hash,password_iterations,active,created_at) VALUES(?,?,?,?,?,?,1,?)",(u,(x.display_name or "Administrador").strip()[:120],(x.email or "").strip()[:200],salt,digest,it,now()))
+ audit(c,u,"admin.bootstrap","Administrador inicial creado durante instalación o recuperación")
+ c.commit();c.close();return {"ok":True,"username":u}
+
+@app.post("/api/admin/login")
+def admin_login(x:AdminLoginIn):
+ u=valid_username(x.username);c=con();r=c.execute("SELECT * FROM admins WHERE username=?",(u,)).fetchone()
+ if not r or not r["active"] or not verify_password(x.password,r):
+  c.close();raise HTTPException(401,"Usuario o contraseña incorrectos")
+ token=secrets.token_urlsafe(48);th=hashlib.sha256(token.encode("utf-8")).hexdigest();created=now();expires=(datetime.datetime.now(datetime.timezone.utc)+datetime.timedelta(hours=12)).isoformat()
+ c.execute("DELETE FROM admin_sessions WHERE expires_at<=?",(now(),))
+ c.execute("INSERT INTO admin_sessions(token_hash,username,created_at,expires_at,last_seen_at) VALUES(?,?,?,?,?)",(th,u,created,expires,created))
+ c.execute("UPDATE admins SET last_login_at=? WHERE username=?",(created,u));audit(c,u,"admin.login","Inicio de sesión")
+ c.commit();profile={"username":u,"display_name":r["display_name"],"email":r["email"]};c.close()
+ return {"ok":True,"token":token,"expires_at":expires,"admin":profile}
+
+@app.post("/api/admin/logout")
+def admin_logout(x_admin_token:str|None=Header(None,alias="X-Admin-Token")):
+ u=admin_auth(x_admin_token);th=hashlib.sha256((x_admin_token or "").encode("utf-8")).hexdigest();c=con();c.execute("DELETE FROM admin_sessions WHERE token_hash=?",(th,));audit(c,u["username"],"admin.logout","Cierre de sesión");c.commit();c.close();return {"ok":True}
+
+@app.get("/api/admin/session")
+def admin_session(x_admin_token:str|None=Header(None,alias="X-Admin-Token")):
+ u=admin_auth(x_admin_token);return {"ok":True,"admin":{"username":u["username"],"display_name":u["display_name"],"email":u["email"]}}
+
+@app.get("/api/admin/overview")
+def admin_overview(x_admin_token:str|None=Header(None,alias="X-Admin-Token")):
+ u=admin_auth(x_admin_token);c=con()
+ q=lambda sql,*a:c.execute(sql,a).fetchone()[0]
+ data={"admins":q("SELECT COUNT(*) FROM admins WHERE active=1"),"students":q("SELECT COUNT(*) FROM students"),"results":q("SELECT COUNT(*) FROM results"),"active_exams":q("SELECT COUNT(*) FROM attempts WHERE kind='exam' AND status='started'"),"pending_ai":q("SELECT COUNT(*) FROM ai_reviews WHERE status='pending'"),"courses":q("SELECT COUNT(*) FROM configs"),"db_bytes":os.path.getsize(DB) if os.path.exists(DB) else 0}
+ recent=[dict(r) for r in c.execute("SELECT username,action,detail,created_at FROM admin_audit ORDER BY id DESC LIMIT 20")];c.close()
+ return {"ok":True,"admin":u["username"],"stats":data,"recent":recent}
+
+@app.get("/api/admin/admins")
+def list_admins(x_admin_token:str|None=Header(None,alias="X-Admin-Token")):
+ admin_auth(x_admin_token);c=con();rows=[dict(r) for r in c.execute("SELECT username,display_name,email,active,created_at,last_login_at FROM admins ORDER BY username")];c.close();return rows
+
+@app.post("/api/admin/admins")
+def create_admin(x:AdminCreateIn,x_admin_token:str|None=Header(None,alias="X-Admin-Token")):
+ actor=admin_auth(x_admin_token);u=valid_username(x.username);salt,digest,it=hash_password(x.password);c=con()
+ try:c.execute("INSERT INTO admins(username,display_name,email,password_salt,password_hash,password_iterations,active,created_at) VALUES(?,?,?,?,?,?,1,?)",(u,(x.display_name or "Administrador").strip()[:120],(x.email or "").strip()[:200],salt,digest,it,now()))
+ except sqlite3.IntegrityError:c.close();raise HTTPException(409,"El usuario ya existe")
+ audit(c,actor["username"],"admin.create",u);c.commit();c.close();return {"ok":True,"username":u}
+
+@app.put("/api/admin/admins/{username}/password")
+def admin_change_password(username:str,x:AdminPasswordIn,x_admin_token:str|None=Header(None,alias="X-Admin-Token")):
+ actor=admin_auth(x_admin_token);u=valid_username(username);salt,digest,it=hash_password(x.password);c=con();cur=c.execute("UPDATE admins SET password_salt=?,password_hash=?,password_iterations=? WHERE username=?",(salt,digest,it,u))
+ if not cur.rowcount:c.close();raise HTTPException(404,"Administrador no encontrado")
+ c.execute("DELETE FROM admin_sessions WHERE username=?",(u,));audit(c,actor["username"],"admin.password",u);c.commit();c.close();return {"ok":True}
+
+@app.put("/api/admin/admins/{username}/active")
+def admin_set_active(username:str,x:AdminActiveIn,x_admin_token:str|None=Header(None,alias="X-Admin-Token")):
+ actor=admin_auth(x_admin_token);u=valid_username(username);c=con()
+ if not x.active and u==actor["username"]:c.close();raise HTTPException(409,"No puede desactivar la sesión administradora actual")
+ if not x.active and c.execute("SELECT COUNT(*) FROM admins WHERE active=1").fetchone()[0]<=1:c.close();raise HTTPException(409,"Debe existir al menos un administrador activo")
+ cur=c.execute("UPDATE admins SET active=? WHERE username=?",(1 if x.active else 0,u))
+ if not cur.rowcount:c.close();raise HTTPException(404,"Administrador no encontrado")
+ if not x.active:c.execute("DELETE FROM admin_sessions WHERE username=?",(u,))
+ audit(c,actor["username"],"admin.active",u+"="+str(bool(x.active)));c.commit();c.close();return {"ok":True}
+
+@app.get("/api/admin/students")
+def admin_students(x_admin_token:str|None=Header(None,alias="X-Admin-Token")):
+ admin_auth(x_admin_token);c=con();rows=[dict(r) for r in c.execute("""SELECT s.student_id,s.created_at,COUNT(DISTINCT st.course_id) courses,COUNT(DISTINCT r.course_id) results
+ FROM students s LEFT JOIN states st ON st.student_id=s.student_id LEFT JOIN results r ON r.student_id=s.student_id GROUP BY s.student_id,s.created_at ORDER BY s.student_id""")];c.close();return rows
+
+@app.get("/api/admin/system")
+def admin_system(x_admin_token:str|None=Header(None,alias="X-Admin-Token")):
+ admin_auth(x_admin_token);return {"ok":True,"database":DB,"database_exists":os.path.exists(DB),"database_bytes":os.path.getsize(DB) if os.path.exists(DB) else 0,"private_bank_dir":PRIVATE_BANK_DIR,"private_bank_files":len(list(Path(PRIVATE_BANK_DIR).glob("*.json"))) if PRIVATE_BANK_DIR and Path(PRIVATE_BANK_DIR).is_dir() else 0,"allowed_origins":ORIGINS,"server_time":now()}
 
 @app.get("/api/teacher/ai-rubrics")
 def get_ai_rubrics(course_id:str,x_teacher_token:str|None=Header(None)):
