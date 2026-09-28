@@ -1494,7 +1494,9 @@ def result(x:ResultIn,x_student_token:str|None=Header(None)):
  for ceid in ces:
   ps=portfolio_by.get(ceid,[]);p=sum(ps)/len(ps) if ps else 0;ex=exam_by.get(ceid,{});ev=(float(ex.get("ok",0))/max(1,int(ex.get("n",0)))*100) if ex.get("n",0) else 0;fv=p*pw+ev*ew;ce[ceid]={"portfolio":round(p,2),"exam":round(ev,2),"final":round(fv,2),"passed":fv>=float(cfg["ce_pass_score"])}
  vals=list(ce.values());portfolio=sum(v["portfolio"] for v in vals)/len(vals);exam=sum(v["exam"] for v in vals)/len(vals);final=portfolio*pw+exam*ew;passed=sum(1 for v in vals if v["passed"]);needed=(len(vals)*int(cfg["ce_pass_percent"])+99)//100;both=(not cfg.get("require_both_instruments")) or (portfolio>=float(cfg["pass_score"]) and exam>=float(cfg["pass_score"]));ra=final>=float(cfg["pass_score"]) and passed>=needed and both;recovery=[k for k,v in ce.items() if not v["passed"]]
- c.execute("INSERT OR REPLACE INTO results VALUES(?,?,?,?,?,?,?,?,?,?)",(x.student_id,x.course_id,portfolio,exam,final,passed,len(vals),int(ra),json.dumps(recovery),now()));c.commit();c.close();return {"ok":True,"portfolio":round(portfolio,2),"exam":round(exam,2),"final":round(final,2),"ce_passed":passed,"ce_total":len(vals),"ra_passed":ra,"recovery":recovery,"ce":ce}
+ c.execute("INSERT OR REPLACE INTO results VALUES(?,?,?,?,?,?,?,?,?,?)",(x.student_id,x.course_id,portfolio,exam,final,passed,len(vals),int(ra),json.dumps(recovery),now()));c.commit();c.close()
+ lti_grade=lti_push_grade(x.student_id,x.course_id,float(final)) if lti_session_row(x_student_token) else None
+ return {"ok":True,"portfolio":round(portfolio,2),"exam":round(exam,2),"final":round(final,2),"ce_passed":passed,"ce_total":len(vals),"ra_passed":ra,"recovery":recovery,"ce":ce,"lti_grade":lti_grade}
 
 @app.post("/api/teacher/close/{course_id}")
 def close_eval(course_id:str,x_teacher_token:str|None=Header(None)):
