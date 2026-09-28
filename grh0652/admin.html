@@ -105,13 +105,14 @@
    <div class="field"><label>Nombre</label><input id="studentFirstName" placeholder="Nombre"></div>
    <div class="field"><label>Apellidos</label><input id="studentLastName" placeholder="Apellidos"></div>
    <div class="field"><label>Correo</label><input id="studentEmail" type="email" placeholder="alumno@centro.es"></div>
+   <div class="field"><label>Contraseña temporal</label><input id="studentTempPassword" value="1234" autocomplete="new-password"><small class="muted">Por defecto: 1234. El alumno deberá cambiarla en su primer acceso.</small></div>
    <div class="field"><label>Grupos</label><select id="studentGroups" multiple style="min-height:110px"></select></div>
    <div class="field"><label>Estado</label><label style="font-weight:600"><input id="studentActive" type="checkbox" checked style="width:auto"> Alumno activo</label></div>
   </div>
   <button class="btn primary" id="createStudent">Registrar alumno</button> <span id="studentStatus" class="muted"></span>
   <div id="studentCreated" class="statusline hidden"></div>
  </div>
- <div class="card"><h3>Alta masiva</h3><p class="muted">Una línea por alumno: <code>ID;Nombre;Apellidos;Correo;GRUPO1,GRUPO2</code>. Los grupos indicados deben existir previamente.</p><textarea id="studentBulk" style="width:100%;min-height:120px;padding:11px;border:1px solid var(--line);border-radius:10px" placeholder="AF2-01;Ana;Pérez López;ana@centro.es;2AF-A&#10;AF2-02;Luis;García Díaz;luis@centro.es;2AF-A"></textarea><p><button class="btn secondary" id="bulkStudents">Registrar lote</button> <span id="bulkStatus" class="muted"></span></p></div>
+ <div class="card"><h3>Alta masiva</h3><p class="muted">Una línea por alumno: <code>ID;Nombre;Apellidos;Correo;GRUPO1,GRUPO2</code>. La contraseña temporal será <b>1234</b> para todo el lote. Los grupos indicados deben existir previamente.</p><textarea id="studentBulk" style="width:100%;min-height:120px;padding:11px;border:1px solid var(--line);border-radius:10px" placeholder="AF2-01;Ana;Pérez López;ana@centro.es;2AF-A&#10;AF2-02;Luis;García Díaz;luis@centro.es;2AF-A"></textarea><p><button class="btn secondary" id="bulkStudents">Registrar lote</button> <span id="bulkStatus" class="muted"></span></p></div>
  <div class="card"><h3>Registros</h3><div class="tablewrap"><table><thead><tr><th>Alumno</th><th>Nombre</th><th>Correo</th><th>Grupos</th><th>Estado</th><th>RA progreso</th><th>RA resultado</th><th>Acciones</th></tr></thead><tbody id="studentsTable"></tbody></table></div></div>
 </section>
 
@@ -213,14 +214,14 @@ function selectedStudentGroups(){return Array.from($('studentGroups').selectedOp
 async function loadStudents(){
  try{
   const rows=await json('/api/admin/students');studentsCache=rows;
-  $('studentsTable').innerHTML=rows.length?rows.map(x=>'<tr><td><b>'+esc(x.student_id)+'</b><br><small>'+esc(fmtDate(x.created_at))+'</small></td><td>'+esc(([x.first_name,x.last_name].filter(Boolean).join(' ')||'—'))+'</td><td>'+esc(x.email||'—')+'</td><td>'+((x.groups||[]).length?(x.groups||[]).map(g=>'<span class="pill">'+esc(g)+'</span>').join(' '):'<span class="muted">Sin grupo</span>')+'</td><td><span class="pill '+(x.active?'':'off')+'">'+(x.active?'Activo':'Inactivo')+'</span></td><td>'+x.courses+'</td><td>'+x.results+'</td><td><button class="btn secondary" onclick="editStudent(\''+esc(x.student_id)+'\')">Editar</button> <button class="btn secondary" onclick="regenerateStudentToken(\''+esc(x.student_id)+'\')">Nueva clave</button> <button class="btn '+(x.active?'danger':'good')+'" onclick="toggleStudent(\''+esc(x.student_id)+'\','+(!x.active)+')">'+(x.active?'Desactivar':'Activar')+'</button></td></tr>').join(''):'<tr><td colspan="8" class="muted">No hay alumnado registrado.</td></tr>'
+  $('studentsTable').innerHTML=rows.length?rows.map(x=>'<tr><td><b>'+esc(x.student_id)+'</b><br><small>'+esc(fmtDate(x.created_at))+'</small></td><td>'+esc(([x.first_name,x.last_name].filter(Boolean).join(' ')||'—'))+'</td><td>'+esc(x.email||'—')+'</td><td>'+((x.groups||[]).length?(x.groups||[]).map(g=>'<span class="pill">'+esc(g)+'</span>').join(' '):'<span class="muted">Sin grupo</span>')+'</td><td><span class="pill '+(x.active?'':'off')+'">'+(x.active?'Activo':'Inactivo')+'</span></td><td>'+x.courses+'</td><td>'+x.results+'</td><td><button class="btn secondary" onclick="editStudent(\''+esc(x.student_id)+'\')">Editar</button> <button class="btn secondary" onclick="resetStudentPassword(\''+esc(x.student_id)+'\')">Restablecer 1234</button> <button class="btn secondary" onclick="regenerateStudentToken(\''+esc(x.student_id)+'\')">Código legado</button> <button class="btn '+(x.active?'danger':'good')+'" onclick="toggleStudent(\''+esc(x.student_id)+'\','+(!x.active)+')">'+(x.active?'Desactivar':'Activar')+'</button></td></tr>').join(''):'<tr><td colspan="8" class="muted">No hay alumnado registrado.</td></tr>'
  }catch(e){$('studentsTable').innerHTML='<tr><td colspan="8">'+esc(e.message)+'</td></tr>'}
 }
 async function createStudent(){
  const id=$('studentId').value.trim();if(!id){$('studentStatus').textContent='El identificador es obligatorio.';return}
- const p={student_id:id,first_name:$('studentFirstName').value.trim(),last_name:$('studentLastName').value.trim(),email:$('studentEmail').value.trim(),active:$('studentActive').checked,group_ids:selectedStudentGroups()};
+ const p={student_id:id,first_name:$('studentFirstName').value.trim(),last_name:$('studentLastName').value.trim(),email:$('studentEmail').value.trim(),active:$('studentActive').checked,group_ids:selectedStudentGroups(),temporary_password:$('studentTempPassword').value.trim()||'1234'};
  $('studentStatus').textContent='Registrando…';
- try{const d=await json('/api/admin/students',{method:'POST',body:JSON.stringify(p)});$('studentCreated').classList.remove('hidden');$('studentCreated').innerHTML='<b>Alumno registrado: '+esc(d.student_id)+'</b><br>Código de acceso: <code>'+esc(d.token)+'</code><br><small>Este código solo se muestra al generarlo. Entrégalo de forma privada.</small>';$('studentStatus').textContent='Registro correcto.';$('studentId').value='';$('studentFirstName').value='';$('studentLastName').value='';$('studentEmail').value='';await Promise.all([loadStudents(),loadOverview(),loadGroups()])}catch(e){$('studentStatus').textContent='Error: '+e.message}
+ try{const d=await json('/api/admin/students',{method:'POST',body:JSON.stringify(p)});$('studentCreated').classList.remove('hidden');$('studentCreated').innerHTML='<b>Alumno registrado: '+esc(d.student_id)+'</b><br>Usuario: <code>'+esc(d.student_id)+'</code><br>Contraseña temporal: <code>'+esc(d.temporary_password||'1234')+'</code><br><small>Deberá cambiarla en el primer acceso.</small>';$('studentStatus').textContent='Registro correcto.';$('studentId').value='';$('studentFirstName').value='';$('studentLastName').value='';$('studentEmail').value='';$('studentTempPassword').value='1234';await Promise.all([loadStudents(),loadOverview(),loadGroups(),loadStudentGroupOptions()])}catch(e){$('studentStatus').textContent='Error: '+e.message}
 }
 async function editStudent(id){
  const x=studentsCache.find(s=>s.student_id===id);if(!x)return;
@@ -230,19 +231,28 @@ async function editStudent(id){
  const groups=prompt('Grupos separados por comas:',(x.groups||[]).join(','));if(groups===null)return;
  try{await json('/api/admin/students/'+encodeURIComponent(id),{method:'PUT',body:JSON.stringify({first_name:first,last_name:last,email,active:!!x.active,group_ids:groups.split(',').map(v=>v.trim()).filter(Boolean)})});await Promise.all([loadStudents(),loadGroups()])}catch(e){alert('No se pudo editar: '+e.message)}
 }
+async function resetStudentPassword(id){
+ if(!confirm('¿Restablecer la contraseña temporal de '+id+' a 1234? El alumno deberá cambiarla en el siguiente acceso.'))return;
+ try{
+  const d=await json('/api/admin/students/'+encodeURIComponent(id)+'/password',{method:'PUT',body:JSON.stringify({password:'1234'})});
+  $('studentCreated').classList.remove('hidden');
+  $('studentCreated').innerHTML='<b>Contraseña restablecida para '+esc(id)+':</b><br>Usuario: <code>'+esc(id)+'</code><br>Contraseña temporal: <code>'+esc(d.temporary_password||'1234')+'</code>';
+  await Promise.all([loadStudents(),loadOverview()])
+ }catch(e){alert(e.message)}
+}
 async function regenerateStudentToken(id){
  if(!confirm('¿Generar una nueva clave de acceso para '+id+'? La anterior dejará de funcionar.'))return;
  try{const d=await json('/api/admin/students/'+encodeURIComponent(id)+'/token',{method:'POST'});$('studentCreated').classList.remove('hidden');$('studentCreated').innerHTML='<b>Nueva clave para '+esc(id)+':</b><br><code>'+esc(d.token)+'</code><br><small>La clave anterior ha quedado invalidada.</small>'}catch(e){alert(e.message)}
 }
 async function toggleStudent(id,active){
- try{await json('/api/admin/students/'+encodeURIComponent(id)+'/active',{method:'PUT',body:JSON.stringify({active})});await Promise.all([loadStudents(),loadOverview()])}catch(e){alert(e.message)}
+ try{await json('/api/admin/students/'+encodeURIComponent(id)+'/active',{method:'PUT',body:JSON.stringify({active})});await Promise.all([loadStudents(),loadOverview(),loadGroups(),loadStudentGroupOptions()])}catch(e){alert(e.message)}
 }
 async function bulkStudents(){
  const lines=$('studentBulk').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);if(!lines.length)return;
  let ok=0,errors=[];
  for(const [i,line] of lines.entries()){
   const p=line.split(';');const groups=(p[4]||'').split(',').map(v=>v.trim()).filter(Boolean);
-  try{await json('/api/admin/students',{method:'POST',body:JSON.stringify({student_id:(p[0]||'').trim(),first_name:(p[1]||'').trim(),last_name:(p[2]||'').trim(),email:(p[3]||'').trim(),active:true,group_ids:groups})});ok++}catch(e){errors.push('Línea '+(i+1)+': '+e.message)}
+  try{await json('/api/admin/students',{method:'POST',body:JSON.stringify({student_id:(p[0]||'').trim(),first_name:(p[1]||'').trim(),last_name:(p[2]||'').trim(),email:(p[3]||'').trim(),active:true,group_ids:groups,temporary_password:'1234'})});ok++}catch(e){errors.push('Línea '+(i+1)+': '+e.message)}
  }
  $('bulkStatus').textContent=ok+' registrados'+(errors.length?' · '+errors.length+' errores':'');if(errors.length)alert(errors.join('\n'));await Promise.all([loadStudents(),loadOverview(),loadGroups()])
 }
