@@ -42,6 +42,9 @@ def con():
 CREATE TABLE IF NOT EXISTS admins(username TEXT PRIMARY KEY,display_name TEXT NOT NULL,email TEXT NOT NULL DEFAULT '',password_salt TEXT NOT NULL,password_hash TEXT NOT NULL,password_iterations INTEGER NOT NULL DEFAULT 310000,active INTEGER NOT NULL DEFAULT 1,created_at TEXT NOT NULL,last_login_at TEXT);
 CREATE TABLE IF NOT EXISTS admin_sessions(token_hash TEXT PRIMARY KEY,username TEXT NOT NULL,created_at TEXT NOT NULL,expires_at TEXT NOT NULL,last_seen_at TEXT NOT NULL,FOREIGN KEY(username) REFERENCES admins(username));
 CREATE TABLE IF NOT EXISTS admin_audit(id INTEGER PRIMARY KEY AUTOINCREMENT,username TEXT,action TEXT NOT NULL,detail TEXT,created_at TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS groups(group_id TEXT PRIMARY KEY,name TEXT NOT NULL,academic_year TEXT NOT NULL DEFAULT '',description TEXT NOT NULL DEFAULT '',active INTEGER NOT NULL DEFAULT 1,created_at TEXT NOT NULL,updated_at TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS group_members(group_id TEXT NOT NULL,student_id TEXT NOT NULL,created_at TEXT NOT NULL,PRIMARY KEY(group_id,student_id),FOREIGN KEY(group_id) REFERENCES groups(group_id) ON DELETE CASCADE,FOREIGN KEY(student_id) REFERENCES students(student_id) ON DELETE CASCADE);
+CREATE INDEX IF NOT EXISTS idx_group_members_student ON group_members(student_id);
 CREATE TABLE IF NOT EXISTS states(student_id TEXT,course_id TEXT,state TEXT,updated_at TEXT,PRIMARY KEY(student_id,course_id));
 CREATE TABLE IF NOT EXISTS evidence(id INTEGER PRIMARY KEY AUTOINCREMENT,student_id TEXT,course_id TEXT,kind TEXT,ce TEXT,item_id TEXT,attempt INTEGER,response TEXT,correct INTEGER,score REAL,payload TEXT,created_at TEXT);
 CREATE TABLE IF NOT EXISTS results(student_id TEXT,course_id TEXT,portfolio REAL,exam REAL,final REAL,ce_passed INTEGER,ce_total INTEGER,ra_passed INTEGER,recovery TEXT,updated_at TEXT,PRIMARY KEY(student_id,course_id));
@@ -142,6 +145,10 @@ class AdminPasswordIn(BaseModel):
  password:str
 class AdminActiveIn(BaseModel):
  active:bool
+class GroupCreateIn(BaseModel):
+ group_id:str;name:str;academic_year:str="";description:str="";active:bool=True
+class GroupUpdateIn(BaseModel):
+ name:str;academic_year:str="";description:str="";active:bool=True
 class StateIn(BaseModel): course_id:str;state:dict
 class EventIn(BaseModel):
  student_id:str;course_id:str;kind:str;ce:str|None=None;item_id:str|None=None;attempt:int|None=None;response:object|None=None;correct:bool|None=None;score:float|None=None;payload:dict|None=None
@@ -388,10 +395,75 @@ def admin_set_active(username:str,x:AdminActiveIn,x_admin_token:str|None=Header(
  if not x.active:c.execute("DELETE FROM admin_sessions WHERE username=?",(u,))
  audit(c,actor["username"],"admin.active",u+"="+str(bool(x.active)));c.commit();c.close();return {"ok":True}
 
+def valid_group_id(value):
+ g=(value or "").strip()
+ if len(g)<2 or len(g)>64 or any(not (ch.isalnum() or ch in "._-") for ch in g):raise HTTPException(400,"Código de grupo no válido")
+ return g
+
+@app.get("/api/admin/groups")
+def admin_groups(x_admin_token:str|None=Header(None,alias="X-Admin-Token")):
+ admin_auth(x_admin_token);c=con();rows=[dict(r) for r in c.execute("""SELECT g.*,COUNT(gm.student_id) member_count
+ FROM groups g LEFT JOIN group_members gm ON gm.group_id=g.group_id
+ GROUP BY g.group_id ORDER BY g.active DESC,g.academic_year DESC,g.name""")];c.close();return rows
+
+@app.post("/api/admin/groups")
+def admin_create_group(x:GroupCreateIn,x_admin_token:str|None=Header(None,alias="X-Admin-Token")):
+ actor=admin_auth(x_admin_token);gid=valid_group_id(x.group_id);name=x.name.strip()
+ if len(name)<2:raise HTTPException(400,"El nombre del grupo es obligatorio")
+ c=con()
+ try:c.execute("INSERT INTO groups(group_id,name,academic_year,description,active,created_at,updated_at) VALUES(?,?,?,?,?,?,?)",(gid,name[:120],x.academic_year.strip()[:30],x.description.strip()[:500],1 if x.active else 0,now(),now()))
+ except sqlite3.IntegrityError:c.close();raise HTTPException(409,"Ya existe un grupo con ese código")
+ audit(c,actor["username"],"group.create",gid+" · "+name[:120]);c.commit();c.close();return {"ok":True,"group_id":gid}
+
+@app.put("/api/admin/groups/{group_id}")
+def admin_update_group(group_id:str,x:GroupUpdateIn,x_admin_token:str|None=Header(None,alias="X-Admin-Token")):
+ actor=admin_auth(x_admin_token);gid=valid_group_id(group_id);name=x.name.strip()
+ if len(name)<2:raise HTTPException(400,"El nombre del grupo es obligatorio")
+ c=con();cur=c.execute("UPDATE groups SET name=?,academic_year=?,description=?,active=?,updated_at=? WHERE group_id=?",(name[:120],x.academic_year.strip()[:30],x.description.strip()[:500],1 if x.active else 0,now(),gid))
+ if not cur.rowcount:c.close();raise HTTPException(404,"Grupo no encontrado")
+ audit(c,actor["username"],"group.update",gid);c.commit();c.close();return {"ok":True}
+
+@app.delete("/api/admin/groups/{group_id}")
+def admin_delete_group(group_id:str,x_admin_token:str|None=Header(None,alias="X-Admin-Token")):
+ actor=admin_auth(x_admin_token);gid=valid_group_id(group_id);c=con();r=c.execute("SELECT name FROM groups WHERE group_id=?",(gid,)).fetchone()
+ if not r:c.close();raise HTTPException(404,"Grupo no encontrado")
+ c.execute("DELETE FROM group_members WHERE group_id=?",(gid,));c.execute("DELETE FROM groups WHERE group_id=?",(gid,));audit(c,actor["username"],"group.delete",gid+" · "+r["name"]);c.commit();c.close();return {"ok":True}
+
+@app.get("/api/admin/groups/{group_id}/members")
+def admin_group_members(group_id:str,x_admin_token:str|None=Header(None,alias="X-Admin-Token")):
+ admin_auth(x_admin_token);gid=valid_group_id(group_id);c=con()
+ if not c.execute("SELECT 1 FROM groups WHERE group_id=?",(gid,)).fetchone():c.close();raise HTTPException(404,"Grupo no encontrado")
+ rows=[dict(r) for r in c.execute("""SELECT s.student_id,s.created_at,CASE WHEN gm.student_id IS NULL THEN 0 ELSE 1 END member
+ FROM students s LEFT JOIN group_members gm ON gm.student_id=s.student_id AND gm.group_id=? ORDER BY s.student_id""",(gid,))];c.close();return rows
+
+@app.post("/api/admin/groups/{group_id}/members/{student_id}")
+def admin_add_group_member(group_id:str,student_id:str,x_admin_token:str|None=Header(None,alias="X-Admin-Token")):
+ actor=admin_auth(x_admin_token);gid=valid_group_id(group_id);sid=student_id.strip();c=con()
+ if not c.execute("SELECT 1 FROM groups WHERE group_id=?",(gid,)).fetchone():c.close();raise HTTPException(404,"Grupo no encontrado")
+ if not c.execute("SELECT 1 FROM students WHERE student_id=?",(sid,)).fetchone():c.close();raise HTTPException(404,"Alumno no encontrado")
+ c.execute("INSERT OR IGNORE INTO group_members(group_id,student_id,created_at) VALUES(?,?,?)",(gid,sid,now()));audit(c,actor["username"],"group.member.add",gid+" <- "+sid);c.commit();c.close();return {"ok":True}
+
+@app.delete("/api/admin/groups/{group_id}/members/{student_id}")
+def admin_remove_group_member(group_id:str,student_id:str,x_admin_token:str|None=Header(None,alias="X-Admin-Token")):
+ actor=admin_auth(x_admin_token);gid=valid_group_id(group_id);sid=student_id.strip();c=con();c.execute("DELETE FROM group_members WHERE group_id=? AND student_id=?",(gid,sid));audit(c,actor["username"],"group.member.remove",gid+" <- "+sid);c.commit();c.close();return {"ok":True}
+
+@app.get("/api/teacher/groups")
+def teacher_groups(x_teacher_token:str|None=Header(None)):
+ auth(x_teacher_token);c=con();rows=[dict(r) for r in c.execute("""SELECT g.*,COUNT(gm.student_id) member_count
+ FROM groups g LEFT JOIN group_members gm ON gm.group_id=g.group_id GROUP BY g.group_id ORDER BY g.active DESC,g.name""")];c.close();return rows
+
+@app.get("/api/teacher/groups/{group_id}/students")
+def teacher_group_students(group_id:str,x_teacher_token:str|None=Header(None)):
+ auth(x_teacher_token);gid=valid_group_id(group_id);c=con();rows=[r["student_id"] for r in c.execute("SELECT student_id FROM group_members WHERE group_id=? ORDER BY student_id",(gid,))];c.close();return {"group_id":gid,"students":rows}
+
 @app.get("/api/admin/students")
 def admin_students(x_admin_token:str|None=Header(None,alias="X-Admin-Token")):
- admin_auth(x_admin_token);c=con();rows=[dict(r) for r in c.execute("""SELECT s.student_id,s.created_at,COUNT(DISTINCT st.course_id) courses,COUNT(DISTINCT r.course_id) results
- FROM students s LEFT JOIN states st ON st.student_id=s.student_id LEFT JOIN results r ON r.student_id=s.student_id GROUP BY s.student_id,s.created_at ORDER BY s.student_id""")];c.close();return rows
+ admin_auth(x_admin_token);c=con();rows=[dict(r) for r in c.execute("""SELECT s.student_id,s.created_at,COUNT(DISTINCT st.course_id) courses,COUNT(DISTINCT r.course_id) results,
+ COALESCE(GROUP_CONCAT(DISTINCT gm.group_id),'') group_ids
+ FROM students s LEFT JOIN states st ON st.student_id=s.student_id LEFT JOIN results r ON r.student_id=s.student_id LEFT JOIN group_members gm ON gm.student_id=s.student_id
+ GROUP BY s.student_id,s.created_at ORDER BY s.student_id""")];c.close()
+ for row in rows:row["groups"]=[x for x in (row.pop("group_ids","") or "").split(",") if x]
+ return rows
 
 @app.get("/api/admin/system")
 def admin_system(x_admin_token:str|None=Header(None,alias="X-Admin-Token")):
