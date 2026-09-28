@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GRH0652 · Registros de evaluación</title>
+<style>
+:root{--navy:#17365d;--teal:#168c9e;--green:#2e7d5b;--amber:#e5a72d;--red:#b54343;--bg:#f3f6f8;--line:#dbe5ea;--ink:#202b33;--muted:#697983}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--ink)}button,input,select,textarea{font:inherit}.top{background:#17365d;color:#fff;padding:16px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10}.top h1{font-size:1.05rem;margin:0}.spacer{flex:1}.btn{border:0;border-radius:10px;padding:10px 13px;font-weight:850;cursor:pointer}.primary{background:var(--navy);color:#fff}.secondary{background:#e8f1f4;color:var(--navy)}.danger{background:#f8e8e8;color:#9c3333}.good{background:var(--green);color:#fff}
+main{max-width:1180px;margin:auto;padding:22px}.hero{background:linear-gradient(125deg,#17365d,#0d7280);color:#fff;border-radius:22px;padding:24px}.hero h2{margin:.1em 0}.hero p{max-width:850px;line-height:1.55}.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:19px;margin:14px 0}.card h3{color:var(--navy);margin-top:0}.field{margin:11px 0}.field label{display:block;font-weight:800;margin-bottom:5px}.field input,.field select,.field textarea{width:100%;padding:10px 11px;border:1px solid #cad8df;border-radius:9px}.field textarea{min-height:100px;resize:vertical}.wide{grid-column:1/-1}.muted{color:var(--muted);font-size:.88rem;line-height:1.5}.status{padding:10px 12px;background:#eef5f7;border-radius:10px;margin:10px 0}.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}.tab{background:#e8f1f4;color:var(--navy)}.tab.active{background:var(--teal);color:#fff}.tablewrap{overflow:auto}table{width:100%;border-collapse:collapse}th,td{padding:9px;border-bottom:1px solid #e5ecef;text-align:left;vertical-align:top;font-size:.88rem}th{font-size:.75rem;color:#596a74;text-transform:uppercase}.pill{display:inline-block;padding:4px 7px;border-radius:999px;background:#e7f4f3;color:#17666d;font-size:.72rem;font-weight:900}.secret{font-family:ui-monospace,Consolas,monospace;word-break:break-word}.tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.hidden{display:none!important}
+@media(max-width:760px){.grid{grid-template-columns:1fr}.wide{grid-column:auto}.top{flex-wrap:wrap}}
+</style></head>
+<body>
+<header class="top"><button class="btn secondary" onclick="history.back()">← Volver</button><h1>Registros de evaluación · GRH0652</h1><span class="spacer"></span><button class="btn secondary" onclick="location.href='teacher.html'">Panel docente</button></header>
+<main>
+<section class="hero"><h2>Alta y mantenimiento de bancos</h2><p>Permite registrar individualmente preguntas de examen, actividades de recuperación y claves privadas de portafolio. También puedes importar un banco completo en JSON. Todo queda almacenado en la base de datos del servidor.</p></section>
+<div class="card"><div class="grid"><div class="field"><label>Resultado de aprendizaje</label><select id="course"><option value="GRH0652_UT1">RA1 · Contratación</option><option value="GRH0652_UT2">RA2 · Modificación, suspensión y extinción</option><option value="GRH0652_UT3">RA3 · Seguridad Social</option><option value="GRH0652_UT4">RA4 · Retribución, nóminas, cotización e IRPF</option></select></div><div class="field"><label>Token docente / sesión administrativa</label><input id="token" type="password" placeholder="Se recupera automáticamente si vienes del panel"></div></div><div class="tools"><button class="btn primary" id="connect">Cargar registros</button><span id="status" class="muted">Sin conectar.</span></div></div>
+<div class="tabs"><button class="btn tab active" data-bank="exam">Examen</button><button class="btn tab" data-bank="recovery">Recuperación</button><button class="btn tab" data-bank="portfolio">Portafolio</button></div>
+
+<section class="card" id="formCard">
+<h3 id="formTitle">Registrar pregunta de examen</h3>
+<div class="grid">
+ <div class="field"><label>ID *</label><input id="itemId" placeholder="Ej.: q1a-01"></div>
+ <div class="field"><label>Criterio de evaluación *</label><input id="ce" placeholder="Ej.: 1.a"></div>
+ <div class="field" id="kindWrap"><label>Tipo</label><select id="kind"><option value="choice">Elección única</option><option value="tf">Verdadero/Falso</option><option value="multi">Selección múltiple</option></select></div>
+ <div class="field wide" id="promptWrap"><label>Enunciado</label><textarea id="prompt"></textarea></div>
+ <div class="field wide" id="optionsWrap"><label>Opciones (una por línea)</label><textarea id="options" placeholder="Primera opción&#10;Segunda opción&#10;Tercera opción"></textarea></div>
+ <div class="field wide hidden" id="pairsWrap"><label>Parejas para relacionar (una por línea, formato izquierda =&gt; derecha)</label><textarea id="pairs"></textarea></div>
+ <div class="field wide"><label>Respuesta correcta *</label><input id="answer" class="secret" placeholder="Choice: 1 · TF: true · Multi: 1,3 · Texto/avanzado: JSON o texto"></div>
+ <div class="field wide hidden" id="feedbackWrap"><label>Retroalimentación</label><textarea id="feedback"></textarea></div>
+</div>
+<div class="tools"><button class="btn primary" id="saveItem">Guardar registro</button><button class="btn secondary" id="clearItem">Limpiar formulario</button><span id="saveStatus" class="muted"></span></div>
+<p class="muted" id="hint"></p>
+</section>
+
+<section class="card"><h3>Registros existentes</h3><div class="tablewrap"><table><thead><tr><th>ID</th><th>CE</th><th>Tipo</th><th>Enunciado / referencia</th><th>Respuesta</th><th>Acciones</th></tr></thead><tbody id="items"></tbody></table></div></section>
+
+<section class="card"><h3>Importación completa por JSON</h3><p class="muted">Esta operación sustituye el banco completo del RA seleccionado. Úsala para cargas masivas o restauraciones.</p><textarea id="bulkJson" style="width:100%;min-height:180px;padding:11px;border:1px solid var(--line);border-radius:10px" placeholder='{"questions":[...]}'></textarea><div class="tools" style="margin-top:10px"><button class="btn secondary" id="importJson">Importar JSON</button><span id="bulkStatus" class="muted"></span></div></section>
+</main>
+<script>
+const $=id=>document.getElementById(id);let bank='exam',cache=[];
+$('token').value=sessionStorage.getItem('grh0652.teacherToken')||sessionStorage.getItem('grh0652.adminToken')||'';
+async function req(path,opt={}){const r=await fetch(location.origin+path,{...opt,headers:{'Content-Type':'application/json','X-Teacher-Token':$('token').value,...(opt.headers||{})}});let d;try{d=await r.json()}catch(e){d={detail:await r.text()}}if(!r.ok)throw new Error(typeof d.detail==='string'?d.detail:JSON.stringify(d.detail||d));return d}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function parseAnswer(kind,text){
+ const t=text.trim();
+ if(kind==='choice'){const n=Number(t);if(!Number.isInteger(n)||n<1)throw new Error('Para elección única indica el número de opción empezando en 1.');return n-1}
+ if(kind==='tf'){if(!/^(true|false|verdadero|falso)$/i.test(t))throw new Error('Indica true/false o verdadero/falso.');return /^(true|verdadero)$/i.test(t)}
+ if(kind==='multi'){const a=t.split(',').map(x=>Number(x.trim())-1);if(!a.length||a.some(x=>!Number.isInteger(x)||x<0))throw new Error('Indica números de opción separados por comas, empezando en 1.');return a}
+ try{return JSON.parse(t)}catch(e){return t}
+}
+function showAnswer(kind,a){
+ if(kind==='choice'&&Number.isInteger(a))return String(a+1);
+ if(kind==='tf')return a?'true':'false';
+ if(kind==='multi'&&Array.isArray(a))return a.map(x=>Number(x)+1).join(',');
+ return typeof a==='string'?a:JSON.stringify(a);
+}
+function configure(){
+ const isExam=bank==='exam',isRec=bank==='recovery';
+ $('formTitle').textContent=isExam?'Registrar pregunta de examen':isRec?'Registrar actividad de recuperación':'Registrar clave de portafolio';
+ $('promptWrap').classList.toggle('hidden',bank==='portfolio');$('optionsWrap').classList.toggle('hidden',bank==='portfolio');$('feedbackWrap').classList.toggle('hidden',!isRec);
+ $('kind').innerHTML=isExam?'<option value="choice">Elección única</option><option value="tf">Verdadero/Falso</option><option value="multi">Selección múltiple</option>':'<option value="choice">Elección única</option><option value="tf">Verdadero/Falso</option><option value="multi">Selección múltiple</option><option value="order">Ordenación</option><option value="match">Relacionar</option><option value="free">Respuesta abierta</option><option value="text">Texto</option><option value="case">Caso práctico</option><option value="calculation">Cálculo</option>';
+ $('hint').textContent=isExam?'Para choice usa 1, 2, 3…; para multi usa 1,3; para verdadero/falso usa true o false.':isRec?'Para tipos avanzados puedes introducir la respuesta como JSON o como texto. En “Relacionar” añade las parejas con =>.':'El ID, CE y tipo deben coincidir con la actividad pública del SCORM. Aquí se registra únicamente la clave privada de corrección.';
+ $('bulkJson').placeholder=isExam?'{"questions":[{"id":"q1","ce":"1.a","q":"...","options":["A","B"],"answer":0,"type":"choice"}]}':isRec?'{"items":[{"id":"r1","ce":"1.a","kind":"choice","prompt":"...","options":["A","B"],"answer":0,"feedback":""}]}':'{"items":[{"id":"p1","ce":"1.a","kind":"choice","answer":0}]}';
+ togglePairs();
+}
+function togglePairs(){$('pairsWrap').classList.toggle('hidden',!(bank==='recovery'&&$('kind').value==='match'))}
+async function load(){
+ sessionStorage.setItem('grh0652.teacherToken',$('token').value);
+ const course=encodeURIComponent($('course').value),path=bank==='exam'?'/api/teacher/exam-bank/'+course:bank==='recovery'?'/api/teacher/recovery-bank/'+course:'/api/teacher/portfolio-bank/'+course;
+ try{cache=await req(path);render();$('status').textContent='Conectado · '+cache.length+' registros.'}catch(e){$('status').textContent='Error: '+e.message}
+}
+function render(){
+ $('items').innerHTML=cache.length?cache.map(x=>{const id=x.question_id||x.item_id,kind=x.type||x.kind,prompt=x.question||x.prompt||'Clave privada de actividad pública';return '<tr><td><b>'+esc(id)+'</b></td><td>'+esc(x.ce)+'</td><td><span class="pill">'+esc(kind)+'</span></td><td>'+esc(prompt).slice(0,180)+'</td><td class="secret">'+esc(showAnswer(kind,x.answer)).slice(0,150)+'</td><td><button class="btn secondary" onclick="editItem(\''+esc(id)+'\')">Editar</button> <button class="btn danger" onclick="deleteItem(\''+esc(id)+'\')">Eliminar</button></td></tr>}).join(''):'<tr><td colspan="6" class="muted">No hay registros en este banco.</td></tr>'
+}
+function clearForm(){['itemId','ce','prompt','options','answer','feedback','pairs'].forEach(id=>$(id).value='');$('kind').value='choice';togglePairs();$('saveStatus').textContent=''}
+function editItem(id){
+ const x=cache.find(v=>(v.question_id||v.item_id)===id);if(!x)return;$('itemId').value=id;$('ce').value=x.ce||'';$('kind').value=x.type||x.kind||'choice';$('prompt').value=x.question||x.prompt||'';$('options').value=(x.options||[]).join('\n');$('answer').value=showAnswer($('kind').value,x.answer);$('feedback').value=x.feedback||'';$('pairs').value=(x.pairs||[]).map(p=>p.join(' => ')).join('\n');togglePairs();scrollTo({top:$('formCard').offsetTop-70,behavior:'smooth'})
+}
+async function saveItem(){
+ const course=encodeURIComponent($('course').value),kind=$('kind').value,id=$('itemId').value.trim(),ce=$('ce').value.trim();if(!id||!ce){$('saveStatus').textContent='ID y CE son obligatorios.';return}
+ try{
+  const answer=parseAnswer(kind,$('answer').value),options=$('options').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+  let path,payload;
+  if(bank==='exam'){path='/api/teacher/exam-bank/'+course+'/question';payload={id,ce,q:$('prompt').value.trim(),options,answer,type:kind}}
+  else if(bank==='recovery'){path='/api/teacher/recovery-bank/'+course+'/item';payload={id,ce,kind,prompt:$('prompt').value.trim(),options,answer,feedback:$('feedback').value.trim(),pairs:$('pairs').value.split(/\r?\n/).map(x=>x.split('=>').map(y=>y.trim())).filter(p=>p.length===2&&p[0]&&p[1])}}
+  else{path='/api/teacher/portfolio-bank/'+course+'/item';payload={id,ce,kind,answer}}
+  await req(path,{method:'POST',body:JSON.stringify(payload)});$('saveStatus').textContent='Registro guardado.';clearForm();await load()
+ }catch(e){$('saveStatus').textContent='Error: '+e.message}
+}
+async function deleteItem(id){
+ if(!confirm('¿Eliminar '+id+' del banco?'))return;const course=encodeURIComponent($('course').value);const path=bank==='exam'?'/api/teacher/exam-bank/'+course+'/question/'+encodeURIComponent(id):bank==='recovery'?'/api/teacher/recovery-bank/'+course+'/item/'+encodeURIComponent(id):'/api/teacher/portfolio-bank/'+course+'/item/'+encodeURIComponent(id);
+ try{await req(path,{method:'DELETE'});await load()}catch(e){alert(e.message)}
+}
+async function importJson(){
+ let data;try{data=JSON.parse($('bulkJson').value)}catch(e){$('bulkStatus').textContent='JSON no válido.';return}
+ const course=encodeURIComponent($('course').value),path=bank==='exam'?'/api/teacher/exam-bank/'+course:bank==='recovery'?'/api/teacher/recovery-bank/'+course:'/api/teacher/portfolio-bank/'+course;
+ try{await req(path,{method:'PUT',body:JSON.stringify(data)});$('bulkStatus').textContent='Banco importado correctamente.';await load()}catch(e){$('bulkStatus').textContent='Error: '+e.message}
+}
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));bank=b.dataset.bank;configure();clearForm();load()});
+$('kind').onchange=togglePairs;$('connect').onclick=load;$('course').onchange=load;$('saveItem').onclick=saveItem;$('clearItem').onclick=clearForm;$('importJson').onclick=importJson;
+configure();if($('token').value)load();
+</script></body></html>
