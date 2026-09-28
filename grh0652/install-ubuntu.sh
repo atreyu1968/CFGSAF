@@ -145,16 +145,25 @@ password_ok(){
 }
 
 collect_admin_credentials(){
-  if [[ -z "$ADMIN_USER" ]]; then
-    if ((NON_INTERACTIVE)); then die "No existe administrador. Indique --admin-user y --admin-password para completar la actualización."; fi
-    prompt ADMIN_USER "Usuario administrador" "admin"
+  local saved_non_interactive="$NON_INTERACTIVE"
+  # Excepción deliberada: incluso una actualización lanzada con --non-interactive
+  # debe pedir credenciales si descubre que no existe ningún administrador.
+  # Esto permite que versiones antiguas de grh0652-update, que añadían
+  # --non-interactive, migren de forma segura al nuevo sistema de cuentas.
+  if ((NON_INTERACTIVE)) && { [[ -z "$ADMIN_USER" ]] || [[ -z "$ADMIN_PASSWORD" ]]; }; then
+    if [[ -r /dev/tty ]]; then
+      warn "No existe administrador: se abre el asistente obligatorio de credenciales aunque la actualización fuese no interactiva."
+      NON_INTERACTIVE=0
+    else
+      die "No existe administrador y no hay terminal interactivo. Repita con --admin-user USUARIO --admin-password CLAVE [--admin-name NOMBRE --admin-email EMAIL]."
+    fi
   fi
+  if [[ -z "$ADMIN_USER" ]]; then prompt ADMIN_USER "Usuario administrador" "admin"; fi
   [[ "$ADMIN_USER" =~ ^[A-Za-z0-9._-]{3,64}$ ]] || die "Usuario administrador inválido. Use 3-64 caracteres: letras, números, punto, guion o guion bajo."
   if [[ -z "$ADMIN_NAME" && "$NON_INTERACTIVE" -eq 0 ]]; then prompt ADMIN_NAME "Nombre visible del administrador" "Administrador GRH0652"; fi
   ADMIN_NAME="${ADMIN_NAME:-Administrador GRH0652}"
   if [[ -z "$ADMIN_EMAIL" && "$NON_INTERACTIVE" -eq 0 ]]; then prompt ADMIN_EMAIL "Correo del administrador (opcional)" ""; fi
   if [[ -z "$ADMIN_PASSWORD" ]]; then
-    if ((NON_INTERACTIVE)); then die "No existe administrador. Indique --admin-password (mínimo 12 caracteres y 3 tipos de caracteres)."; fi
     while true; do
       local p1="" p2=""
       prompt_secret p1 "Contraseña del administrador"
@@ -165,6 +174,7 @@ collect_admin_credentials(){
     done
   fi
   password_ok "$ADMIN_PASSWORD" || die "La contraseña de administrador no cumple la política mínima."
+  NON_INTERACTIVE="$saved_non_interactive"
 }
 
 if [[ -z "$DOMAIN" ]]; then prompt DOMAIN "Dominio público (sin https://)" || die "Falta --domain"; fi
@@ -582,8 +592,7 @@ curl -fsSL '$RAW_INSTALLER' | sudo bash -s -- \
   --install-dir '$INSTALL_DIR' \
   --retention '$BACKUP_RETENTION_DAYS' \
   --reuse-private-banks \
-  --cloudflare-mode existing \
-  --non-interactive
+  --cloudflare-mode existing
 EOF
 chmod 755 /usr/local/sbin/grh0652-update
 
