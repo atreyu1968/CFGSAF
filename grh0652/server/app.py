@@ -56,8 +56,8 @@ CREATE INDEX IF NOT EXISTS idx_group_members_student ON group_members(student_id
 CREATE TABLE IF NOT EXISTS lti_platforms(id INTEGER PRIMARY KEY AUTOINCREMENT,name TEXT NOT NULL,issuer TEXT NOT NULL,client_id TEXT NOT NULL,deployment_id TEXT NOT NULL DEFAULT '',auth_login_url TEXT NOT NULL,auth_token_url TEXT NOT NULL,jwks_url TEXT NOT NULL,identity_mode TEXT NOT NULL DEFAULT 'sub',active INTEGER NOT NULL DEFAULT 1,created_at TEXT NOT NULL,updated_at TEXT NOT NULL,UNIQUE(issuer,client_id,deployment_id));
 CREATE TABLE IF NOT EXISTS lti_states(state TEXT PRIMARY KEY,nonce TEXT NOT NULL,issuer TEXT NOT NULL,client_id TEXT NOT NULL,target_link_uri TEXT,lti_message_hint TEXT,created_at TEXT NOT NULL,expires_at TEXT NOT NULL,used INTEGER NOT NULL DEFAULT 0);
 CREATE TABLE IF NOT EXISTS lti_users(id INTEGER PRIMARY KEY AUTOINCREMENT,issuer TEXT NOT NULL,subject TEXT NOT NULL,student_id TEXT NOT NULL,external_key_hash TEXT NOT NULL DEFAULT '',created_at TEXT NOT NULL,updated_at TEXT NOT NULL,UNIQUE(issuer,subject),UNIQUE(student_id));
-CREATE TABLE IF NOT EXISTS lti_sessions(token_hash TEXT PRIMARY KEY,student_id TEXT NOT NULL,issuer TEXT NOT NULL,subject TEXT NOT NULL,course_id TEXT NOT NULL,context_id TEXT NOT NULL DEFAULT '',resource_link_id TEXT NOT NULL DEFAULT '',lineitem TEXT NOT NULL DEFAULT '',lineitems TEXT NOT NULL DEFAULT '',ags_scopes TEXT NOT NULL DEFAULT '[]',roles TEXT NOT NULL DEFAULT '[]',nrps_url TEXT NOT NULL DEFAULT '',nrps_versions TEXT NOT NULL DEFAULT '[]',created_at TEXT NOT NULL,expires_at TEXT NOT NULL,last_seen_at TEXT NOT NULL,FOREIGN KEY(student_id) REFERENCES students(student_id));
-CREATE TABLE IF NOT EXISTS lti_contexts(id INTEGER PRIMARY KEY AUTOINCREMENT,issuer TEXT NOT NULL,deployment_id TEXT NOT NULL,context_id TEXT NOT NULL,group_id TEXT NOT NULL,label TEXT NOT NULL DEFAULT '',title TEXT NOT NULL DEFAULT '',nrps_url TEXT NOT NULL DEFAULT '',nrps_versions TEXT NOT NULL DEFAULT '[]',last_sync_at TEXT,created_at TEXT NOT NULL,updated_at TEXT NOT NULL,UNIQUE(issuer,deployment_id,context_id));
+CREATE TABLE IF NOT EXISTS lti_sessions(token_hash TEXT PRIMARY KEY,student_id TEXT NOT NULL,issuer TEXT NOT NULL,client_id TEXT NOT NULL DEFAULT '',deployment_id TEXT NOT NULL DEFAULT '',subject TEXT NOT NULL,course_id TEXT NOT NULL,context_id TEXT NOT NULL DEFAULT '',resource_link_id TEXT NOT NULL DEFAULT '',lineitem TEXT NOT NULL DEFAULT '',lineitems TEXT NOT NULL DEFAULT '',ags_scopes TEXT NOT NULL DEFAULT '[]',roles TEXT NOT NULL DEFAULT '[]',nrps_url TEXT NOT NULL DEFAULT '',nrps_versions TEXT NOT NULL DEFAULT '[]',created_at TEXT NOT NULL,expires_at TEXT NOT NULL,last_seen_at TEXT NOT NULL,FOREIGN KEY(student_id) REFERENCES students(student_id));
+CREATE TABLE IF NOT EXISTS lti_contexts(id INTEGER PRIMARY KEY AUTOINCREMENT,issuer TEXT NOT NULL,client_id TEXT NOT NULL DEFAULT '',deployment_id TEXT NOT NULL,context_id TEXT NOT NULL,group_id TEXT NOT NULL,label TEXT NOT NULL DEFAULT '',title TEXT NOT NULL DEFAULT '',nrps_url TEXT NOT NULL DEFAULT '',nrps_versions TEXT NOT NULL DEFAULT '[]',last_sync_at TEXT,created_at TEXT NOT NULL,updated_at TEXT NOT NULL,UNIQUE(issuer,deployment_id,context_id));
 CREATE TABLE IF NOT EXISTS lti_links(id INTEGER PRIMARY KEY AUTOINCREMENT,issuer TEXT NOT NULL,deployment_id TEXT NOT NULL,resource_link_id TEXT NOT NULL,course_id TEXT NOT NULL,context_id TEXT NOT NULL DEFAULT '',created_at TEXT NOT NULL,updated_at TEXT NOT NULL,UNIQUE(issuer,deployment_id,resource_link_id));
 CREATE TABLE IF NOT EXISTS lti_grade_log(id INTEGER PRIMARY KEY AUTOINCREMENT,student_id TEXT NOT NULL,course_id TEXT NOT NULL,issuer TEXT NOT NULL,lineitem TEXT NOT NULL,score REAL NOT NULL,status TEXT NOT NULL,detail TEXT,created_at TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS states(student_id TEXT,course_id TEXT,state TEXT,updated_at TEXT,PRIMARY KEY(student_id,course_id));
@@ -87,6 +87,10 @@ CREATE TABLE IF NOT EXISTS ai_rubrics(id INTEGER PRIMARY KEY AUTOINCREMENT,cours
  if "must_change_password" not in scols:c.execute("ALTER TABLE students ADD COLUMN must_change_password INTEGER NOT NULL DEFAULT 0")
  lcols={r["name"] for r in c.execute("PRAGMA table_info(lti_sessions)")}
  if "roles" not in lcols:c.execute("ALTER TABLE lti_sessions ADD COLUMN roles TEXT NOT NULL DEFAULT '[]'")
+ if "client_id" not in lcols:c.execute("ALTER TABLE lti_sessions ADD COLUMN client_id TEXT NOT NULL DEFAULT ''")
+ if "deployment_id" not in lcols:c.execute("ALTER TABLE lti_sessions ADD COLUMN deployment_id TEXT NOT NULL DEFAULT ''")
+ cxcols={r["name"] for r in c.execute("PRAGMA table_info(lti_contexts)")}
+ if "client_id" not in cxcols:c.execute("ALTER TABLE lti_contexts ADD COLUMN client_id TEXT NOT NULL DEFAULT ''")
  cols={r["name"] for r in c.execute("PRAGMA table_info(exam_versions)")}
  if "config" not in cols:c.execute("ALTER TABLE exam_versions ADD COLUMN config TEXT")
  if "deadline_at" not in cols:c.execute("ALTER TABLE exam_versions ADD COLUMN deadline_at TEXT")
@@ -441,8 +445,8 @@ def lti_context_group(c,platform,claims,student_id):
  label=str(ctx.get("label") or "")[:80];title=str(ctx.get("title") or label or "Aula CAMPUS")[:120]
  c.execute("INSERT OR IGNORE INTO groups(group_id,name,academic_year,description,active,created_at,updated_at) VALUES(?,?,?,?,1,?,?)",(gid,title,"","Grupo sincronizado mediante LTI 1.3",now(),now()))
  nrps=claims.get("https://purl.imsglobal.org/spec/lti-nrps/claim/namesroleservice") or {}
- c.execute("""INSERT INTO lti_contexts(issuer,deployment_id,context_id,group_id,label,title,nrps_url,nrps_versions,created_at,updated_at)
- VALUES(?,?,?,?,?,?,?,?,?,?) ON CONFLICT(issuer,deployment_id,context_id) DO UPDATE SET group_id=excluded.group_id,label=excluded.label,title=excluded.title,nrps_url=excluded.nrps_url,nrps_versions=excluded.nrps_versions,updated_at=excluded.updated_at""",(platform["issuer"],dep,context_id,gid,label,title,str(nrps.get("context_memberships_url") or ""),json.dumps(nrps.get("service_versions") or []),now(),now()))
+ c.execute("""INSERT INTO lti_contexts(issuer,client_id,deployment_id,context_id,group_id,label,title,nrps_url,nrps_versions,created_at,updated_at)
+ VALUES(?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(issuer,deployment_id,context_id) DO UPDATE SET client_id=excluded.client_id,group_id=excluded.group_id,label=excluded.label,title=excluded.title,nrps_url=excluded.nrps_url,nrps_versions=excluded.nrps_versions,updated_at=excluded.updated_at""",(platform["issuer"],platform["client_id"],dep,context_id,gid,label,title,str(nrps.get("context_memberships_url") or ""),json.dumps(nrps.get("service_versions") or []),now(),now()))
  c.execute("INSERT OR IGNORE INTO group_members(group_id,student_id,created_at) VALUES(?,?,?)",(gid,student_id))
  return gid
 
@@ -480,7 +484,7 @@ def lti_ensure_lineitem(platform,ags,course_id,resource_link_id):
 def lti_push_grade(student_id,course_id,score=None):
  c=con();s=c.execute("SELECT * FROM lti_sessions WHERE student_id=? AND course_id=? AND lineitem<>'' ORDER BY created_at DESC LIMIT 1",(student_id,course_id)).fetchone()
  if not s:c.close();return {"ok":False,"reason":"Sin sesión LTI con lineitem"}
- platform=lti_platform(c,s["issuer"])
+ platform=lti_platform(c,s["issuer"],s["client_id"] or None,s["deployment_id"] or None)
  if not platform:c.close();return {"ok":False,"reason":"Plataforma LTI no disponible"}
  if score is None:
   result=recompute_official(c,student_id,course_id);score=float(result.get("final",0))
@@ -632,7 +636,7 @@ def lti_launch(request:Request,id_token:str=Form(...),state:str=Form(...)):
  ags=claims.get("https://purl.imsglobal.org/spec/lti-ags/claim/endpoint") or {};scopes=ags.get("scope") or [];lineitem=lti_ensure_lineitem(platform,ags,course_id,resource_link_id)
  nrps=claims.get("https://purl.imsglobal.org/spec/lti-nrps/claim/namesroleservice") or {}
  token=secrets.token_urlsafe(48);th=hashlib.sha256(token.encode()).hexdigest();expires=(datetime.datetime.now(datetime.timezone.utc)+datetime.timedelta(hours=12)).isoformat()
- c.execute("INSERT INTO lti_sessions(token_hash,student_id,issuer,subject,course_id,context_id,resource_link_id,lineitem,lineitems,ags_scopes,roles,nrps_url,nrps_versions,created_at,expires_at,last_seen_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",(th,student_id,platform["issuer"],str(claims.get("sub") or ""),course_id,context_id,resource_link_id,lineitem,str(ags.get("lineitems") or ""),json.dumps(scopes),json.dumps(roles),str(nrps.get("context_memberships_url") or ""),json.dumps(nrps.get("service_versions") or []),now(),expires,now()));c.commit();c.close()
+ c.execute("INSERT INTO lti_sessions(token_hash,student_id,issuer,client_id,deployment_id,subject,course_id,context_id,resource_link_id,lineitem,lineitems,ags_scopes,roles,nrps_url,nrps_versions,created_at,expires_at,last_seen_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",(th,student_id,platform["issuer"],platform["client_id"],dep,str(claims.get("sub") or ""),course_id,context_id,resource_link_id,lineitem,str(ags.get("lineitems") or ""),json.dumps(scopes),json.dumps(roles),str(nrps.get("context_memberships_url") or ""),json.dumps(nrps.get("service_versions") or []),now(),expires,now()));c.commit();c.close()
  base=lti_public_url(request);role="instructor" if any("Instructor" in str(r) for r in roles) and not any("Learner" in str(r) for r in roles) else "learner"
  return RedirectResponse(base+f"/lti-entry.html#token={token}&course={course_id}&role={role}",status_code=303)
 
@@ -656,7 +660,7 @@ def admin_lti_contexts(x_admin_token:str|None=Header(None,alias="X-Admin-Token")
 def admin_lti_context_sync(context_pk:int,x_admin_token:str|None=Header(None,alias="X-Admin-Token")):
  actor=admin_auth(x_admin_token);c=con();ctx=c.execute("SELECT * FROM lti_contexts WHERE id=?",(context_pk,)).fetchone()
  if not ctx:c.close();raise HTTPException(404,"Contexto LTI no encontrado")
- platform=lti_platform(c,ctx["issuer"]);c.close()
+ platform=lti_platform(c,ctx["issuer"],ctx["client_id"] or None,ctx["deployment_id"] or None);c.close()
  if not platform:raise HTTPException(409,"Plataforma LTI no disponible")
  if not ctx["nrps_url"]:raise HTTPException(409,"CAMPUS no proporcionó NRPS para este aula")
  scope="https://purl.imsglobal.org/spec/lti-nrps/scope/contextmembership.readonly"
