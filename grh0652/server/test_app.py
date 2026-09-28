@@ -1131,3 +1131,33 @@ def test_admin_bootstrap_login_and_session_can_authorize_teacher_api():
  self_disable=client.put("/api/admin/admins/admin/active",headers=AH,json={"active":False});assert self_disable.status_code==409
  logout=client.post("/api/admin/logout",headers=AH);assert logout.status_code==200
  assert client.get("/api/admin/session",headers=AH).status_code==401
+
+
+def _admin_headers():
+ s=client.get("/api/setup/status").json()
+ if s.get("needs_admin"):
+  r=client.post("/api/setup/admin",headers={"X-Setup-Token":"test-token"},json={"username":"admin","password":"ClaveMuySegura123!","display_name":"Administrador","email":""})
+  assert r.status_code==200,r.text
+ r=client.post("/api/admin/login",json={"username":"admin","password":"ClaveMuySegura123!"})
+ assert r.status_code==200,r.text
+ return {"X-Admin-Token":r.json()["token"]}
+
+def test_groups_crud_and_student_membership():
+ ah=_admin_headers()
+ created=client.post("/api/admin/groups",headers=ah,json={"group_id":"2AF-A","name":"2º Administración y Finanzas A","academic_year":"2026-2027","description":"Grupo de prueba","active":True})
+ assert created.status_code==200,created.text
+ duplicate=client.post("/api/admin/groups",headers=ah,json={"group_id":"2AF-A","name":"Duplicado","academic_year":"2026-2027","description":"","active":True})
+ assert duplicate.status_code==409
+ student=client.post("/api/teacher/students/grupo-alumno",headers={"X-Teacher-Token":"test-token"})
+ assert student.status_code==200,student.text
+ add=client.post("/api/admin/groups/2AF-A/members/grupo-alumno",headers=ah);assert add.status_code==200,add.text
+ members=client.get("/api/admin/groups/2AF-A/members",headers=ah);assert members.status_code==200
+ row=next(x for x in members.json() if x["student_id"]=="grupo-alumno");assert row["member"]==1
+ students=client.get("/api/admin/students",headers=ah);assert students.status_code==200
+ sr=next(x for x in students.json() if x["student_id"]=="grupo-alumno");assert "2AF-A" in sr["groups"]
+ teacher_groups=client.get("/api/teacher/groups",headers={"X-Teacher-Token":"test-token"});assert teacher_groups.status_code==200
+ assert any(x["group_id"]=="2AF-A" and x["member_count"]>=1 for x in teacher_groups.json())
+ update=client.put("/api/admin/groups/2AF-A",headers=ah,json={"name":"2º AF A","academic_year":"2026-2027","description":"Actualizado","active":False});assert update.status_code==200
+ remove=client.delete("/api/admin/groups/2AF-A/members/grupo-alumno",headers=ah);assert remove.status_code==200
+ delete=client.delete("/api/admin/groups/2AF-A",headers=ah);assert delete.status_code==200
+ assert all(x["group_id"]!="2AF-A" for x in client.get("/api/admin/groups",headers=ah).json())
