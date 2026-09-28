@@ -1,9 +1,15 @@
 import csv,io
-import os,json,sqlite3,datetime,secrets,tempfile,shutil,hashlib
+import os,json,sqlite3,datetime,secrets,tempfile,shutil,hashlib,time
+from urllib.parse import urlencode
 import httpx
+import jwt
+from jwt import PyJWKClient
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
 from pathlib import Path
-from fastapi import FastAPI,HTTPException,Header,UploadFile,File
+from fastapi import FastAPI,HTTPException,Header,UploadFile,File,Request,Form
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse,HTMLResponse
 from pydantic import BaseModel
 
 DB=os.getenv("GRH_DB","grh0652.db")
@@ -11,6 +17,8 @@ TEACHER_TOKEN=os.getenv("GRH_TEACHER_TOKEN")
 if not TEACHER_TOKEN:
     raise RuntimeError("Define GRH_TEACHER_TOKEN antes de iniciar el servidor")
 SETUP_TOKEN=os.getenv("GRH_SETUP_TOKEN") or TEACHER_TOKEN
+PUBLIC_URL=os.getenv("GRH_PUBLIC_URL","").rstrip("/")
+LTI_KEY_PATH=os.getenv("GRH_LTI_PRIVATE_KEY",str(Path(DB).with_name("lti_private.pem")))
 ORIGINS=[x.strip() for x in os.getenv("GRH_ALLOWED_ORIGINS","").split(",") if x.strip()]
 app=FastAPI(title="GRH0652 Evidence API")
 app.add_middleware(CORSMiddleware,allow_origins=ORIGINS or [],allow_credentials=False,allow_methods=["GET","POST","PUT"],allow_headers=["Content-Type","X-Teacher-Token","X-Admin-Token","X-Student-Token","X-Setup-Token"])
