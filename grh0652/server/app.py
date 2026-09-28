@@ -523,6 +523,160 @@ def config_row(c,course):
  return (json.loads(r["config"]),r["version"]) if r else (DEFAULT,0)
 
 
+@app.get("/api/lti/jwks")
+def lti_jwks_endpoint():
+ return {"keys":[lti_jwk()]}
+
+@app.get("/api/lti/configuration")
+def lti_configuration(request:Request):
+ base=lti_public_url(request)
+ return {
+  "title":"GRH0652 · Gestión de Recursos Humanos",
+  "description":"Herramienta LTI 1.3 para las unidades SCORM de Gestión de Recursos Humanos.",
+  "oidc_initiation_url":base+"/api/lti/login",
+  "target_link_uri":base+"/api/lti/launch",
+  "redirect_uris":[base+"/api/lti/launch"],
+  "jwks_url":base+"/api/lti/jwks",
+  "deep_linking":True,
+  "ags":True,
+  "nrps":True
+ }
+
+@app.get("/api/admin/lti/platforms")
+def admin_lti_platforms(x_admin_token:str|None=Header(None,alias="X-Admin-Token")):
+ admin_auth(x_admin_token);c=con();rows=[dict(r) for r in c.execute("SELECT * FROM lti_platforms ORDER BY active DESC,name")];c.close();return rows
+
+@app.post("/api/admin/lti/platforms")
+def admin_lti_platform_create(x:LTIPlatformIn,x_admin_token:str|None=Header(None,alias="X-Admin-Token")):
+ actor=admin_auth(x_admin_token)
+ if x.identity_mode not in ("sub","cial"):raise HTTPException(400,"identity_mode debe ser sub o cial")
+ vals=[x.issuer.strip(),x.client_id.strip(),x.auth_login_url.strip(),x.auth_token_url.strip(),x.jwks_url.strip()]
+ if any(not v for v in vals):raise HTTPException(400,"Faltan datos obligatorios de la plataforma")
+ c=con()
+ try:c.execute("INSERT INTO lti_platforms(name,issuer,client_id,deployment_id,auth_login_url,auth_token_url,jwks_url,identity_mode,active,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)",(x.name.strip()[:120],x.issuer.strip(),x.client_id.strip(),x.deployment_id.strip(),x.auth_login_url.strip(),x.auth_token_url.strip(),x.jwks_url.strip(),x.identity_mode,1 if x.active else 0,now(),now()))
+ except sqlite3.IntegrityError:c.close();raise HTTPException(409,"Ya existe este registro LTI")
+ audit(c,actor["username"],"lti.platform.create",x.name.strip()[:120]);c.commit();pid=c.execute("SELECT last_insert_rowid()").fetchone()[0];c.close();return {"ok":True,"id":pid}
+
+@app.put("/api/admin/lti/platforms/{platform_id}")
+def admin_lti_platform_update(platform_id:int,x:LTIPlatformIn,x_admin_token:str|None=Header(None,alias="X-Admin-Token")):
+ actor=admin_auth(x_admin_token)
+ if x.identity_mode not in ("sub","cial"):raise HTTPException(400,"identity_mode debe ser sub o cial")
+ c=con();cur=c.execute("""UPDATE lti_platforms SET name=?,issuer=?,client_id=?,deployment_id=?,auth_login_url=?,auth_token_url=?,jwks_url=?,identity_mode=?,active=?,updated_at=? WHERE id=?""",(x.name.strip()[:120],x.issuer.strip(),x.client_id.strip(),x.deployment_id.strip(),x.auth_login_url.strip(),x.auth_token_url.strip(),x.jwks_url.strip(),x.identity_mode,1 if x.active else 0,now(),platform_id))
+ if not cur.rowcount:c.close();raise HTTPException(404,"Plataforma LTI no encontrada")
+ audit(c,actor["username"],"lti.platform.update",str(platform_id));c.commit();c.close();return {"ok":True}
+
+@app.delete("/api/admin/lti/platforms/{platform_id}")
+def admin_lti_platform_delete(platform_id:int,x_admin_token:str|None=Header(None,alias="X-Admin-Token")):
+ actor=admin_auth(x_admin_token);c=con();r=c.execute("SELECT name FROM lti_platforms WHERE id=?",(platform_id,)).fetchone()
+ if not r:c.close();raise HTTPException(404,"Plataforma LTI no encontrada")
+ c.execute("DELETE FROM lti_platforms WHERE id=?",(platform_id,));audit(c,actor["username"],"lti.platform.delete",str(r["name"]));c.commit();c.close();return {"ok":True}
+
+@app.api_route("/api/lti/login",methods=["GET","POST"])
+async def lti_login(request:Request):
+ params=dict(request.query_params)
+ if request.method=="POST":
+  form=await request.form();params.update({k:str(v) for k,v in form.items()})
+ issuer=(params.get("iss") or "").strip();login_hint=params.get("login_hint") or "";message_hint=params.get("lti_message_hint") or "";target=params.get("target_link_uri") or (lti_public_url(request)+"/api/lti/launch");client_id=(params.get("client_id") or "").strip()
+ if not issuer or not login_hint:raise HTTPException(400,"LTI OIDC initiation incompleta")
+ c=con();platform=lti_platform(c,issuer,client_id or None)
+ if not platform:c.close();raise HTTPException(404,"Plataforma LTI no registrada o ambigua")
+ state=secrets.token_urlsafe(32);nonce=secrets.token_urlsafe(32);expires=(datetime.datetime.now(datetime.timezone.utc)+datetime.timedelta(minutes=10)).isoformat()
+ c.execute("DELETE FROM lti_states WHERE expires_at<=? OR used=1",(now(),));c.execute("INSERT INTO lti_states(state,nonce,issuer,client_id,target_link_uri,lti_message_hint,created_at,expires_at,used) VALUES(?,?,?,?,?,?,?,?,0)",(state,nonce,issuer,platform["client_id"],target,message_hint,now(),expires));c.commit();c.close()
+ q={"scope":"openid","response_type":"id_token","response_mode":"form_post","prompt":"none","client_id":platform["client_id"],"redirect_uri":lti_public_url(request)+"/api/lti/launch","login_hint":login_hint,"state":state,"nonce":nonce}
+ if message_hint:q["lti_message_hint"]=message_hint
+ sep="&" if "?" in platform["auth_login_url"] else "?"
+ return RedirectResponse(platform["auth_login_url"]+sep+urlencode(q),status_code=302)
+
+def lti_verify_launch(id_token,state):
+ c=con();st=c.execute("SELECT * FROM lti_states WHERE state=? AND used=0",(state,)).fetchone()
+ if not st:c.close();raise HTTPException(401,"Estado LTI inválido o reutilizado")
+ try:valid=datetime.datetime.fromisoformat(st["expires_at"])>datetime.datetime.now(datetime.timezone.utc)
+ except Exception:valid=False
+ if not valid:c.execute("DELETE FROM lti_states WHERE state=?",(state,));c.commit();c.close();raise HTTPException(401,"Estado LTI caducado")
+ platform=lti_platform(c,st["issuer"],st["client_id"])
+ if not platform:c.close();raise HTTPException(401,"Plataforma LTI no registrada")
+ try:
+  key=PyJWKClient(platform["jwks_url"]).get_signing_key_from_jwt(id_token).key
+  claims=jwt.decode(id_token,key,algorithms=["RS256"],audience=platform["client_id"],issuer=platform["issuer"],options={"require":["exp","iat","iss","aud","sub"]})
+ except Exception as e:c.close();raise HTTPException(401,"Firma LTI no válida: "+str(e)[:220])
+ if claims.get("nonce")!=st["nonce"]:c.close();raise HTTPException(401,"Nonce LTI no válido")
+ dep=str(claims.get("https://purl.imsglobal.org/spec/lti/claim/deployment_id") or "")
+ if platform.get("deployment_id") and dep!=platform["deployment_id"]:c.close();raise HTTPException(401,"Deployment ID no autorizado")
+ c.execute("UPDATE lti_states SET used=1 WHERE state=?",(state,));c.commit();c.close()
+ return platform,claims
+
+def lti_deep_link_page(platform,claims,request):
+ settings=claims.get("https://purl.imsglobal.org/spec/lti-dl/claim/deep_linking_settings") or {};ret=settings.get("deep_link_return_url")
+ if not ret:raise HTTPException(400,"CAMPUS no proporcionó deep_link_return_url")
+ ts=int(time.time());ticket=lti_sign({"iss":"grh0652","aud":"grh0652-deeplink","iat":ts,"exp":ts+600,"platform_issuer":platform["issuer"],"client_id":platform["client_id"],"deployment_id":str(claims.get("https://purl.imsglobal.org/spec/lti/claim/deployment_id") or ""),"return_url":ret,"data":settings.get("data","")})
+ units=[("GRH0652_UT1","UT1 · Gestión de la contratación laboral"),("GRH0652_UT2","UT2 · Modificación, suspensión y extinción"),("GRH0652_UT3","UT3 · Seguridad Social"),("GRH0652_UT4","UT4 · Retribución, nóminas, cotización e IRPF")]
+ buttons="".join(f'<form method="post" action="/api/lti/deep-link/return"><input type="hidden" name="ticket" value="{html.escape(ticket)}"><input type="hidden" name="course_id" value="{cid}"><button>{html.escape(title)}</button></form>' for cid,title in units)
+ return HTMLResponse(f"""<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Seleccionar unidad GRH0652</title><style>body{{font-family:Arial,sans-serif;background:#f4f6f8;margin:0;padding:32px;color:#202b33}}main{{max-width:760px;margin:auto;background:#fff;padding:28px;border-radius:20px}}h1{{color:#17365d}}form{{margin:12px 0}}button{{width:100%;padding:15px;border:0;border-radius:12px;background:#17365d;color:#fff;font-weight:700;cursor:pointer;text-align:left}}</style></head><body><main><h1>Vincular GRH0652 con CAMPUS</h1><p>Selecciona la unidad que quieres añadir al aula. Se creará como recurso LTI 1.3 y, si CAMPUS concede AGS, podrá recibir la calificación.</p>{buttons}</main></body></html>""")
+
+@app.post("/api/lti/launch")
+def lti_launch(request:Request,id_token:str=Form(...),state:str=Form(...)):
+ platform,claims=lti_verify_launch(id_token,state)
+ msg=str(claims.get("https://purl.imsglobal.org/spec/lti/claim/message_type") or "")
+ version=str(claims.get("https://purl.imsglobal.org/spec/lti/claim/version") or "")
+ if version!="1.3.0":raise HTTPException(400,"Versión LTI no compatible")
+ if msg=="LtiDeepLinkingRequest":return lti_deep_link_page(platform,claims,request)
+ if msg!="LtiResourceLinkRequest":raise HTTPException(400,"Tipo de mensaje LTI no compatible")
+ custom=claims.get("https://purl.imsglobal.org/spec/lti/claim/custom") or {};course_id=str(custom.get("grh_course_id") or "GRH0652_UT1")
+ if course_id not in ("GRH0652_UT1","GRH0652_UT2","GRH0652_UT3","GRH0652_UT4"):course_id="GRH0652_UT1"
+ resource=claims.get("https://purl.imsglobal.org/spec/lti/claim/resource_link") or {};resource_link_id=str(resource.get("id") or "")
+ dep=str(claims.get("https://purl.imsglobal.org/spec/lti/claim/deployment_id") or platform.get("deployment_id") or "");roles=claims.get("https://purl.imsglobal.org/spec/lti/claim/roles") or []
+ c=con();student_id=lti_local_student(c,platform,claims);lti_context_group(c,platform,claims,student_id)
+ ctx=claims.get("https://purl.imsglobal.org/spec/lti/claim/context") or {};context_id=str(ctx.get("id") or "")
+ if resource_link_id:c.execute("""INSERT INTO lti_links(issuer,deployment_id,resource_link_id,course_id,context_id,created_at,updated_at) VALUES(?,?,?,?,?,?,?)
+ ON CONFLICT(issuer,deployment_id,resource_link_id) DO UPDATE SET course_id=excluded.course_id,context_id=excluded.context_id,updated_at=excluded.updated_at""",(platform["issuer"],dep,resource_link_id,course_id,context_id,now(),now()))
+ ags=claims.get("https://purl.imsglobal.org/spec/lti-ags/claim/endpoint") or {};scopes=ags.get("scope") or [];lineitem=lti_ensure_lineitem(platform,ags,course_id,resource_link_id)
+ nrps=claims.get("https://purl.imsglobal.org/spec/lti-nrps/claim/namesroleservice") or {}
+ token=secrets.token_urlsafe(48);th=hashlib.sha256(token.encode()).hexdigest();expires=(datetime.datetime.now(datetime.timezone.utc)+datetime.timedelta(hours=12)).isoformat()
+ c.execute("INSERT INTO lti_sessions(token_hash,student_id,issuer,subject,course_id,context_id,resource_link_id,lineitem,lineitems,ags_scopes,roles,nrps_url,nrps_versions,created_at,expires_at,last_seen_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",(th,student_id,platform["issuer"],str(claims.get("sub") or ""),course_id,context_id,resource_link_id,lineitem,str(ags.get("lineitems") or ""),json.dumps(scopes),json.dumps(roles),str(nrps.get("context_memberships_url") or ""),json.dumps(nrps.get("service_versions") or []),now(),expires,now()));c.commit();c.close()
+ base=lti_public_url(request);role="instructor" if any("Instructor" in str(r) for r in roles) and not any("Learner" in str(r) for r in roles) else "learner"
+ return RedirectResponse(base+f"/lti-entry.html#token={token}&course={course_id}&role={role}",status_code=303)
+
+@app.post("/api/lti/deep-link/return")
+def lti_deep_link_return(request:Request,ticket:str=Form(...),course_id:str=Form(...)):
+ if course_id not in ("GRH0652_UT1","GRH0652_UT2","GRH0652_UT3","GRH0652_UT4"):raise HTTPException(400,"Unidad no válida")
+ try:data=jwt.decode(ticket,ensure_lti_key().public_key(),algorithms=["RS256"],audience="grh0652-deeplink")
+ except Exception as e:raise HTTPException(401,"Selección LTI caducada o inválida")
+ labels={"GRH0652_UT1":"UT1 · Gestión de la contratación laboral","GRH0652_UT2":"UT2 · Modificación, suspensión y extinción","GRH0652_UT3":"UT3 · Seguridad Social","GRH0652_UT4":"UT4 · Retribución, nóminas, cotización e IRPF"}
+ base=lti_public_url(request);ts=int(time.time());item={"type":"ltiResourceLink","title":labels[course_id],"url":base+"/api/lti/launch","custom":{"grh_course_id":course_id},"lineItem":{"scoreMaximum":100,"label":labels[course_id],"resourceId":course_id,"tag":course_id}}
+ claims={"iss":data["client_id"],"aud":data["platform_issuer"],"iat":ts,"exp":ts+600,"nonce":secrets.token_urlsafe(16),"https://purl.imsglobal.org/spec/lti/claim/message_type":"LtiDeepLinkingResponse","https://purl.imsglobal.org/spec/lti/claim/version":"1.3.0","https://purl.imsglobal.org/spec/lti/claim/deployment_id":data.get("deployment_id",""),"https://purl.imsglobal.org/spec/lti-dl/claim/content_items":[item]}
+ if data.get("data")!="":claims["https://purl.imsglobal.org/spec/lti-dl/claim/data"]=data["data"]
+ out=lti_sign(claims);ret=html.escape(str(data["return_url"]));val=html.escape(out)
+ return HTMLResponse(f"""<!doctype html><html><body><form id="f" method="post" action="{ret}"><input type="hidden" name="JWT" value="{val}"></form><script>document.getElementById('f').submit()</script></body></html>""")
+
+@app.get("/api/admin/lti/contexts")
+def admin_lti_contexts(x_admin_token:str|None=Header(None,alias="X-Admin-Token")):
+ admin_auth(x_admin_token);c=con();rows=[dict(r) for r in c.execute("SELECT * FROM lti_contexts ORDER BY updated_at DESC")];c.close();return rows
+
+@app.post("/api/admin/lti/contexts/{context_pk}/sync")
+def admin_lti_context_sync(context_pk:int,x_admin_token:str|None=Header(None,alias="X-Admin-Token")):
+ actor=admin_auth(x_admin_token);c=con();ctx=c.execute("SELECT * FROM lti_contexts WHERE id=?",(context_pk,)).fetchone()
+ if not ctx:c.close();raise HTTPException(404,"Contexto LTI no encontrado")
+ platform=lti_platform(c,ctx["issuer"]);c.close()
+ if not platform:raise HTTPException(409,"Plataforma LTI no disponible")
+ if not ctx["nrps_url"]:raise HTTPException(409,"CAMPUS no proporcionó NRPS para este aula")
+ scope="https://purl.imsglobal.org/spec/lti-nrps/scope/contextmembership.readonly"
+ try:
+  access=lti_oauth_token(platform,[scope])
+  with httpx.Client(timeout=30) as h:r=h.get(ctx["nrps_url"],headers={"Authorization":"Bearer "+access,"Accept":"application/vnd.ims.lti-nrps.v2.membershipcontainer+json"});r.raise_for_status();members=r.json().get("members",[])
+ except Exception as e:raise HTTPException(502,"No se pudo sincronizar NRPS: "+str(e)[:300])
+ c=con();added=0
+ for m in members:
+  roles=m.get("roles") or []
+  if not any("Learner" in str(role) for role in roles):continue
+  claims={"sub":str(m.get("user_id") or ""),"given_name":str(m.get("given_name") or ""),"family_name":str(m.get("family_name") or ""),"email":str(m.get("email") or "")}
+  if not claims["sub"]:continue
+  sid=lti_local_student(c,platform,claims);c.execute("INSERT OR IGNORE INTO group_members(group_id,student_id,created_at) VALUES(?,?,?)",(ctx["group_id"],sid,now()));added+=1
+ c.execute("UPDATE lti_contexts SET last_sync_at=?,updated_at=? WHERE id=?",(now(),now(),context_pk));audit(c,actor["username"],"lti.nrps.sync",f"context={context_pk} learners={added}");c.commit();c.close();return {"ok":True,"learners":added}
+
+@app.post("/api/admin/lti/grade")
+def admin_lti_grade(x:LTIGradePushIn,x_admin_token:str|None=Header(None,alias="X-Admin-Token")):
+ admin_auth(x_admin_token);return lti_push_grade(x.student_id,x.course_id)
+
 @app.get("/api/setup/status")
 def setup_status():
  c=con();n=c.execute("SELECT COUNT(*) n FROM admins WHERE active=1").fetchone()["n"];total=c.execute("SELECT COUNT(*) n FROM admins").fetchone()["n"];c.close()
