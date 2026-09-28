@@ -39,6 +39,7 @@
  <div class="nav-title">Sistema</div>
  <button class="nav active" data-view="dashboard">▦ &nbsp;Resumen</button>
  <button class="nav" data-view="admins">♙ &nbsp;Administradores</button>
+ <button class="nav" data-view="groups">▤ &nbsp;Grupos</button>
  <button class="nav" data-view="students">👥 &nbsp;Alumnado</button>
  <button class="nav" data-view="system">⚙ &nbsp;Sistema</button>
  <div class="nav-title">Trabajo docente</div>
@@ -79,10 +80,26 @@
  <div class="card"><h3>Cuentas existentes</h3><div class="tablewrap"><table><thead><tr><th>Usuario</th><th>Nombre</th><th>Correo</th><th>Estado</th><th>Último acceso</th><th>Acciones</th></tr></thead><tbody id="adminsTable"></tbody></table></div></div>
 </section>
 
+<section class="view" id="groups">
+ <h1>Grupos</h1><p class="lead">Crea los grupos de clase y asigna el alumnado. Los grupos se guardan en SQLite y se conservan entre actualizaciones.</p>
+ <div class="card"><h3>Crear grupo</h3>
+  <div class="formgrid">
+   <div class="field"><label>Código del grupo</label><input id="groupCode" placeholder="Ej.: 2AF-A"></div>
+   <div class="field"><label>Nombre</label><input id="groupName" placeholder="2.º Administración y Finanzas A"></div>
+   <div class="field"><label>Curso académico</label><input id="groupYear" placeholder="2026-2027"></div>
+   <div class="field"><label>Estado</label><label style="font-weight:600"><input id="groupActive" type="checkbox" checked style="width:auto"> Grupo activo</label></div>
+   <div class="field wide"><label>Descripción</label><input id="groupDescription" placeholder="Tutoría, turno, observaciones…"></div>
+  </div>
+  <button class="btn primary" id="createGroup">Crear grupo</button> <span id="groupStatus" class="muted"></span>
+ </div>
+ <div class="card"><h3>Grupos existentes</h3><div class="tablewrap"><table><thead><tr><th>Código</th><th>Nombre</th><th>Curso</th><th>Alumnado</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="groupsTable"></tbody></table></div></div>
+ <div class="card hidden" id="groupMembersCard"><div class="tools" style="justify-content:space-between"><div><h3 style="margin:0">Alumnado de <span id="membersGroupName"></span></h3><p class="muted" id="membersGroupCode"></p></div><button class="btn secondary" id="closeMembers">Cerrar</button></div><div id="membersList"></div></div>
+</section>
+
 <section class="view" id="students">
  <h1>Alumnado</h1><p class="lead">Vista administrativa de las identidades registradas en la plataforma.</p>
  <div class="card"><h3>Crear código de alumno</h3><div class="tools"><input id="studentId" placeholder="Identificador, por ejemplo AF2-01" style="max-width:330px;padding:10px;border:1px solid var(--line);border-radius:10px"><button class="btn primary" id="createStudent">Crear / regenerar acceso</button></div><div id="studentCreated" class="statusline hidden"></div></div>
- <div class="card"><h3>Registros</h3><div class="tablewrap"><table><thead><tr><th>Alumno</th><th>Creado</th><th>RA con progreso</th><th>RA con resultado</th></tr></thead><tbody id="studentsTable"></tbody></table></div></div>
+ <div class="card"><h3>Registros</h3><div class="tablewrap"><table><thead><tr><th>Alumno</th><th>Grupos</th><th>Creado</th><th>RA con progreso</th><th>RA con resultado</th></tr></thead><tbody id="studentsTable"></tbody></table></div></div>
 </section>
 
 <section class="view" id="system">
@@ -116,7 +133,7 @@ function showApp(a){$('loginView').classList.add('hidden');$('app').classList.re
 async function resume(){
  if(!token)return;try{const d=await json('/api/admin/session');sessionStorage.setItem('grh0652.teacherToken',token);showApp(d.admin);await refreshAll()}catch(e){token='';sessionStorage.removeItem('grh0652.adminToken')}
 }
-async function refreshAll(){await Promise.all([loadOverview(),loadAdmins(),loadStudents(),loadSystem()])}
+async function refreshAll(){await Promise.all([loadOverview(),loadAdmins(),loadGroups(),loadStudents(),loadSystem()])}
 async function loadOverview(){
  try{const d=await json('/api/admin/overview'),s=d.stats;$('mAdmins').textContent=s.admins;$('mStudents').textContent=s.students;$('mExams').textContent=s.active_exams;$('mAI').textContent=s.pending_ai;$('mResults').textContent=s.results;$('mCourses').textContent=s.courses;$('mDb').textContent=formatBytes(s.db_bytes);
  $('audit').innerHTML=d.recent.length?d.recent.map(x=>'<div class="audit-row"><span>'+esc(fmtDate(x.created_at))+'</span><b>'+esc(x.username||'sistema')+'</b><span><strong>'+esc(x.action)+'</strong> '+esc(x.detail||'')+'</span></div>').join(''):'<p class="muted">No hay actividad registrada.</p>'}catch(e){$('quickStatus').textContent='Error de estado: '+e.message}
@@ -129,7 +146,43 @@ async function createAdmin(){
 }
 async function resetPass(u){const p=prompt('Nueva contraseña para '+u+' (mínimo 12 caracteres):');if(!p)return;try{await json('/api/admin/admins/'+encodeURIComponent(u)+'/password',{method:'PUT',body:JSON.stringify({password:p})});alert('Contraseña actualizada. Las sesiones de '+u+' han sido cerradas.')}catch(e){alert(e.message)}}
 async function toggleAdmin(u,active){if(!confirm((active?'Activar ':'Desactivar ')+u+'?'))return;try{await json('/api/admin/admins/'+encodeURIComponent(u)+'/active',{method:'PUT',body:JSON.stringify({active})});await loadAdmins();await loadOverview()}catch(e){alert(e.message)}}
-async function loadStudents(){try{const rows=await json('/api/admin/students');$('studentsTable').innerHTML=rows.map(x=>'<tr><td><b>'+esc(x.student_id)+'</b></td><td>'+esc(fmtDate(x.created_at))+'</td><td>'+x.courses+'</td><td>'+x.results+'</td></tr>').join('')}catch(e){$('studentsTable').innerHTML='<tr><td colspan="4">'+esc(e.message)+'</td></tr>'}}
+async function loadGroups(){
+ try{
+  const rows=await json('/api/admin/groups');
+  $('groupsTable').innerHTML=rows.length?rows.map(g=>'<tr><td><b>'+esc(g.group_id)+'</b></td><td>'+esc(g.name)+'</td><td>'+esc(g.academic_year||'—')+'</td><td><span class="pill">'+g.member_count+'</span></td><td><span class="pill '+(g.active?'':'off')+'">'+(g.active?'Activo':'Archivado')+'</span></td><td><button class="btn secondary" onclick="manageMembers(\''+esc(g.group_id)+'\',\''+esc(g.name).replaceAll("'","&#39;")+'\')">Alumnado</button> <button class="btn secondary" onclick="editGroup(\''+esc(g.group_id)+'\')">Editar</button> <button class="btn danger" onclick="deleteGroup(\''+esc(g.group_id)+'\')">Eliminar</button></td></tr>').join(''):'<tr><td colspan="6" class="muted">Todavía no hay grupos. Crea el primero con el formulario superior.</td></tr>';
+ }catch(e){$('groupsTable').innerHTML='<tr><td colspan="6">'+esc(e.message)+'</td></tr>';if($('groupStatus'))$('groupStatus').textContent='Error: '+e.message}
+}
+async function createGroup(){
+ const p={group_id:$('groupCode').value.trim(),name:$('groupName').value.trim(),academic_year:$('groupYear').value.trim(),description:$('groupDescription').value.trim(),active:$('groupActive').checked};
+ $('groupStatus').textContent='Guardando…';
+ try{const d=await json('/api/admin/groups',{method:'POST',body:JSON.stringify(p)});$('groupStatus').textContent='Grupo '+d.group_id+' creado correctamente.';$('groupCode').value='';$('groupName').value='';$('groupDescription').value='';await loadGroups();await loadStudents()}
+ catch(e){$('groupStatus').textContent='Error: '+e.message}
+}
+async function editGroup(gid){
+ try{
+  const groups=await json('/api/admin/groups'),g=groups.find(x=>x.group_id===gid);if(!g)return;
+  const name=prompt('Nombre del grupo:',g.name);if(name===null)return;
+  const year=prompt('Curso académico:',g.academic_year||'');if(year===null)return;
+  const description=prompt('Descripción:',g.description||'');if(description===null)return;
+  const active=confirm('Pulsa Aceptar para mantener el grupo ACTIVO. Pulsa Cancelar para ARCHIVARLO.');
+  await json('/api/admin/groups/'+encodeURIComponent(gid),{method:'PUT',body:JSON.stringify({name,academic_year:year,description,active})});await loadGroups();await loadStudents()
+ }catch(e){alert('No se pudo editar el grupo: '+e.message)}
+}
+async function deleteGroup(gid){
+ if(!confirm('¿Eliminar definitivamente el grupo '+gid+'? Se eliminarán sus asignaciones de alumnado, pero no los alumnos ni sus resultados.'))return;
+ try{await json('/api/admin/groups/'+encodeURIComponent(gid),{method:'DELETE'});$('groupMembersCard').classList.add('hidden');await loadGroups();await loadStudents()}catch(e){alert('No se pudo eliminar: '+e.message)}
+}
+async function manageMembers(gid,name){
+ try{
+  const rows=await json('/api/admin/groups/'+encodeURIComponent(gid)+'/members');$('groupMembersCard').classList.remove('hidden');$('membersGroupName').textContent=name;$('membersGroupCode').textContent=gid;
+  $('membersList').innerHTML=rows.length?'<div class="tablewrap"><table><thead><tr><th>Alumno</th><th>Asignado</th><th>Acción</th></tr></thead><tbody>'+rows.map(s=>'<tr><td><b>'+esc(s.student_id)+'</b></td><td>'+(s.member?'<span class="pill">Sí</span>':'<span class="pill off">No</span>')+'</td><td><button class="btn '+(s.member?'danger':'good')+'" onclick="setGroupMember(\''+esc(gid)+'\',\''+esc(name).replaceAll("'","&#39;")+'\',\''+esc(s.student_id)+'\','+(!s.member)+')">'+(s.member?'Quitar':'Añadir')+'</button></td></tr>').join('')+'</tbody></table></div>':'<p class="muted">No hay alumnos creados. Crea primero las identidades del alumnado.</p>';
+  $('groupMembersCard').scrollIntoView({behavior:'smooth',block:'start'});
+ }catch(e){alert('No se pudo cargar el grupo: '+e.message)}
+}
+async function setGroupMember(gid,name,sid,add){
+ try{await json('/api/admin/groups/'+encodeURIComponent(gid)+'/members/'+encodeURIComponent(sid),{method:add?'POST':'DELETE'});await Promise.all([manageMembers(gid,name),loadGroups(),loadStudents()])}catch(e){alert('No se pudo modificar la pertenencia: '+e.message)}
+}
+async function loadStudents(){try{const rows=await json('/api/admin/students');$('studentsTable').innerHTML=rows.map(x=>'<tr><td><b>'+esc(x.student_id)+'</b></td><td>'+((x.groups||[]).length?(x.groups||[]).map(g=>'<span class="pill">'+esc(g)+'</span>').join(' '):'<span class="muted">Sin grupo</span>')+'</td><td>'+esc(fmtDate(x.created_at))+'</td><td>'+x.courses+'</td><td>'+x.results+'</td></tr>').join('')}catch(e){$('studentsTable').innerHTML='<tr><td colspan="5">'+esc(e.message)+'</td></tr>'}}
 async function createStudent(){const id=$('studentId').value.trim();if(!id)return;try{const d=await teacherReq('/api/teacher/students/'+encodeURIComponent(id),{method:'POST'});$('studentCreated').classList.remove('hidden');$('studentCreated').innerHTML='<b>Acceso generado para '+esc(d.student_id)+'</b><br><code>'+esc(d.token)+'</code><br><small>Guarda este código y entrégalo de forma privada al alumno.</small>';await loadStudents();await loadOverview()}catch(e){alert(e.message)}}
 async function loadSystem(){try{const d=await json('/api/admin/system');$('systemData').innerHTML='<dt>Hora del servidor</dt><dd>'+esc(fmtDate(d.server_time))+'</dd><dt>Base de datos</dt><dd>'+esc(d.database)+'</dd><dt>Tamaño</dt><dd>'+formatBytes(d.database_bytes)+'</dd><dt>Bancos privados</dt><dd>'+d.private_bank_files+' archivos · '+esc(d.private_bank_dir||'sin configurar')+'</dd><dt>Orígenes permitidos</dt><dd>'+esc((d.allowed_origins||[]).join(', ')||'ninguno')+'</dd>'}catch(e){$('systemData').innerHTML='<dt>Error</dt><dd>'+esc(e.message)+'</dd>'}}
 async function teacherReq(path,opt={}){const r=await fetch(API+path,{...opt,headers:{'Content-Type':'application/json','X-Teacher-Token':token,...(opt.headers||{})}});if(!r.ok)throw new Error(await r.text());return r.json()}
@@ -140,7 +193,7 @@ async function logout(){try{await json('/api/admin/logout',{method:'POST'})}catc
 function fmtDate(v){if(!v)return'—';try{return new Date(v).toLocaleString('es-ES')}catch(e){return v}}
 function formatBytes(n){n=Number(n||0);if(n<1024)return n+' B';if(n<1048576)return(n/1024).toFixed(1)+' KB';return(n/1048576).toFixed(1)+' MB'}
 document.querySelectorAll('.nav[data-view]').forEach(b=>b.onclick=()=>{document.querySelectorAll('.nav[data-view]').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.view').forEach(x=>x.classList.toggle('active',x.id===b.dataset.view));$('viewTitle').textContent=b.textContent.trim();$('side').classList.remove('open')});
-$('loginBtn').onclick=login;$('loginPass').addEventListener('keydown',e=>{if(e.key==='Enter')login()});$('createAdmin').onclick=createAdmin;$('createStudent').onclick=createStudent;$('logoutBtn').onclick=logout;$('teacherBtn').onclick=openTeacher;$('dashTeacher').onclick=openTeacher;$('courseBtn').onclick=openCourse;$('dashCourse').onclick=openCourse;$('backupBtn').onclick=backup;$('systemBackup').onclick=backup;$('refreshBtn').onclick=refreshAll;$('systemRefresh').onclick=loadSystem;$('hamb').onclick=()=>$('side').classList.toggle('open');
+$('loginBtn').onclick=login;$('loginPass').addEventListener('keydown',e=>{if(e.key==='Enter')login()});$('createAdmin').onclick=createAdmin;$('createGroup').onclick=createGroup;$('closeMembers').onclick=()=>$('groupMembersCard').classList.add('hidden');$('createStudent').onclick=createStudent;$('logoutBtn').onclick=logout;$('teacherBtn').onclick=openTeacher;$('dashTeacher').onclick=openTeacher;$('courseBtn').onclick=openCourse;$('dashCourse').onclick=openCourse;$('backupBtn').onclick=backup;$('systemBackup').onclick=backup;$('refreshBtn').onclick=refreshAll;$('systemRefresh').onclick=loadSystem;$('hamb').onclick=()=>$('side').classList.toggle('open');
 setupCheck().then(()=>resume());
 </script>
 </body></html>
