@@ -261,7 +261,7 @@ log "Desplegando backend y web pública..."
 rm -rf "$INSTALL_DIR/server.new" "$INSTALL_DIR/web.new"
 cp -a "$SRC/server" "$INSTALL_DIR/server.new"
 mkdir -p "$INSTALL_DIR/web.new"
-for f in index.html course.html player.html teacher.html admin.html ut1.html; do
+for f in index.html course.html player.html teacher.html admin.html banks.html ut1.html; do
   [[ -f "$SRC/$f" ]] && cp -a "$SRC/$f" "$INSTALL_DIR/web.new/"
 done
 cp -a "$SRC/assets" "$SRC/scorm" "$INSTALL_DIR/web.new/"
