@@ -460,6 +460,21 @@ def lti_session_row(token):
  if not valid:c.execute("DELETE FROM lti_sessions WHERE token_hash=?",(th,));c.commit();c.close();return None
  d=dict(r);c.close();return d
 
+def lti_ensure_lineitem(platform,ags,course_id,resource_link_id):
+ lineitem=str(ags.get("lineitem") or "")
+ scopes=ags.get("scope") or []
+ if lineitem:return lineitem
+ lineitems=str(ags.get("lineitems") or "")
+ scope="https://purl.imsglobal.org/spec/lti-ags/scope/lineitem"
+ if not lineitems or scope not in scopes:return ""
+ try:
+  access=lti_oauth_token(platform,[scope]);labels={"GRH0652_UT1":"UT1 · Gestión de la contratación laboral","GRH0652_UT2":"UT2 · Modificación, suspensión y extinción","GRH0652_UT3":"UT3 · Seguridad Social","GRH0652_UT4":"UT4 · Retribución, nóminas, cotización e IRPF"}
+  payload={"scoreMaximum":100.0,"label":labels.get(course_id,course_id),"resourceId":course_id,"tag":course_id}
+  if resource_link_id:payload["resourceLinkId"]=resource_link_id
+  with httpx.Client(timeout=20) as h:r=h.post(lineitems,headers={"Authorization":"Bearer "+access,"Content-Type":"application/vnd.ims.lis.v2.lineitem+json","Accept":"application/vnd.ims.lis.v2.lineitem+json"},json=payload);r.raise_for_status();d=r.json()
+  return str(d.get("id") or r.headers.get("Location") or "")
+ except Exception:return ""
+
 def lti_push_grade(student_id,course_id,score=None):
  c=con();s=c.execute("SELECT * FROM lti_sessions WHERE student_id=? AND course_id=? AND lineitem<>'' ORDER BY created_at DESC LIMIT 1",(student_id,course_id)).fetchone()
  if not s:c.close();return {"ok":False,"reason":"Sin sesión LTI con lineitem"}
@@ -467,6 +482,8 @@ def lti_push_grade(student_id,course_id,score=None):
  if not platform:c.close();return {"ok":False,"reason":"Plataforma LTI no disponible"}
  if score is None:
   result=recompute_official(c,student_id,course_id);score=float(result.get("final",0))
+ last=c.execute("SELECT score FROM lti_grade_log WHERE student_id=? AND course_id=? AND status='sent' ORDER BY id DESC LIMIT 1",(student_id,course_id)).fetchone()
+ if last and abs(float(last["score"])-float(score))<0.005:c.close();return {"ok":True,"score":score,"unchanged":True}
  lineitem=s["lineitem"];scopes=json.loads(s["ags_scopes"] or "[]");c.close()
  scope="https://purl.imsglobal.org/spec/lti-ags/scope/score"
  if scope not in scopes:return {"ok":False,"reason":"CAMPUS no concedió scope AGS de puntuación"}
