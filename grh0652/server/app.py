@@ -737,6 +737,26 @@ def recovery(student_id:str,course_id:str,x_student_token:str|None=Header(None))
  if not r:return {"plan":None}
  return {"plan":{"criteria":json.loads(r["criteria"] or "[]"),"status":r["status"],"created_at":r["created_at"]}}
 
+@app.get("/api/teacher/recovery-bank/{course_id}")
+def get_recovery_bank(course_id:str,x_teacher_token:str|None=Header(None)):
+ auth(x_teacher_token);c=con();rows=[dict(r) for r in c.execute("SELECT item_id,ce,kind,prompt,options,answer,feedback,pairs FROM recovery_banks WHERE course_id=? ORDER BY ce,item_id",(course_id,))];c.close()
+ for r in rows:r["options"]=json.loads(r["options"] or "[]");r["answer"]=json.loads(r["answer"]);r["pairs"]=json.loads(r["pairs"] or "[]")
+ return rows
+
+@app.post("/api/teacher/recovery-bank/{course_id}/item")
+def upsert_recovery_item(course_id:str,x:RecoveryItem,x_teacher_token:str|None=Header(None)):
+ auth(x_teacher_token)
+ if x.kind not in RECOVERY_KINDS:raise HTTPException(400,"Tipo de recuperación no válido")
+ if x.kind=="match" and (not x.pairs or any(len(pair)!=2 for pair in x.pairs)):raise HTTPException(400,"Emparejamiento incompleto")
+ c=con();c.execute("""INSERT INTO recovery_banks(course_id,item_id,ce,kind,prompt,options,answer,feedback,pairs) VALUES(?,?,?,?,?,?,?,?,?)
+ ON CONFLICT(course_id,item_id) DO UPDATE SET ce=excluded.ce,kind=excluded.kind,prompt=excluded.prompt,options=excluded.options,answer=excluded.answer,feedback=excluded.feedback,pairs=excluded.pairs""",(course_id,x.id.strip(),x.ce.strip(),x.kind,x.prompt.strip(),json.dumps(x.options,ensure_ascii=False),json.dumps(x.answer,ensure_ascii=False),x.feedback,json.dumps(x.pairs,ensure_ascii=False)));c.commit();c.close();return {"ok":True,"id":x.id}
+
+@app.delete("/api/teacher/recovery-bank/{course_id}/item/{item_id}")
+def delete_recovery_item(course_id:str,item_id:str,x_teacher_token:str|None=Header(None)):
+ auth(x_teacher_token);c=con();cur=c.execute("DELETE FROM recovery_banks WHERE course_id=? AND item_id=?",(course_id,item_id));c.commit();c.close()
+ if not cur.rowcount:raise HTTPException(404,"Actividad no encontrada")
+ return {"ok":True}
+
 @app.put("/api/teacher/recovery-bank/{course_id}")
 def put_recovery_bank(course_id:str,x:RecoveryBankIn,x_teacher_token:str|None=Header(None)):
  auth(x_teacher_token);c=con();c.execute("DELETE FROM recovery_banks WHERE course_id=?",(course_id,))
@@ -848,6 +868,27 @@ def get_portfolio(course_id:str,x_student_token:str|None=Header(None)):
     items.append(q)
  return {"course_id":course_id,"items":items}
 
+@app.get("/api/teacher/portfolio-bank/{course_id}")
+def get_portfolio_bank(course_id:str,x_teacher_token:str|None=Header(None)):
+ auth(x_teacher_token);c=con();rows=[dict(r) for r in c.execute("SELECT item_id,ce,kind,answer,public_hash FROM portfolio_banks WHERE course_id=? ORDER BY ce,item_id",(course_id,))];c.close()
+ for r in rows:r["answer"]=json.loads(r["answer"])
+ return rows
+
+@app.post("/api/teacher/portfolio-bank/{course_id}/item")
+def upsert_portfolio_item(course_id:str,x:PortfolioKey,x_teacher_token:str|None=Header(None)):
+ auth(x_teacher_token)
+ if x.kind not in PORTFOLIO_KINDS:raise HTTPException(400,"Tipo de actividad no válido")
+ public=portfolio_public_map(course_id);pub=public.get(x.id) if public else None
+ if public and (not pub or pub.get("ce")!=x.ce or pub.get("kind")!=x.kind):raise HTTPException(400,"Metadatos no coinciden con la actividad pública")
+ ph=portfolio_public_hash(pub) if pub else None;c=con();c.execute("""INSERT INTO portfolio_banks(course_id,item_id,ce,kind,answer,public_hash) VALUES(?,?,?,?,?,?)
+ ON CONFLICT(course_id,item_id) DO UPDATE SET ce=excluded.ce,kind=excluded.kind,answer=excluded.answer,public_hash=excluded.public_hash""",(course_id,x.id.strip(),x.ce.strip(),x.kind,json.dumps(x.answer,ensure_ascii=False),ph));c.commit();c.close();return {"ok":True,"id":x.id}
+
+@app.delete("/api/teacher/portfolio-bank/{course_id}/item/{item_id}")
+def delete_portfolio_item(course_id:str,item_id:str,x_teacher_token:str|None=Header(None)):
+ auth(x_teacher_token);c=con();cur=c.execute("DELETE FROM portfolio_banks WHERE course_id=? AND item_id=?",(course_id,item_id));c.commit();c.close()
+ if not cur.rowcount:raise HTTPException(404,"Clave de portafolio no encontrada")
+ return {"ok":True}
+
 @app.put("/api/teacher/portfolio-keys/{course_id}")
 def put_portfolio_keys(course_id:str,x:PortfolioKeysIn,x_teacher_token:str|None=Header(None)):
  auth(x_teacher_token);public=portfolio_public_map(course_id)
@@ -883,6 +924,28 @@ def put_portfolio_bank(course_id:str,x:RecoveryBankIn,x_teacher_token:str|None=H
   c.execute("INSERT INTO portfolio_banks(course_id,item_id,ce,kind,answer,public_hash) VALUES(?,?,?,?,?,?)",(course_id,q.id,q.ce,q.kind,json.dumps(q.answer,ensure_ascii=False),ph))
  if public and set(public)!={q.id for q in x.items}:c.rollback();c.close();raise HTTPException(400,"El banco privado debe contener exactamente todas las actividades públicas de la unidad")
  c.commit();c.close();return {"ok":True,"items":len(x.items)}
+
+@app.get("/api/teacher/exam-bank/{course_id}")
+def get_exam_bank(course_id:str,x_teacher_token:str|None=Header(None)):
+ auth(x_teacher_token);c=con();rows=[dict(r) for r in c.execute("SELECT question_id,ce,question,options,answer,type FROM exam_banks WHERE course_id=? ORDER BY ce,question_id",(course_id,))];c.close()
+ for r in rows:r["options"]=json.loads(r["options"] or "[]");r["answer"]=json.loads(r["answer"])
+ return rows
+
+@app.post("/api/teacher/exam-bank/{course_id}/question")
+def upsert_exam_question(course_id:str,x:BankQuestion,x_teacher_token:str|None=Header(None)):
+ auth(x_teacher_token)
+ if x.type not in ("choice","tf","multi"):raise HTTPException(400,"Tipo de pregunta no válido")
+ if x.type=="choice" and (not isinstance(x.answer,int) or isinstance(x.answer,bool) or x.answer<0 or x.answer>=len(x.options)):raise HTTPException(400,"Respuesta choice no válida")
+ if x.type=="tf" and not isinstance(x.answer,bool):raise HTTPException(400,"Respuesta tf no válida")
+ if x.type=="multi" and (not isinstance(x.answer,list) or not x.answer or any(not isinstance(i,int) or isinstance(i,bool) or i<0 or i>=len(x.options) for i in x.answer)):raise HTTPException(400,"Respuesta multi no válida")
+ c=con();c.execute("""INSERT INTO exam_banks(course_id,question_id,ce,question,options,answer,type) VALUES(?,?,?,?,?,?,?)
+ ON CONFLICT(course_id,question_id) DO UPDATE SET ce=excluded.ce,question=excluded.question,options=excluded.options,answer=excluded.answer,type=excluded.type""",(course_id,x.id.strip(),x.ce.strip(),x.q.strip(),json.dumps(x.options,ensure_ascii=False),json.dumps(x.answer,ensure_ascii=False),x.type));c.commit();c.close();return {"ok":True,"id":x.id}
+
+@app.delete("/api/teacher/exam-bank/{course_id}/question/{question_id}")
+def delete_exam_question(course_id:str,question_id:str,x_teacher_token:str|None=Header(None)):
+ auth(x_teacher_token);c=con();cur=c.execute("DELETE FROM exam_banks WHERE course_id=? AND question_id=?",(course_id,question_id));c.commit();c.close()
+ if not cur.rowcount:raise HTTPException(404,"Pregunta no encontrada")
+ return {"ok":True}
 
 @app.put("/api/teacher/exam-bank/{course_id}")
 def put_exam_bank(course_id:str,x:BankIn,x_teacher_token:str|None=Header(None)):
