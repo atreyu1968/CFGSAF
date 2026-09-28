@@ -42,6 +42,7 @@
  <button class="nav" data-view="groups">▤ &nbsp;Grupos</button>
  <button class="nav" data-view="students">👥 &nbsp;Alumnado</button>
  <button class="nav" data-view="system">⚙ &nbsp;Sistema</button>
+ <button class="nav" id="ltiBtn">↔ &nbsp;LTI 1.3 · CAMPUS</button>
  <div class="nav-title">Trabajo docente</div>
  <button class="nav" id="teacherBtn">▣ &nbsp;Panel docente</button>\n <button class="nav" id="banksBtn">✎ &nbsp;Bancos de evaluación</button>
  <button class="nav" id="courseBtn">▷ &nbsp;Aula del alumnado</button>
@@ -265,7 +266,7 @@ async function logout(){try{await json('/api/admin/logout',{method:'POST'})}catc
 function fmtDate(v){if(!v)return'—';try{return new Date(v).toLocaleString('es-ES')}catch(e){return v}}
 function formatBytes(n){n=Number(n||0);if(n<1024)return n+' B';if(n<1048576)return(n/1024).toFixed(1)+' KB';return(n/1048576).toFixed(1)+' MB'}
 document.querySelectorAll('.nav[data-view]').forEach(b=>b.onclick=()=>{document.querySelectorAll('.nav[data-view]').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.view').forEach(x=>x.classList.toggle('active',x.id===b.dataset.view));$('viewTitle').textContent=b.textContent.trim();$('side').classList.remove('open')});
-$('loginBtn').onclick=login;$('loginPass').addEventListener('keydown',e=>{if(e.key==='Enter')login()});$('createAdmin').onclick=createAdmin;$('createGroup').onclick=createGroup;$('closeMembers').onclick=()=>$('groupMembersCard').classList.add('hidden');$('createStudent').onclick=createStudent;$('bulkStudents').onclick=bulkStudents;$('logoutBtn').onclick=logout;$('teacherBtn').onclick=openTeacher;$('banksBtn').onclick=()=>{sessionStorage.setItem('grh0652.teacherToken',token);location.href='banks.html'};$('dashTeacher').onclick=openTeacher;$('courseBtn').onclick=openCourse;$('dashCourse').onclick=openCourse;$('backupBtn').onclick=backup;$('systemBackup').onclick=backup;$('refreshBtn').onclick=refreshAll;$('systemRefresh').onclick=loadSystem;$('hamb').onclick=()=>$('side').classList.toggle('open');
+$('loginBtn').onclick=login;$('loginPass').addEventListener('keydown',e=>{if(e.key==='Enter')login()});$('createAdmin').onclick=createAdmin;$('createGroup').onclick=createGroup;$('closeMembers').onclick=()=>$('groupMembersCard').classList.add('hidden');$('createStudent').onclick=createStudent;$('bulkStudents').onclick=bulkStudents;$('logoutBtn').onclick=logout;$('teacherBtn').onclick=openTeacher;$('ltiBtn').onclick=()=>location.href='lti-admin.html';$('banksBtn').onclick=()=>{sessionStorage.setItem('grh0652.teacherToken',token);location.href='banks.html'};$('dashTeacher').onclick=openTeacher;$('courseBtn').onclick=openCourse;$('dashCourse').onclick=openCourse;$('backupBtn').onclick=backup;$('systemBackup').onclick=backup;$('refreshBtn').onclick=refreshAll;$('systemRefresh').onclick=loadSystem;$('hamb').onclick=()=>$('side').classList.toggle('open');
 setupCheck().then(()=>resume());
 </script>
 </body></html>
