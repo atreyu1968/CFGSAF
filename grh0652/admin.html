@@ -55,7 +55,8 @@
  <h1>Panel de administración</h1><p class="lead">Estado global de GRH0652, accesos y actividad administrativa reciente.</p>
  <div class="cards">
   <div class="metric"><div class="n" id="mAdmins">—</div><div class="l">Administradores activos</div><div class="sub">Acceso al sistema</div></div>
-  <div class="metric"><div class="n" id="mStudents">—</div><div class="l">Alumnos registrados</div><div class="sub">Identidades persistentes</div></div>
+  <div class="metric"><div class="n" id="mGroups">—</div><div class="l">Grupos activos</div><div class="sub">Organización académica</div></div>
+  <div class="metric"><div class="n" id="mStudents">—</div><div class="l">Alumnos registrados</div><div class="sub" id="mStudentsSub">Identidades persistentes</div></div>
   <div class="metric"><div class="n" id="mExams">—</div><div class="l">Exámenes en curso</div><div class="sub">Supervisión activa</div></div>
   <div class="metric"><div class="n" id="mAI">—</div><div class="l">Revisiones IA pendientes</div><div class="sub">Requieren intervención</div></div>
  </div>
@@ -97,9 +98,21 @@
 </section>
 
 <section class="view" id="students">
- <h1>Alumnado</h1><p class="lead">Vista administrativa de las identidades registradas en la plataforma.</p>
- <div class="card"><h3>Crear código de alumno</h3><div class="tools"><input id="studentId" placeholder="Identificador, por ejemplo AF2-01" style="max-width:330px;padding:10px;border:1px solid var(--line);border-radius:10px"><button class="btn primary" id="createStudent">Crear / regenerar acceso</button></div><div id="studentCreated" class="statusline hidden"></div></div>
- <div class="card"><h3>Registros</h3><div class="tablewrap"><table><thead><tr><th>Alumno</th><th>Grupos</th><th>Creado</th><th>RA con progreso</th><th>RA con resultado</th></tr></thead><tbody id="studentsTable"></tbody></table></div></div>
+ <h1>Alumnado</h1><p class="lead">Alta, edición, grupos, estado y credenciales de acceso del alumnado.</p>
+ <div class="card"><h3>Registrar alumno/a</h3>
+  <div class="formgrid">
+   <div class="field"><label>Identificador *</label><input id="studentId" placeholder="Ej.: AF2-01"></div>
+   <div class="field"><label>Nombre</label><input id="studentFirstName" placeholder="Nombre"></div>
+   <div class="field"><label>Apellidos</label><input id="studentLastName" placeholder="Apellidos"></div>
+   <div class="field"><label>Correo</label><input id="studentEmail" type="email" placeholder="alumno@centro.es"></div>
+   <div class="field"><label>Grupos</label><select id="studentGroups" multiple style="min-height:110px"></select></div>
+   <div class="field"><label>Estado</label><label style="font-weight:600"><input id="studentActive" type="checkbox" checked style="width:auto"> Alumno activo</label></div>
+  </div>
+  <button class="btn primary" id="createStudent">Registrar alumno</button> <span id="studentStatus" class="muted"></span>
+  <div id="studentCreated" class="statusline hidden"></div>
+ </div>
+ <div class="card"><h3>Alta masiva</h3><p class="muted">Una línea por alumno: <code>ID;Nombre;Apellidos;Correo;GRUPO1,GRUPO2</code>. Los grupos indicados deben existir previamente.</p><textarea id="studentBulk" style="width:100%;min-height:120px;padding:11px;border:1px solid var(--line);border-radius:10px" placeholder="AF2-01;Ana;Pérez López;ana@centro.es;2AF-A&#10;AF2-02;Luis;García Díaz;luis@centro.es;2AF-A"></textarea><p><button class="btn secondary" id="bulkStudents">Registrar lote</button> <span id="bulkStatus" class="muted"></span></p></div>
+ <div class="card"><h3>Registros</h3><div class="tablewrap"><table><thead><tr><th>Alumno</th><th>Nombre</th><th>Correo</th><th>Grupos</th><th>Estado</th><th>RA progreso</th><th>RA resultado</th><th>Acciones</th></tr></thead><tbody id="studentsTable"></tbody></table></div></div>
 </section>
 
 <section class="view" id="system">
@@ -133,9 +146,9 @@ function showApp(a){$('loginView').classList.add('hidden');$('app').classList.re
 async function resume(){
  if(!token)return;try{const d=await json('/api/admin/session');sessionStorage.setItem('grh0652.teacherToken',token);showApp(d.admin);await refreshAll()}catch(e){token='';sessionStorage.removeItem('grh0652.adminToken')}
 }
-async function refreshAll(){await Promise.all([loadOverview(),loadAdmins(),loadGroups(),loadStudents(),loadSystem()])}
+async function refreshAll(){await Promise.all([loadOverview(),loadAdmins(),loadGroups(),loadStudents(),loadSystem()]);await loadStudentGroupOptions()}
 async function loadOverview(){
- try{const d=await json('/api/admin/overview'),s=d.stats;$('mAdmins').textContent=s.admins;$('mStudents').textContent=s.students;$('mExams').textContent=s.active_exams;$('mAI').textContent=s.pending_ai;$('mResults').textContent=s.results;$('mCourses').textContent=s.courses;$('mDb').textContent=formatBytes(s.db_bytes);
+ try{const d=await json('/api/admin/overview'),s=d.stats;$('mAdmins').textContent=s.admins;$('mGroups').textContent=s.groups??0;$('mStudents').textContent=s.students;$('mStudentsSub').textContent=(s.active_students??s.students)+' activos de '+s.students;$('mExams').textContent=s.active_exams;$('mAI').textContent=s.pending_ai;$('mResults').textContent=s.results;$('mCourses').textContent=s.courses;$('mDb').textContent=formatBytes(s.db_bytes);
  $('audit').innerHTML=d.recent.length?d.recent.map(x=>'<div class="audit-row"><span>'+esc(fmtDate(x.created_at))+'</span><b>'+esc(x.username||'sistema')+'</b><span><strong>'+esc(x.action)+'</strong> '+esc(x.detail||'')+'</span></div>').join(''):'<p class="muted">No hay actividad registrada.</p>'}catch(e){$('quickStatus').textContent='Error de estado: '+e.message}
 }
 async function loadAdmins(){
@@ -182,8 +195,47 @@ async function manageMembers(gid,name){
 async function setGroupMember(gid,name,sid,add){
  try{await json('/api/admin/groups/'+encodeURIComponent(gid)+'/members/'+encodeURIComponent(sid),{method:add?'POST':'DELETE'});await Promise.all([manageMembers(gid,name),loadGroups(),loadStudents()])}catch(e){alert('No se pudo modificar la pertenencia: '+e.message)}
 }
-async function loadStudents(){try{const rows=await json('/api/admin/students');$('studentsTable').innerHTML=rows.map(x=>'<tr><td><b>'+esc(x.student_id)+'</b></td><td>'+((x.groups||[]).length?(x.groups||[]).map(g=>'<span class="pill">'+esc(g)+'</span>').join(' '):'<span class="muted">Sin grupo</span>')+'</td><td>'+esc(fmtDate(x.created_at))+'</td><td>'+x.courses+'</td><td>'+x.results+'</td></tr>').join('')}catch(e){$('studentsTable').innerHTML='<tr><td colspan="5">'+esc(e.message)+'</td></tr>'}}
-async function createStudent(){const id=$('studentId').value.trim();if(!id)return;try{const d=await teacherReq('/api/teacher/students/'+encodeURIComponent(id),{method:'POST'});$('studentCreated').classList.remove('hidden');$('studentCreated').innerHTML='<b>Acceso generado para '+esc(d.student_id)+'</b><br><code>'+esc(d.token)+'</code><br><small>Guarda este código y entrégalo de forma privada al alumno.</small>';await loadStudents();await loadOverview()}catch(e){alert(e.message)}}
+let studentsCache=[];
+async function loadStudentGroupOptions(selected=[]){
+ try{const groups=await json('/api/admin/groups');$('studentGroups').innerHTML=groups.filter(g=>g.active).map(g=>'<option value="'+esc(g.group_id)+'" '+(selected.includes(g.group_id)?'selected':'')+'>'+esc(g.group_id+' · '+g.name)+'</option>').join('')}catch(e){}
+}
+function selectedStudentGroups(){return Array.from($('studentGroups').selectedOptions).map(o=>o.value)}
+async function loadStudents(){
+ try{
+  const rows=await json('/api/admin/students');studentsCache=rows;
+  $('studentsTable').innerHTML=rows.length?rows.map(x=>'<tr><td><b>'+esc(x.student_id)+'</b><br><small>'+esc(fmtDate(x.created_at))+'</small></td><td>'+esc(([x.first_name,x.last_name].filter(Boolean).join(' ')||'—'))+'</td><td>'+esc(x.email||'—')+'</td><td>'+((x.groups||[]).length?(x.groups||[]).map(g=>'<span class="pill">'+esc(g)+'</span>').join(' '):'<span class="muted">Sin grupo</span>')+'</td><td><span class="pill '+(x.active?'':'off')+'">'+(x.active?'Activo':'Inactivo')+'</span></td><td>'+x.courses+'</td><td>'+x.results+'</td><td><button class="btn secondary" onclick="editStudent(\''+esc(x.student_id)+'\')">Editar</button> <button class="btn secondary" onclick="regenerateStudentToken(\''+esc(x.student_id)+'\')">Nueva clave</button> <button class="btn '+(x.active?'danger':'good')+'" onclick="toggleStudent(\''+esc(x.student_id)+'\','+(!x.active)+')">'+(x.active?'Desactivar':'Activar')+'</button></td></tr>').join(''):'<tr><td colspan="8" class="muted">No hay alumnado registrado.</td></tr>'
+ }catch(e){$('studentsTable').innerHTML='<tr><td colspan="8">'+esc(e.message)+'</td></tr>'}
+}
+async function createStudent(){
+ const id=$('studentId').value.trim();if(!id){$('studentStatus').textContent='El identificador es obligatorio.';return}
+ const p={student_id:id,first_name:$('studentFirstName').value.trim(),last_name:$('studentLastName').value.trim(),email:$('studentEmail').value.trim(),active:$('studentActive').checked,group_ids:selectedStudentGroups()};
+ $('studentStatus').textContent='Registrando…';
+ try{const d=await json('/api/admin/students',{method:'POST',body:JSON.stringify(p)});$('studentCreated').classList.remove('hidden');$('studentCreated').innerHTML='<b>Alumno registrado: '+esc(d.student_id)+'</b><br>Código de acceso: <code>'+esc(d.token)+'</code><br><small>Este código solo se muestra al generarlo. Entrégalo de forma privada.</small>';$('studentStatus').textContent='Registro correcto.';$('studentId').value='';$('studentFirstName').value='';$('studentLastName').value='';$('studentEmail').value='';await Promise.all([loadStudents(),loadOverview(),loadGroups()])}catch(e){$('studentStatus').textContent='Error: '+e.message}
+}
+async function editStudent(id){
+ const x=studentsCache.find(s=>s.student_id===id);if(!x)return;
+ const first=prompt('Nombre:',x.first_name||'');if(first===null)return;
+ const last=prompt('Apellidos:',x.last_name||'');if(last===null)return;
+ const email=prompt('Correo:',x.email||'');if(email===null)return;
+ const groups=prompt('Grupos separados por comas:',(x.groups||[]).join(','));if(groups===null)return;
+ try{await json('/api/admin/students/'+encodeURIComponent(id),{method:'PUT',body:JSON.stringify({first_name:first,last_name:last,email,active:!!x.active,group_ids:groups.split(',').map(v=>v.trim()).filter(Boolean)})});await Promise.all([loadStudents(),loadGroups()])}catch(e){alert('No se pudo editar: '+e.message)}
+}
+async function regenerateStudentToken(id){
+ if(!confirm('¿Generar una nueva clave de acceso para '+id+'? La anterior dejará de funcionar.'))return;
+ try{const d=await json('/api/admin/students/'+encodeURIComponent(id)+'/token',{method:'POST'});$('studentCreated').classList.remove('hidden');$('studentCreated').innerHTML='<b>Nueva clave para '+esc(id)+':</b><br><code>'+esc(d.token)+'</code><br><small>La clave anterior ha quedado invalidada.</small>'}catch(e){alert(e.message)}
+}
+async function toggleStudent(id,active){
+ try{await json('/api/admin/students/'+encodeURIComponent(id)+'/active',{method:'PUT',body:JSON.stringify({active})});await Promise.all([loadStudents(),loadOverview()])}catch(e){alert(e.message)}
+}
+async function bulkStudents(){
+ const lines=$('studentBulk').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);if(!lines.length)return;
+ let ok=0,errors=[];
+ for(const [i,line] of lines.entries()){
+  const p=line.split(';');const groups=(p[4]||'').split(',').map(v=>v.trim()).filter(Boolean);
+  try{await json('/api/admin/students',{method:'POST',body:JSON.stringify({student_id:(p[0]||'').trim(),first_name:(p[1]||'').trim(),last_name:(p[2]||'').trim(),email:(p[3]||'').trim(),active:true,group_ids:groups})});ok++}catch(e){errors.push('Línea '+(i+1)+': '+e.message)}
+ }
+ $('bulkStatus').textContent=ok+' registrados'+(errors.length?' · '+errors.length+' errores':'');if(errors.length)alert(errors.join('\n'));await Promise.all([loadStudents(),loadOverview(),loadGroups()])
+}
 async function loadSystem(){try{const d=await json('/api/admin/system');$('systemData').innerHTML='<dt>Hora del servidor</dt><dd>'+esc(fmtDate(d.server_time))+'</dd><dt>Base de datos</dt><dd>'+esc(d.database)+'</dd><dt>Tamaño</dt><dd>'+formatBytes(d.database_bytes)+'</dd><dt>Bancos privados</dt><dd>'+d.private_bank_files+' archivos · '+esc(d.private_bank_dir||'sin configurar')+'</dd><dt>Orígenes permitidos</dt><dd>'+esc((d.allowed_origins||[]).join(', ')||'ninguno')+'</dd>'}catch(e){$('systemData').innerHTML='<dt>Error</dt><dd>'+esc(e.message)+'</dd>'}}
 async function teacherReq(path,opt={}){const r=await fetch(API+path,{...opt,headers:{'Content-Type':'application/json','X-Teacher-Token':token,...(opt.headers||{})}});if(!r.ok)throw new Error(await r.text());return r.json()}
 async function backup(){try{const r=await fetch(API+'/api/teacher/backup',{headers:{'X-Teacher-Token':token}});if(!r.ok)throw new Error(await r.text());const b=await r.blob(),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='grh0652-backup-'+new Date().toISOString().slice(0,19).replaceAll(':','-')+'.db';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}catch(e){alert(e.message)}}
@@ -193,7 +245,7 @@ async function logout(){try{await json('/api/admin/logout',{method:'POST'})}catc
 function fmtDate(v){if(!v)return'—';try{return new Date(v).toLocaleString('es-ES')}catch(e){return v}}
 function formatBytes(n){n=Number(n||0);if(n<1024)return n+' B';if(n<1048576)return(n/1024).toFixed(1)+' KB';return(n/1048576).toFixed(1)+' MB'}
 document.querySelectorAll('.nav[data-view]').forEach(b=>b.onclick=()=>{document.querySelectorAll('.nav[data-view]').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.view').forEach(x=>x.classList.toggle('active',x.id===b.dataset.view));$('viewTitle').textContent=b.textContent.trim();$('side').classList.remove('open')});
-$('loginBtn').onclick=login;$('loginPass').addEventListener('keydown',e=>{if(e.key==='Enter')login()});$('createAdmin').onclick=createAdmin;$('createGroup').onclick=createGroup;$('closeMembers').onclick=()=>$('groupMembersCard').classList.add('hidden');$('createStudent').onclick=createStudent;$('logoutBtn').onclick=logout;$('teacherBtn').onclick=openTeacher;$('dashTeacher').onclick=openTeacher;$('courseBtn').onclick=openCourse;$('dashCourse').onclick=openCourse;$('backupBtn').onclick=backup;$('systemBackup').onclick=backup;$('refreshBtn').onclick=refreshAll;$('systemRefresh').onclick=loadSystem;$('hamb').onclick=()=>$('side').classList.toggle('open');
+$('loginBtn').onclick=login;$('loginPass').addEventListener('keydown',e=>{if(e.key==='Enter')login()});$('createAdmin').onclick=createAdmin;$('createGroup').onclick=createGroup;$('closeMembers').onclick=()=>$('groupMembersCard').classList.add('hidden');$('createStudent').onclick=createStudent;$('bulkStudents').onclick=bulkStudents;$('logoutBtn').onclick=logout;$('teacherBtn').onclick=openTeacher;$('dashTeacher').onclick=openTeacher;$('courseBtn').onclick=openCourse;$('dashCourse').onclick=openCourse;$('backupBtn').onclick=backup;$('systemBackup').onclick=backup;$('refreshBtn').onclick=refreshAll;$('systemRefresh').onclick=loadSystem;$('hamb').onclick=()=>$('side').classList.toggle('open');
 setupCheck().then(()=>resume());
 </script>
 </body></html>
