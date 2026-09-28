@@ -18,6 +18,11 @@ WEB_PORT="8080"
 DOMAIN=""
 PRIVATE_BANKS=""
 TEACHER_TOKEN=""
+SETUP_TOKEN=""
+ADMIN_USER=""
+ADMIN_PASSWORD=""
+ADMIN_NAME=""
+ADMIN_EMAIL=""
 TUNNEL_TOKEN=""
 CLOUDFLARE_MODE=""
 NON_INTERACTIVE=0
@@ -42,7 +47,11 @@ Opciones:
   --domain HOST             Dominio público, por ejemplo grh.ejemplo.es
   --private-banks RUTA     ZIP o directorio con los 12 bancos privados
   --reuse-private-banks    Reutiliza /opt/grh0652/private-banks si ya es válido
-  --teacher-token TOKEN    Clave docente; si se omite se genera una segura
+  --teacher-token TOKEN    Token de recuperación; si se omite se genera uno seguro
+  --admin-user USUARIO      Usuario administrador inicial si no existe ninguno
+  --admin-password CLAVE    Contraseña administrador (mín. 12 caracteres; no se guarda)
+  --admin-name NOMBRE       Nombre visible del administrador
+  --admin-email EMAIL       Correo del administrador (opcional)
   --cloudflare-mode MODO   token | existing | skip
   --tunnel-token TOKEN     Token de un túnel Cloudflare gestionado remotamente
   --web-port PUERTO        Puerto local al que apuntará el túnel (por defecto 8080)
@@ -67,6 +76,10 @@ while (($#)); do
     --private-banks) PRIVATE_BANKS="${2:-}"; shift 2;;
     --reuse-private-banks) REUSE_PRIVATE_BANKS=1; shift;;
     --teacher-token) TEACHER_TOKEN="${2:-}"; shift 2;;
+    --admin-user) ADMIN_USER="${2:-}"; shift 2;;
+    --admin-password) ADMIN_PASSWORD="${2:-}"; shift 2;;
+    --admin-name) ADMIN_NAME="${2:-}"; shift 2;;
+    --admin-email) ADMIN_EMAIL="${2:-}"; shift 2;;
     --cloudflare-mode) CLOUDFLARE_MODE="${2:-}"; shift 2;;
     --tunnel-token) TUNNEL_TOKEN="${2:-}"; shift 2;;
     --web-port) WEB_PORT="${2:-}"; shift 2;;
@@ -119,6 +132,39 @@ prompt_secret(){
   read -r -s -p "$label: " value </dev/tty || true
   printf '\n' >/dev/tty
   printf -v "$var" '%s' "$value"
+}
+
+password_ok(){
+  local p="$1" classes=0
+  [[ "${#p}" -ge 12 ]] || return 1
+  [[ "$p" =~ [a-z] ]] && ((classes+=1))
+  [[ "$p" =~ [A-Z] ]] && ((classes+=1))
+  [[ "$p" =~ [0-9] ]] && ((classes+=1))
+  [[ "$p" =~ [^a-zA-Z0-9] ]] && ((classes+=1))
+  ((classes>=3))
+}
+
+collect_admin_credentials(){
+  if [[ -z "$ADMIN_USER" ]]; then
+    if ((NON_INTERACTIVE)); then die "No existe administrador. Indique --admin-user y --admin-password para completar la actualización."; fi
+    prompt ADMIN_USER "Usuario administrador" "admin"
+  fi
+  [[ "$ADMIN_USER" =~ ^[A-Za-z0-9._-]{3,64}$ ]] || die "Usuario administrador inválido. Use 3-64 caracteres: letras, números, punto, guion o guion bajo."
+  if [[ -z "$ADMIN_NAME" && "$NON_INTERACTIVE" -eq 0 ]]; then prompt ADMIN_NAME "Nombre visible del administrador" "Administrador GRH0652"; fi
+  ADMIN_NAME="${ADMIN_NAME:-Administrador GRH0652}"
+  if [[ -z "$ADMIN_EMAIL" && "$NON_INTERACTIVE" -eq 0 ]]; then prompt ADMIN_EMAIL "Correo del administrador (opcional)" ""; fi
+  if [[ -z "$ADMIN_PASSWORD" ]]; then
+    if ((NON_INTERACTIVE)); then die "No existe administrador. Indique --admin-password (mínimo 12 caracteres y 3 tipos de caracteres)."; fi
+    while true; do
+      local p1="" p2=""
+      prompt_secret p1 "Contraseña del administrador"
+      if ! password_ok "$p1"; then warn "La contraseña debe tener al menos 12 caracteres y combinar 3 de estos grupos: mayúsculas, minúsculas, números y símbolos."; continue; fi
+      prompt_secret p2 "Repita la contraseña"
+      [[ "$p1" == "$p2" ]] || { warn "Las contraseñas no coinciden."; continue; }
+      ADMIN_PASSWORD="$p1"; break
+    done
+  fi
+  password_ok "$ADMIN_PASSWORD" || die "La contraseña de administrador no cumple la política mínima."
 }
 
 if [[ -z "$DOMAIN" ]]; then prompt DOMAIN "Dominio público (sin https://)" || die "Falta --domain"; fi
@@ -205,7 +251,7 @@ log "Desplegando backend y web pública..."
 rm -rf "$INSTALL_DIR/server.new" "$INSTALL_DIR/web.new"
 cp -a "$SRC/server" "$INSTALL_DIR/server.new"
 mkdir -p "$INSTALL_DIR/web.new"
-for f in index.html course.html player.html teacher.html ut1.html; do
+for f in index.html course.html player.html teacher.html admin.html ut1.html; do
   [[ -f "$SRC/$f" ]] && cp -a "$SRC/$f" "$INSTALL_DIR/web.new/"
 done
 cp -a "$SRC/assets" "$SRC/scorm" "$INSTALL_DIR/web.new/"
@@ -256,11 +302,17 @@ python3 "$INSTALL_DIR/server/validate_private_banks.py" "$INSTALL_DIR/private-ba
 if [[ -z "$TEACHER_TOKEN" && -f "$INSTALL_DIR/.env" ]]; then
   TEACHER_TOKEN="$(sed -n 's/^GRH_TEACHER_TOKEN=//p' "$INSTALL_DIR/.env" | head -n1)"
 fi
+if [[ -z "$SETUP_TOKEN" && -f "$INSTALL_DIR/.env" ]]; then
+  SETUP_TOKEN="$(sed -n 's/^GRH_SETUP_TOKEN=//p' "$INSTALL_DIR/.env" | head -n1)"
+fi
 [[ -n "$TEACHER_TOKEN" ]] || TEACHER_TOKEN="$(openssl rand -hex 32)"
-[[ "${#TEACHER_TOKEN}" -ge 32 ]] || die "La clave docente debe tener al menos 32 caracteres."
+[[ -n "$SETUP_TOKEN" ]] || SETUP_TOKEN="$(openssl rand -hex 32)"
+[[ "${#TEACHER_TOKEN}" -ge 32 ]] || die "El token de recuperación debe tener al menos 32 caracteres."
+[[ "${#SETUP_TOKEN}" -ge 32 ]] || die "El token de instalación debe tener al menos 32 caracteres."
 
 cat >"$INSTALL_DIR/.env" <<EOF
 GRH_TEACHER_TOKEN=$TEACHER_TOKEN
+GRH_SETUP_TOKEN=$SETUP_TOKEN
 GRH_ALLOWED_ORIGINS=https://$DOMAIN
 EOF
 chmod 600 "$INSTALL_DIR/.env"
@@ -374,6 +426,51 @@ if ((healthy==0)); then
   die "El servicio local no superó /health."
 fi
 ok "Servicio local operativo en http://127.0.0.1:$WEB_PORT"
+
+log "Comprobando la cuenta administradora..."
+SETUP_STATUS="$TMP_DIR/setup-status.json"
+curl -fsS --max-time 10 "http://127.0.0.1:$WEB_PORT/api/setup/status" -o "$SETUP_STATUS"
+NEEDS_ADMIN="$(python3 - "$SETUP_STATUS" <<'PY'
+import json,sys
+d=json.load(open(sys.argv[1],encoding="utf-8"))
+print("1" if d.get("needs_admin") else "0")
+PY
+)"
+if [[ "$NEEDS_ADMIN" == "1" ]]; then
+  warn "No existe ningún administrador activo. La instalación/actualización no continuará sin crear uno."
+  collect_admin_credentials
+  ADMIN_JSON="$TMP_DIR/admin-create.json"
+  ADMIN_USER="$ADMIN_USER" ADMIN_PASSWORD="$ADMIN_PASSWORD" ADMIN_NAME="$ADMIN_NAME" ADMIN_EMAIL="$ADMIN_EMAIL" python3 - "$ADMIN_JSON" <<'PY'
+import json,os,sys
+payload={
+ "username":os.environ["ADMIN_USER"],
+ "password":os.environ["ADMIN_PASSWORD"],
+ "display_name":os.environ.get("ADMIN_NAME","Administrador GRH0652"),
+ "email":os.environ.get("ADMIN_EMAIL",""),
+}
+with open(sys.argv[1],"w",encoding="utf-8") as f:json.dump(payload,f,ensure_ascii=False)
+PY
+  ADMIN_RESPONSE="$TMP_DIR/admin-response.json"
+  HTTP_CODE="$(curl -sS -o "$ADMIN_RESPONSE" -w '%{http_code}' --max-time 15 \
+    -H "Content-Type: application/json" \
+    -H "X-Setup-Token: $SETUP_TOKEN" \
+    --data-binary "@$ADMIN_JSON" \
+    "http://127.0.0.1:$WEB_PORT/api/setup/admin")"
+  if [[ "$HTTP_CODE" != "200" ]]; then
+    cat "$ADMIN_RESPONSE" >&2 || true
+    die "No se pudo crear el administrador (HTTP $HTTP_CODE)."
+  fi
+  ok "Administrador '$ADMIN_USER' creado correctamente."
+  unset ADMIN_PASSWORD
+else
+  ADMIN_COUNT="$(python3 - "$SETUP_STATUS" <<'PY'
+import json,sys
+d=json.load(open(sys.argv[1],encoding="utf-8"))
+print(d.get("active_admins",0))
+PY
+)"
+  ok "Administrador existente detectado ($ADMIN_COUNT activo/s). No se modifica ninguna credencial."
+fi
 
 log "Comprobando bancos cargados en el backend..."
 for course in GRH0652_UT1 GRH0652_UT2 GRH0652_UT3 GRH0652_UT4; do
@@ -515,8 +612,11 @@ CREDS="/root/GRH0652_CREDENTIALS.txt"
 cat >"$CREDS" <<EOF
 GRH0652
 Dominio: https://$DOMAIN
+Panel de administración: https://$DOMAIN/admin.html
 Panel docente: https://$DOMAIN/teacher.html
-Clave docente: $TEACHER_TOKEN
+Usuario administrador: ${ADMIN_USER:-existente}
+Contraseña administrador: NO SE GUARDA EN ESTE ARCHIVO
+Token de recuperación (solo root): $TEACHER_TOKEN
 Origen local Cloudflare: http://localhost:$WEB_PORT
 Directorio: $INSTALL_DIR
 
@@ -551,14 +651,15 @@ printf '\n\033[1;32m============================================================
 printf ' GRH0652 INSTALADO CORRECTAMENTE\n'
 printf '============================================================\033[0m\n'
 printf ' Aula:          https://%s/\n' "$DOMAIN"
-printf ' Panel docente: https://%s/teacher.html\n' "$DOMAIN"
-printf ' API:           mismo dominio (/api)\n'
+printf ' Administración: https://%s/admin.html\n' "$DOMAIN"
+printf ' Panel docente:  https://%s/teacher.html\n' "$DOMAIN"
+printf ' API:            mismo dominio (/api)\n'
 printf ' Origen túnel:  http://localhost:%s\n' "$WEB_PORT"
 printf ' Credenciales:  %s (solo root)\n' "$CREDS"
 printf ' Estado:        sudo grh0652-status\n'
 printf ' Backup:        sudo grh0652-backup\n'
 printf ' Actualización: sudo grh0652-update\n'
-printf '\nLa clave docente se ha guardado con permisos 600 en %s.\n' "$CREDS"
+printf '\nEl token de recuperación se ha guardado con permisos 600 en %s. La contraseña del administrador no se almacena.\n' "$CREDS"
 if ((external_ok==0)) && [[ "$CLOUDFLARE_MODE" != "skip" ]]; then
   printf '\nPENDIENTE CLOUDFLARE: el Public Hostname %s debe apuntar a http://localhost:%s.\n' "$DOMAIN" "$WEB_PORT"
 fi
